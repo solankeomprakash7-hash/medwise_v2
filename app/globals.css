@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+/*
+ * Colour tokens from docs/DESIGN.md.
+ * PLACEHOLDER VALUES: DESIGN.md does not yet give exact hex codes.
+ * Replace these once the brand colours are decided. Red is for safety alerts only.
+ */
+:root {
+  --cream: #faf6ee;
+  --ink: #1a1a1a;
+  --gold: #8a6d1f;
+  --red: #a4161a;
+  --green: #2f6b3a;
+  --rule: #d9d1c1;
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-ink: var(--ink);
+  --color-gold: var(--gold);
+  --color-red: var(--red);
+  --color-green: var(--green);
+  --color-rule: var(--rule);
+  --font-display: var(--font-playfair);
+  --font-serif: var(--font-garamond);
+  --font-mono: var(--font-dm-mono);
+}
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-garamond), Georgia, serif;
+  font-size: 18px;
+}
