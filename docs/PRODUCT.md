@@ -28,7 +28,7 @@ Limitations: retrospective, small, adequacy gain projected. Prospective validati
 
 ## Version 1 — in scope
 1. Login; each user belongs to one hospital with one role.
-2. Step-by-step patient entry (see `CLINICAL_RULES.md` for fields), usable on a phone.
+2. One-page patient entry in five sections (see `CLINICAL_RULES.md` for fields), usable on a phone.
 3. Result screen, in this order:
    1. The recommendation (drug + dose, AWaRe tag)
    2. How to give it (dose, interval, infusion, renal adjustment)

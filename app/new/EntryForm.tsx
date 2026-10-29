@@ -46,7 +46,14 @@ const EMPTY: Form = {
   allergies: [], current_antibiotics: [],
 };
 
-const STEPS = ["Basics", "Source & severity", "Organs", "Exposures", "Host & allergies", "Review"] as const;
+// One scrolling page in five sections (DESIGN.md, screen 1): no "Next" screens to page through.
+const SECTIONS = [
+  { title: "Patient", hint: "Age, sex, weight" },
+  { title: "Infection", hint: "Source, setting, severity" },
+  { title: "Kidney & liver", hint: "For dose adjustment" },
+  { title: "Resistance risk", hint: "Recent antibiotics, admission, MDR, devices" },
+  { title: "Host & allergies", hint: "Comorbidities, immunity, allergies" },
+] as const;
 
 const LABELS: Record<string, string> = {
   age: "Age (years)",
@@ -76,8 +83,8 @@ const isDrugName = (s: string) => DRUG_NAME.test(s.trim().toLowerCase());
 const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const inRange = (s: string, min: number, max: number) => Number.isFinite(num(s)) && num(s) >= min && num(s) <= max;
 
-// What each step needs before "Next", and any out-of-scope stop it triggers.
-function stepProblems(step: number, f: Form): { missing: string[]; invalid: string[]; stop: string[] } {
+// What each section still needs, and any out-of-scope stop it triggers.
+function sectionProblems(step: number, f: Form): { missing: string[]; invalid: string[]; stop: string[] } {
   const missing: string[] = [];
   const invalid: string[] = [];
   const stop: string[] = [];
@@ -161,48 +168,47 @@ function toPatient(f: Form) {
 
 export default function EntryForm({ options }: { options: Options }) {
   const [form, setForm] = useState<Form>(EMPTY);
-  const [step, setStep] = useState(0);
   const [showProblems, setShowProblems] = useState(false);
   const [typingAge, setTypingAge] = useState(false);
   const [result, setResult] = useState<Omit<Result, "audit"> | null>(null);
   const [pending, startTransition] = useTransition();
   const listId = useId();
+  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
 
   const set = <K extends keyof Form>(field: K, value: Form[K]) => {
     setForm((f) => ({ ...f, [field]: value }));
     setResult(null);
   };
-  const problems = stepProblems(step, form);
-  const blocked = problems.missing.length + problems.invalid.length + problems.stop.length > 0;
-  const label = (field: string, value: string) => options.choices[field]?.find((c) => c.value === value)?.label ?? value;
+  const problems = SECTIONS.map((_, i) => sectionProblems(i, form));
+  const isDone = (i: number) => problems[i].missing.length + problems[i].invalid.length + problems[i].stop.length === 0;
+  const doneCount = SECTIONS.filter((_, i) => isDone(i)).length;
 
-  const goTo = (target: number) => {
-    setShowProblems(false);
-    setStep(target);
-    window.scrollTo({ top: 0 });
-  };
-  const next = () => {
-    if (!blocked) return goTo(step + 1);
-    setShowProblems(true);
-    window.scrollTo({ top: 0 }); // the message is shown at the top of the step
-  };
-  const submit = () =>
+  const submit = () => {
+    const first = SECTIONS.findIndex((_, i) => !isDone(i));
+    if (first >= 0) {
+      setShowProblems(true);
+      sectionRefs.current[first]?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     startTransition(async () => {
       setResult(await getRecommendation(toPatient(form)));
       window.scrollTo({ top: 0 });
     });
+  };
   const startAgain = () => {
     setForm(EMPTY);
     setResult(null);
-    goTo(0);
+    setShowProblems(false);
+    window.scrollTo({ top: 0 });
   };
 
-  const choice = (field: keyof Form & string, exclude: string[] = []) => (
+  const choice = (field: keyof Form & string, columns?: 2 | 3) => (
     <Choice
       legend={LABELS[field]}
-      options={(options.choices[field] ?? []).filter((o) => !exclude.includes(o.value))}
+      options={options.choices[field] ?? []}
       value={form[field] as string}
       onChange={(v) => set(field, v as Form[typeof field])}
+      columns={columns}
     />
   );
   const multi = (field: "prior_mdr" | "devices" | "comorbidities" | "immunocompromise") => (
@@ -213,123 +219,152 @@ export default function EntryForm({ options }: { options: Options }) {
     { value: "yes", label: "Yes" },
   ];
 
+  const fields: ReactNode[] = [
+    <>
+      <div className="grid grid-cols-2 gap-4">
+        <NumberField
+          label={LABELS.age}
+          value={form.age}
+          onChange={(v) => set("age", v)}
+          onFocus={() => setTypingAge(true)}
+          onBlur={() => setTypingAge(false)}
+        />
+        <NumberField label={LABELS.weight_kg} value={form.weight_kg} onChange={(v) => set("weight_kg", v)} decimal />
+      </div>
+      {/* Wait until typing is finished: "6" on the way to "62" must not stop the form. */}
+      {!typingAge && inRange(form.age, 0, 17.99) && <Stop message="Age under 18 is outside MedWise version 1." onStartAgain={startAgain} />}
+      {choice("sex", 3)}
+      {form.sex === "female" && choice("pregnancy", 3)}
+      {form.pregnancy === "yes" && <Stop message="Pregnancy is outside MedWise version 1." onStartAgain={startAgain} />}
+    </>,
+    <>
+      {choice("source")}
+      {choice("setting")}
+      {choice("source_control", 3)}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-[1fr_auto]">
+        {choice("severity")}
+        <NumberField label={LABELS.sofa} value={form.sofa} onChange={(v) => set("sofa", v)} />
+      </div>
+    </>,
+    <>
+      <NumberField label={LABELS.crcl_ml_min} value={form.crcl_ml_min} onChange={(v) => set("crcl_ml_min", v)} decimal />
+      {choice("dialysis")}
+      {choice("hepatic")}
+    </>,
+    <>
+      <Choice legend={LABELS.antibiotics_90d} options={yesNo} value={form.antibioticsGiven} onChange={(v) => set("antibioticsGiven", v)} />
+      {form.antibioticsGiven === "yes" && (
+        <DrugRows
+          rows={form.antibiotics_90d.map((a) => ({ drug: a.drug, extra: a.days }))}
+          onChange={(rows) => set("antibiotics_90d", rows.map((r) => ({ drug: r.drug, days: r.extra })))}
+          listId={listId}
+          what="antibiotic"
+          extra={{ kind: "days" }}
+        />
+      )}
+      {choice("admission_90d")}
+      {multi("prior_mdr")}
+      {multi("devices")}
+    </>,
+    <>
+      {multi("comorbidities")}
+      {multi("immunocompromise")}
+      {form.immunocompromise.includes("neutropenia") && (
+        <Stop
+          message="Neutropenic sepsis is outside MedWise version 1. Follow your hospital's febrile-neutropenia protocol."
+          onStartAgain={startAgain}
+        />
+      )}
+      <Choice legend={LABELS.allergies} options={yesNo} value={form.allergiesKnown} onChange={(v) => set("allergiesKnown", v)} />
+      {form.allergiesKnown === "yes" && (
+        <DrugRows
+          rows={form.allergies.map((a) => ({ drug: a.drug, extra: a.reaction }))}
+          onChange={(rows) => set("allergies", rows.map((r) => ({ drug: r.drug, reaction: r.extra })))}
+          listId={listId}
+          what="allergy (drug or class)"
+          extra={{ kind: "reaction", options: options.choices.allergy_reaction ?? [] }}
+        />
+      )}
+      <DrugRows
+        legend={LABELS.current_antibiotics}
+        rows={form.current_antibiotics.map((d) => ({ drug: d, extra: "" }))}
+        onChange={(rows) => set("current_antibiotics", rows.map((r) => r.drug))}
+        listId={listId}
+        what="antibiotic"
+      />
+    </>,
+  ];
+
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-1 flex-col">
-      <header className="px-4 pt-6">
-        <p className="font-display text-2xl">MedWise</p>
-        <Progress step={step} />
+    <div className="flex w-full flex-1 flex-col">
+      <header className="bg-navy text-white">
+        <div className="mx-auto max-w-2xl px-4 pb-6 pt-5">
+          <div className="flex items-center gap-3">
+            <Logo />
+            <div>
+              <p className="font-display text-2xl leading-none">MedWise</p>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/70">Empiric antibiotics · adult sepsis</p>
+            </div>
+          </div>
+          {!result && (
+            <>
+              <h1 className="mt-6 font-display text-3xl">New patient</h1>
+              <p className="mt-1 text-base text-white/80">
+                Fill in the five sections on this page. No names, hospital numbers or dates of birth: none are needed.
+              </p>
+            </>
+          )}
+        </div>
       </header>
 
       {result && (
-        <main className="flex-1 px-4 pb-40 pt-4">
-          <h1 className="mb-4 font-display text-3xl">Recommendation</h1>
+        <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-40 pt-5">
           <ResultView result={result} onEdit={() => setResult(null)} onStartAgain={startAgain} />
         </main>
       )}
-      <main className={`flex-1 px-4 pb-32 pt-4 ${result ? "hidden" : ""}`}>
-        <h1 className="font-display text-3xl">{STEPS[step]}</h1>
-        <p className="mt-1 text-base">No names, hospital numbers or dates of birth: none are needed.</p>
-        {showProblems && problems.stop.length === 0 && (problems.missing.length > 0 || problems.invalid.length > 0) && (
-          <Alert tone="info" title="Please complete this step">
-            {problems.missing.map((m) => (
-              <p key={m}>Please answer: {m}</p>
-            ))}
-            {problems.invalid.map((m) => (
-              <p key={m}>{m}</p>
-            ))}
-          </Alert>
-        )}
-        {showProblems && problems.stop.length > 0 && (
-          <Alert tone="danger" title="Outside MedWise version 1 — no recommendation">
-            {problems.stop.map((m) => (
-              <p key={m}>{m}</p>
-            ))}
-          </Alert>
-        )}
-
-        <div className="mt-6 flex flex-col gap-8">
-          {step === 0 && (
-            <>
-              <NumberField
-                label={LABELS.age}
-                value={form.age}
-                onChange={(v) => set("age", v)}
-                onFocus={() => setTypingAge(true)}
-                onBlur={() => setTypingAge(false)}
-              />
-              {/* Wait until typing is finished: "6" on the way to "62" must not stop the form. */}
-              {!typingAge && inRange(form.age, 0, 17.99) && <Stop message="Age under 18 is outside MedWise version 1." onStartAgain={startAgain} />}
-              {choice("sex")}
-              <NumberField label={LABELS.weight_kg} value={form.weight_kg} onChange={(v) => set("weight_kg", v)} decimal />
-              {form.sex === "female" && choice("pregnancy")}
-              {form.pregnancy === "yes" && <Stop message="Pregnancy is outside MedWise version 1." onStartAgain={startAgain} />}
-            </>
-          )}
-          {step === 1 && (
-            <>
-              {choice("source")}
-              {choice("setting")}
-              {choice("source_control")}
-              {choice("severity")}
-              <NumberField label={LABELS.sofa} value={form.sofa} onChange={(v) => set("sofa", v)} />
-            </>
-          )}
-          {step === 2 && (
-            <>
-              <NumberField label={LABELS.crcl_ml_min} value={form.crcl_ml_min} onChange={(v) => set("crcl_ml_min", v)} decimal />
-              {choice("dialysis")}
-              {choice("hepatic")}
-            </>
-          )}
-          {step === 3 && (
-            <>
-              <Choice legend={LABELS.antibiotics_90d} options={yesNo} value={form.antibioticsGiven} onChange={(v) => set("antibioticsGiven", v)} />
-              {form.antibioticsGiven === "yes" && (
-                <DrugRows
-                  rows={form.antibiotics_90d.map((a) => ({ drug: a.drug, extra: a.days }))}
-                  onChange={(rows) => set("antibiotics_90d", rows.map((r) => ({ drug: r.drug, days: r.extra })))}
-                  listId={listId}
-                  what="antibiotic"
-                  extra={{ kind: "days" }}
-                />
+      <main className={`mx-auto -mt-2 w-full max-w-2xl flex-1 px-4 pb-36 ${result ? "hidden" : ""}`}>
+        <div className="flex flex-col gap-4">
+          {SECTIONS.map((section, i) => (
+            <section
+              key={section.title}
+              ref={(el) => {
+                sectionRefs.current[i] = el;
+              }}
+              aria-labelledby={`${listId}-s${i}`}
+              className="scroll-mt-4 rounded-xl border border-rule bg-white p-4 shadow-sm sm:p-5"
+            >
+              <div className="flex items-center gap-3 border-b border-rule pb-3">
+                <span
+                  aria-hidden
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-full font-mono text-base ${
+                    isDone(i) ? "bg-green text-white" : "bg-navy/10 text-navy"
+                  }`}
+                >
+                  {isDone(i) ? "✓" : i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 id={`${listId}-s${i}`} className="text-lg font-semibold leading-tight text-navy">
+                    {section.title}
+                  </h2>
+                  <p className="text-sm text-muted">{section.hint}</p>
+                </div>
+                <span className={`text-sm font-semibold ${isDone(i) ? "text-green" : "text-muted"}`}>
+                  {isDone(i) ? "Complete" : problems[i].missing.length ? `${problems[i].missing.length} to answer` : "Check"}
+                </span>
+              </div>
+              {showProblems && problems[i].stop.length === 0 && (problems[i].missing.length > 0 || problems[i].invalid.length > 0) && (
+                <Alert tone="info" title="Still to complete here">
+                  {problems[i].missing.map((m) => (
+                    <p key={m}>Please answer: {m}</p>
+                  ))}
+                  {problems[i].invalid.map((m) => (
+                    <p key={m}>{m}</p>
+                  ))}
+                </Alert>
               )}
-              {choice("admission_90d")}
-              {multi("prior_mdr")}
-              {multi("devices")}
-            </>
-          )}
-          {step === 4 && (
-            <>
-              {multi("comorbidities")}
-              {multi("immunocompromise")}
-              {form.immunocompromise.includes("neutropenia") && (
-                <Stop
-                  message="Neutropenic sepsis is outside MedWise version 1. Follow your hospital's febrile-neutropenia protocol."
-                  onStartAgain={startAgain}
-                />
-              )}
-              <Choice legend={LABELS.allergies} options={yesNo} value={form.allergiesKnown} onChange={(v) => set("allergiesKnown", v)} />
-              {form.allergiesKnown === "yes" && (
-                <DrugRows
-                  rows={form.allergies.map((a) => ({ drug: a.drug, extra: a.reaction }))}
-                  onChange={(rows) => set("allergies", rows.map((r) => ({ drug: r.drug, reaction: r.extra })))}
-                  listId={listId}
-                  what="allergy (drug or class)"
-                  extra={{ kind: "reaction", options: options.choices.allergy_reaction ?? [] }}
-                />
-              )}
-              <DrugRows
-                legend={LABELS.current_antibiotics}
-                rows={form.current_antibiotics.map((d) => ({ drug: d, extra: "" }))}
-                onChange={(rows) => set("current_antibiotics", rows.map((r) => r.drug))}
-                listId={listId}
-                what="antibiotic"
-              />
-            </>
-          )}
-          {step === 5 && (
-            <Review form={form} label={label} onEdit={goTo} />
-          )}
+              <div className="mt-4 flex flex-col gap-6">{fields[i]}</div>
+            </section>
+          ))}
         </div>
 
         <datalist id={listId}>
@@ -337,91 +372,87 @@ export default function EntryForm({ options }: { options: Options }) {
             <option key={d} value={d} />
           ))}
         </datalist>
-
       </main>
 
       {result?.status === "recommendation" && (
-        <nav className="fixed inset-x-0 bottom-0 border-t border-rule bg-cream" aria-label="Decision">
-          <div className="mx-auto max-w-xl px-4 py-3">
+        <nav className="fixed inset-x-0 bottom-0 border-t border-rule bg-white/95 backdrop-blur" aria-label="Decision">
+          <div className="mx-auto max-w-2xl px-4 py-3">
             {/* All three equally easy to reach (DESIGN.md). Disabled until decisions can be saved (rule 7). */}
             <div className="flex gap-3">
-              <button type="button" disabled className="min-h-12 flex-1 rounded bg-green text-lg text-cream disabled:opacity-50">
+              <button type="button" disabled className="min-h-12 flex-1 rounded-lg bg-green text-lg font-semibold text-white disabled:opacity-50">
                 Accept
               </button>
-              <button type="button" disabled className="min-h-12 flex-1 rounded border border-ink text-lg disabled:opacity-50">
+              <button type="button" disabled className="min-h-12 flex-1 rounded-lg border border-navy text-lg disabled:opacity-50">
                 Modify
               </button>
-              <button type="button" disabled className="min-h-12 flex-1 rounded border border-ink text-lg disabled:opacity-50">
+              <button type="button" disabled className="min-h-12 flex-1 rounded-lg border border-navy text-lg disabled:opacity-50">
                 Override
               </button>
             </div>
-            <p className="mt-1 text-center text-base">Decisions are saved once login is added.</p>
+            <p className="mt-1 text-center text-sm text-muted">Decisions are saved once login is added.</p>
           </div>
         </nav>
       )}
-      <nav className={`fixed inset-x-0 bottom-0 border-t border-rule bg-cream ${result ? "hidden" : ""}`} aria-label="Steps">
-        <div className="mx-auto flex max-w-xl gap-3 px-4 py-3">
+      <nav className={`fixed inset-x-0 bottom-0 border-t border-rule bg-white/95 backdrop-blur ${result ? "hidden" : ""}`} aria-label="Progress">
+        <div className="mx-auto flex max-w-2xl items-center gap-4 px-4 py-3">
+          <div className="flex-1">
+            <p className="text-sm text-muted">
+              <span className="font-mono text-ink">{doneCount}</span> of <span className="font-mono text-ink">{SECTIONS.length}</span> sections
+              complete
+            </p>
+            <ol className="mt-1.5 flex gap-1" aria-hidden>
+              {SECTIONS.map((s, i) => (
+                <li key={s.title} className={`h-1.5 flex-1 rounded-full ${isDone(i) ? "bg-green" : "bg-rule"}`} />
+              ))}
+            </ol>
+          </div>
           <button
             type="button"
-            onClick={() => goTo(step - 1)}
-            disabled={step === 0}
-            className="min-h-12 flex-1 rounded border border-ink text-lg disabled:opacity-40"
+            onClick={submit}
+            disabled={pending}
+            className="min-h-12 rounded-lg bg-navy px-5 text-lg font-semibold text-white shadow-sm disabled:opacity-60"
           >
-            Back
+            {pending ? "Working…" : "Get recommendation"}
           </button>
-          {step < 5 ? (
-            <button type="button" onClick={next} className="min-h-12 flex-1 rounded bg-ink text-lg text-cream">
-              Next
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={submit}
-              disabled={pending}
-              className="min-h-12 flex-1 rounded bg-ink text-lg text-cream disabled:opacity-60"
-            >
-              {pending ? "Working…" : "Get recommendation"}
-            </button>
-          )}
         </div>
       </nav>
     </div>
   );
 }
 
-function Progress({ step }: { step: number }) {
+// A simple mark: a shield with a cross, in the brand blue.
+function Logo() {
   return (
-    <div className="mt-3">
-      <p className="text-base">
-        Step <span className="font-mono">{step + 1}</span> of <span className="font-mono">{STEPS.length}</span>
-      </p>
-      <ol className="mt-2 flex gap-1" aria-label="Progress">
-        {STEPS.map((name, i) => (
-          <li
-            key={name}
-            aria-current={i === step ? "step" : undefined}
-            aria-label={name}
-            className={`h-1.5 flex-1 rounded-full ${i === step ? "bg-gold" : i < step ? "bg-ink" : "bg-rule"}`}
-          />
-        ))}
-      </ol>
-    </div>
+    <svg viewBox="0 0 32 32" className="size-10" aria-hidden>
+      <path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7L16 2Z" fill="var(--accent)" />
+      <path d="M14 10h4v4h4v4h-4v4h-4v-4h-4v-4h4z" fill="white" />
+    </svg>
   );
 }
 
 const optionClass =
-  "flex min-h-12 cursor-pointer items-center rounded border px-4 text-lg has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold";
+  "flex min-h-11 cursor-pointer items-center justify-center rounded-lg border px-3 py-2 text-center text-base leading-snug transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent";
+const optionState = (selected: boolean) =>
+  selected ? "border-navy bg-navy font-semibold text-white" : "border-rule bg-cream/60 text-ink hover:border-accent";
+const legendClass = "mb-2 text-sm font-semibold uppercase tracking-wider text-muted";
 
-function Choice(props: { legend: string; options: { value: string; label: string }[]; value: string; onChange: (v: string) => void }) {
+function Choice(props: {
+  legend: string;
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+  columns?: 2 | 3;
+}) {
   const name = useId();
+  const grid = props.columns === 3 ? "grid-cols-3" : "grid-cols-2";
   return (
     <fieldset>
-      <legend className="mb-2 text-lg font-semibold">{props.legend}</legend>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <legend className={legendClass}>{props.legend}</legend>
+      <div className={`grid gap-2 ${grid}`}>
         {props.options.map((o) => {
           const selected = props.value === o.value;
           return (
-            <label key={o.value} className={`${optionClass} ${selected ? "border-ink bg-ink text-cream" : "border-rule bg-white/60"}`}>
+            <label key={o.value} className={`${optionClass} ${optionState(selected)}`}>
               <input type="radio" name={name} value={o.value} checked={selected} onChange={() => props.onChange(o.value)} className="sr-only" />
               {o.label}
             </label>
@@ -441,14 +472,16 @@ function MultiChoice(props: { legend: string; options: { value: string; label: s
   };
   return (
     <fieldset>
-      <legend className="mb-1 text-lg font-semibold">{props.legend}</legend>
-      <p className="mb-2 text-base">Choose all that apply, or None.</p>
-      <div className="grid grid-cols-2 gap-2">
+      <legend className={legendClass}>
+        {props.legend} <span className="font-normal normal-case tracking-normal">· all that apply, or None</span>
+      </legend>
+      <div className="flex flex-wrap gap-2">
         {props.options.map((o) => {
           const selected = props.value.includes(o.value);
           return (
-            <label key={o.value} className={`${optionClass} ${selected ? "border-ink bg-ink text-cream" : "border-rule bg-white/60"}`}>
+            <label key={o.value} className={`${optionClass} rounded-full px-4 ${optionState(selected)}`}>
               <input type="checkbox" checked={selected} onChange={() => toggle(o.value)} className="sr-only" />
+              {selected && <span aria-hidden className="mr-1.5">✓</span>}
               {o.label}
             </label>
           );
@@ -477,7 +510,7 @@ function NumberField(props: {
   const id = useId();
   return (
     <div>
-      <label htmlFor={id} className="mb-2 block text-lg font-semibold">
+      <label htmlFor={id} className={`block ${legendClass}`}>
         {props.label}
       </label>
       <input
@@ -491,7 +524,7 @@ function NumberField(props: {
         onChange={(e) => props.onChange(digitsOnly(e.target.value, props.decimal ?? false))}
         onFocus={props.onFocus}
         onBlur={props.onBlur}
-        className="min-h-12 w-40 rounded border border-ink bg-white px-3 font-mono text-xl"
+        className="min-h-12 w-full max-w-40 rounded-lg border border-rule bg-cream/60 px-3 font-mono text-xl focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
       />
     </div>
   );
@@ -512,10 +545,10 @@ function DrugRows(props: {
     props.onChange(props.rows.map((r, j) => (j === i ? { ...r, ...change } : r)));
   return (
     <fieldset>
-      {props.legend && <legend className="mb-2 text-lg font-semibold">{props.legend}</legend>}
+      {props.legend && <legend className={legendClass}>{props.legend}</legend>}
       <div className="flex flex-col gap-3">
         {props.rows.map((row, i) => (
-          <div key={i} className="flex flex-wrap items-end gap-2 rounded border border-rule p-3">
+          <div key={i} className="flex flex-wrap items-end gap-2 rounded-lg border border-rule bg-cream/40 p-3">
             <label className="flex flex-1 flex-col text-base">
               {props.what[0].toUpperCase() + props.what.slice(1)}
               <input
@@ -523,7 +556,7 @@ function DrugRows(props: {
                 value={row.drug}
                 onChange={(e) => update(i, { drug: e.target.value })}
                 autoComplete="off"
-                className="mt-1 min-h-12 rounded border border-ink bg-white px-3 text-lg"
+                className="mt-1 min-h-12 rounded-lg border border-rule bg-white px-3 text-lg"
               />
             </label>
             {props.extra?.kind === "days" && (
@@ -537,7 +570,7 @@ function DrugRows(props: {
                   maxLength={2}
                   value={row.extra}
                   onChange={(e) => update(i, { extra: digitsOnly(e.target.value, false) })}
-                  className="mt-1 min-h-12 rounded border border-ink bg-white px-3 font-mono text-lg"
+                  className="mt-1 min-h-12 rounded-lg border border-rule bg-white px-3 font-mono text-lg"
                 />
               </label>
             )}
@@ -547,7 +580,7 @@ function DrugRows(props: {
                 <select
                   value={row.extra}
                   onChange={(e) => update(i, { extra: e.target.value })}
-                  className="mt-1 min-h-12 rounded border border-ink bg-white px-2 text-lg"
+                  className="mt-1 min-h-12 rounded-lg border border-rule bg-white px-2 text-lg"
                 >
                   <option value="">Choose…</option>
                   {props.extra.options.map((o) => (
@@ -571,7 +604,7 @@ function DrugRows(props: {
         <button
           type="button"
           onClick={() => props.onChange([...props.rows, { drug: "", extra: "" }])}
-          className="min-h-12 self-start rounded border border-ink px-4 text-lg"
+          className="min-h-11 self-start rounded-lg border border-dashed border-accent px-4 text-base font-semibold text-accent"
         >
           + Add {props.what}
         </button>
@@ -580,93 +613,15 @@ function DrugRows(props: {
   );
 }
 
-function Review({ form, label, onEdit }: { form: Form; label: (field: string, value: string) => string; onEdit: (step: number) => void }) {
-  const list = (field: string, values: string[]) => values.map((v) => label(field, v)).join(", ");
-  const sections: { step: number; rows: [string, ReactNode][] }[] = [
-    {
-      step: 0,
-      rows: [
-        [LABELS.age, <Mono key="a">{form.age}</Mono>],
-        [LABELS.sex, label("sex", form.sex)],
-        [LABELS.weight_kg, <Mono key="w">{form.weight_kg}</Mono>],
-        ...(form.sex === "female" ? [[LABELS.pregnancy, label("pregnancy", form.pregnancy)] as [string, ReactNode]] : []),
-      ],
-    },
-    {
-      step: 1,
-      rows: [
-        [LABELS.source, label("source", form.source)],
-        [LABELS.setting, label("setting", form.setting)],
-        [LABELS.source_control, label("source_control", form.source_control)],
-        [LABELS.severity, label("severity", form.severity)],
-        [LABELS.sofa, <Mono key="s">{form.sofa}</Mono>],
-      ],
-    },
-    {
-      step: 2,
-      rows: [
-        [LABELS.crcl_ml_min, <Mono key="c">{form.crcl_ml_min}</Mono>],
-        [LABELS.dialysis, label("dialysis", form.dialysis)],
-        [LABELS.hepatic, label("hepatic", form.hepatic)],
-      ],
-    },
-    {
-      step: 3,
-      rows: [
-        [
-          LABELS.antibiotics_90d,
-          form.antibioticsGiven === "yes" ? form.antibiotics_90d.map((a) => `${a.drug} (${a.days} days)`).join(", ") : "None",
-        ],
-        [LABELS.admission_90d, label("admission_90d", form.admission_90d)],
-        [LABELS.prior_mdr, list("prior_mdr", form.prior_mdr)],
-        [LABELS.devices, list("devices", form.devices)],
-      ],
-    },
-    {
-      step: 4,
-      rows: [
-        [LABELS.comorbidities, list("comorbidities", form.comorbidities)],
-        [LABELS.immunocompromise, list("immunocompromise", form.immunocompromise)],
-        [
-          LABELS.allergies,
-          form.allergiesKnown === "yes" ? form.allergies.map((a) => `${a.drug} (${label("allergy_reaction", a.reaction)})`).join(", ") : "None",
-        ],
-        [LABELS.current_antibiotics, form.current_antibiotics.filter(Boolean).join(", ") || "None"],
-      ],
-    },
-  ];
-  return (
-    <div className="flex flex-col gap-6">
-      <p className="text-lg">Check everything before asking for a recommendation.</p>
-      {sections.map((s) => (
-        <section key={s.step} className="border-t border-rule pt-3">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-xl font-semibold">{STEPS[s.step]}</h2>
-            <button type="button" onClick={() => onEdit(s.step)} className="min-h-11 px-2 text-lg text-gold underline">
-              Edit
-            </button>
-          </div>
-          <dl className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-[1fr_1fr]">
-            {s.rows.map(([k, v]) => (
-              <div key={k} className="contents">
-                <dt className="text-base">{k}</dt>
-                <dd className="mb-2 text-lg font-semibold sm:mb-0">{v}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      ))}
-    </div>
-  );
-}
-
 // Out-of-scope stop, shown directly under the answer that caused it (red: safety alerts only).
 // It scrolls itself into view, clear of the bottom bar, as soon as it appears.
 function Stop({ message, onStartAgain }: { message: string; onStartAgain: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => ref.current?.scrollIntoView({ block: "nearest" }), []);
+  useEffect(() => {
+    ref.current?.scrollIntoView({ block: "nearest" });
+  }, []);
   return (
-    <div ref={ref} className="scroll-mb-28">
+    <div ref={ref} className="scroll-mb-28 -mt-2">
       <Alert tone="danger" title="Outside MedWise version 1 — no recommendation">
         <p>{message}</p>
         <button type="button" onClick={onStartAgain} className="mt-3 min-h-11 underline">
@@ -677,12 +632,15 @@ function Stop({ message, onStartAgain }: { message: string; onStartAgain: () => 
   );
 }
 
-const Mono = ({ children }: { children: ReactNode }) => <span className="font-mono">{children}</span>;
 
 function Alert({ tone, title, children }: { tone: "danger" | "info" | "success"; title: string; children: ReactNode }) {
-  const style = { danger: "border-red text-red", info: "border-ink", success: "border-green text-green" }[tone];
+  const style = {
+    danger: "border-red bg-red/5 text-red",
+    info: "border-accent bg-accent/5 text-accent",
+    success: "border-green bg-green/5 text-green",
+  }[tone];
   return (
-    <div role={tone === "danger" ? "alert" : "status"} className={`mt-4 rounded border-2 bg-white/70 p-4 text-lg ${style}`}>
+    <div role={tone === "danger" ? "alert" : "status"} className={`mt-4 rounded-lg border-l-4 p-4 text-base ${style}`}>
       <p className="font-semibold">{title}</p>
       <div className="mt-1 text-ink">{children}</div>
     </div>

@@ -1,34 +1,38 @@
 @import "tailwindcss";
 
 /*
- * Colour tokens from docs/DESIGN.md.
- * PLACEHOLDER VALUES: DESIGN.md does not yet give exact hex codes.
- * Replace these once the brand colours are decided. Red is for safety alerts only.
+ * Colour tokens from docs/DESIGN.md (palette taken from the first prototype, DECISIONS 2026-10-29).
+ * Red is for safety alerts only.
  */
 :root {
-  --cream: #faf6ee;
+  --cream: #f9f7f2;
   --ink: #1a1a1a;
-  --gold: #8a6d1f;
-  --red: #a4161a;
+  --navy: #0e1b2f;
+  --accent: #005a8d;
+  --red: #c41e3a;
   --green: #2f6b3a;
-  --rule: #d9d1c1;
+  --rule: #d1d5db;
+  --muted: #5b6472;
 }
 
 @theme inline {
   --color-cream: var(--cream);
   --color-ink: var(--ink);
-  --color-gold: var(--gold);
+  --color-navy: var(--navy);
+  --color-accent: var(--accent);
   --color-red: var(--red);
   --color-green: var(--green);
   --color-rule: var(--rule);
+  --color-muted: var(--muted);
   --font-display: var(--font-playfair);
   --font-serif: var(--font-garamond);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-dm-mono);
 }
 
 body {
   background: var(--cream);
   color: var(--ink);
-  font-family: var(--font-garamond), Georgia, serif;
-  font-size: 18px;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 17px;
 }

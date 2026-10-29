@@ -5,6 +5,7 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | Patient entry: one scrolling page with five section cards and a sticky "Get recommendation" bar, instead of six step screens; look refreshed with the first prototype's palette (navy, brand blue, cream), Inter for screen text, white cards. Red still for safety alerts only | Owner: the old screens were "boring" with "too many next next slides" |
 | 2026-10-29 | Number boxes changed from type="number" to text boxes with the numeric keypad (inputmode) that keep digits only (and one decimal point for weight and CrCl) | Dr. Solanke still could not type the age on a phone; type="number" is known to misbehave on some phones and keyboards |
 | 2026-10-29 | Age "under 18" stop now waits until the clinician leaves the age box (Next stays blocked either way) | Bug reported by Dr. Solanke: on a phone the alert appeared after the first digit ("6" of "62") and interrupted typing |
 | 2026-10-29 | Result screen built (10 cards, DESIGN.md order) with a DEMO stand-in that takes the guideline table's choice and passes through all real safety checks; "DEMO — not for patient care" banner | Shows the full screen and every check working before the paid AI is connected |
@@ -54,7 +55,7 @@
 | 2026-10-28 | Docs moved into `docs/`; original zip kept in the repo | Matches the paths in `CLAUDE.md`; owner wants the original bundle kept |
 | 2026-10-28 | Empty project: Next.js 16 + TypeScript + Tailwind 4, Vitest for tests, GitHub Actions runs checks on every push | Phase 2 step 1; checks catch mistakes before anything reaches staging |
 | 2026-10-28 | Automatic test fails if "confidence %", "validated" or "approved" appears in app code | Enforces rule 5 without relying on memory |
-| 2026-10-28 | Colour hex values in `app/globals.css` are placeholders | `DESIGN.md` hex codes still to be filled |
+| 2026-10-28 | Colour hex values in `app/globals.css` are placeholders (superseded 2026-10-29: prototype palette) | `DESIGN.md` hex codes still to be filled |
 | 2026-10-26 | Rebuild from scratch instead of extending the Google AI Studio prototype | Prototype is one AI prompt with no structure, no login, no logging, possible key exposure |
 | 2026-10-26 | Split into rules engine → AI layer → safety check | Same patient gets the same allowed options; every output is auditable; AI cannot invent drugs or doses |
 | 2026-10-26 | Doses come only from `drugs.csv`, never from the AI | Patient safety and regulatory traceability |

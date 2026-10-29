@@ -10,7 +10,7 @@ export default function Home() {
         Empiric antibiotic decision support for adult sepsis.
       </p>
       <p className="mt-4 text-lg leading-8">This site is being set up. No recommendations are given yet.</p>
-      <Link href="/new" className="mt-8 inline-flex min-h-12 items-center self-start rounded bg-ink px-6 text-lg text-cream">
+      <Link href="/new" className="mt-8 inline-flex min-h-12 items-center self-start rounded-lg bg-navy px-6 text-lg font-semibold text-white">
         New patient
       </Link>
       <footer className="mt-auto border-t border-rule pt-4 text-base">

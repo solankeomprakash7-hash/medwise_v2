@@ -33,9 +33,9 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
 
   return (
     <div className="flex flex-col gap-4">
-      <div role="note" className="rounded border-2 border-gold bg-white/70 p-3 text-lg">
-        <p className="font-semibold">DEMO — not for patient care</p>
-        <p className="text-base">
+      <div role="note" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-base">
+        <p className="font-semibold uppercase tracking-wider text-amber-900">DEMO — not for patient care</p>
+        <p className="text-amber-950">
           Stand-in answer from the guideline table and a draft knowledge base. The real AI is not connected yet.
         </p>
       </div>
@@ -51,18 +51,21 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
       {r.status === "recommendation" && r.regimen && (
         <>
           {/* 1. Recommendation */}
-          <Card title="Recommendation">
-            <p className="font-display text-3xl leading-tight">{r.regimen.name.split(" + ").map(title).join(" + ")}</p>
-            <ul className="mt-3 flex flex-col gap-2">
+          <section className="rounded-xl bg-navy p-5 text-white shadow-md">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-white/70">Recommended empiric regimen</h2>
+            <p className="mt-2 font-display text-3xl leading-tight sm:text-4xl">{r.regimen.name.split(" + ").map(title).join(" + ")}</p>
+            <ul className="mt-4 flex flex-col gap-3">
               {drugs.map((d) => (
-                <li key={d.drug} className="flex flex-wrap items-baseline gap-2">
-                  <span className="font-semibold">{title(d.drug)}</span>
-                  <Aware group={d.aware} />
-                  <span className="w-full font-mono text-base">{[d.dose, d.interval].filter(Boolean).join(" · ") || NOT_YET}</span>
+                <li key={d.drug} className="rounded-lg bg-white/10 p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-lg font-semibold">{title(d.drug)}</span>
+                    <Aware group={d.aware} />
+                  </div>
+                  <span className="mt-1 block font-mono text-base">{[d.dose, d.interval].filter(Boolean).join(" · ") || NOT_YET}</span>
                 </li>
               ))}
             </ul>
-          </Card>
+          </section>
 
           {/* 2. How to give it */}
           <Card title="How to give it">
@@ -91,9 +94,16 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
             <p className="text-base">What this regimen covers, from the knowledge base.</p>
             <ul className="mt-2 grid grid-cols-2 gap-2">
               {r.coverage?.map((c) => (
-                <li key={c.key} className={`rounded border px-3 py-2 ${c.level === "yes" ? "border-ink" : "border-rule"}`}>
-                  <span className="block text-base">{c.label}</span>
-                  <span className="font-semibold">{c.level === "yes" ? "Yes" : c.level === "limited" ? "Limited" : "No"}</span>
+                <li
+                  key={c.key}
+                  className={`rounded-lg border px-3 py-2 ${
+                    c.level === "yes" ? "border-accent bg-accent/5" : c.level === "limited" ? "border-rule bg-cream" : "border-rule"
+                  }`}
+                >
+                  <span className="block text-sm text-muted">{c.label}</span>
+                  <span className={`font-semibold ${c.level === "yes" ? "text-accent" : c.level === "no" ? "text-muted" : ""}`}>
+                    {c.level === "yes" ? "● Yes" : c.level === "limited" ? "◐ Limited" : "○ No"}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -140,13 +150,13 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
                 <li key={k}>{k}</li>
               ))}
             </ul>
-            <p className="mt-3">{r.reasoning}</p>
-            <h3 className="mt-3 font-semibold">Guideline passages cited</h3>
+            <p className="mt-3 font-serif text-lg leading-relaxed">{r.reasoning}</p>
+            <h3 className="mt-4 text-sm font-semibold uppercase tracking-wider text-muted">Guideline passages cited</h3>
             <ul className="mt-1 flex flex-col gap-2">
               {r.citations?.map((c) => (
-                <li key={c.passage_id + c.quote} className="border-l-2 border-gold pl-3 text-base">
+                <li key={c.passage_id + c.quote} className="rounded-r-lg border-l-4 border-accent bg-cream/70 px-3 py-2 font-serif text-lg">
                   “{c.quote}”
-                  <span className="block font-semibold">
+                  <span className="mt-1 block font-sans text-sm font-semibold text-accent">
                     {guideline(c.guideline)}, {c.location}
                   </span>
                 </li>
@@ -198,21 +208,21 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
       )}
 
       {/* 10. Footer */}
-      <footer className="border-t border-rule pt-3 text-base">
+      <footer className="rounded-xl border border-rule bg-white p-4 text-sm text-muted">
         <p>
           Knowledge base <span className="font-mono">{r.versions.knowledgeBase}</span>
         </p>
         <p>Sources: {r.versions.guidelines.map((g) => `${guideline(g.guideline)} (${g.version})`).join(" · ")}</p>
         {r.disclaimers.map((d) => (
-          <p key={d} className="mt-1 font-semibold">
+          <p key={d} className="mt-1 font-semibold text-ink">
             {d}
           </p>
         ))}
         <div className="mt-3 flex flex-wrap gap-4">
-          <button type="button" onClick={onEdit} className="min-h-11 underline">
+          <button type="button" onClick={onEdit} className="min-h-11 rounded-lg border border-navy px-4 text-base font-semibold text-navy">
             Edit details
           </button>
-          <button type="button" onClick={onStartAgain} className="min-h-11 underline">
+          <button type="button" onClick={onStartAgain} className="min-h-11 rounded-lg border border-navy px-4 text-base font-semibold text-navy">
             Start a new patient
           </button>
         </div>
@@ -223,18 +233,20 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
 
 function Card({ title, tone, children }: { title: string; tone?: "danger"; children: ReactNode }) {
   return (
-    <section className={`rounded border bg-white/60 p-4 text-lg ${tone === "danger" ? "border-2 border-red" : "border-rule"}`}>
-      <h2 className={`mb-2 text-xl font-semibold ${tone === "danger" ? "text-red" : ""}`}>{title}</h2>
+    <section className={`rounded-xl border bg-white p-4 text-base shadow-sm sm:p-5 ${tone === "danger" ? "border-2 border-red" : "border-rule"}`}>
+      <h2 className={`mb-3 border-b border-rule pb-2 text-sm font-semibold uppercase tracking-wider ${tone === "danger" ? "text-red" : "text-navy"}`}>
+        {title}
+      </h2>
       {children}
     </section>
   );
 }
 
 function Aware({ group }: { group: string }) {
-  if (!group) return <span className="rounded border border-rule px-2 text-base">AWaRe: not classified</span>;
+  if (!group) return <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-sm">AWaRe: not classified</span>;
   const warn = group === "Not recommended";
   return (
-    <span className={`rounded border px-2 text-base ${warn ? "border-red font-semibold text-red" : "border-ink"}`}>
+    <span className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${warn ? "bg-white text-red" : "bg-white text-navy"}`}>
       {warn ? "WHO: Not recommended" : `AWaRe: ${group}`}
     </span>
   );
@@ -244,7 +256,7 @@ function FitGroup({ title, lines, danger }: { title: string; lines?: { key: stri
   if (!lines || lines.length === 0) return null;
   return (
     <div className="mt-2">
-      <h3 className={`font-semibold ${danger ? "text-red" : ""}`}>{title}</h3>
+      <h3 className={`text-sm font-semibold uppercase tracking-wider ${danger ? "text-red" : "text-muted"}`}>{title}</h3>
       <ul className="pl-1">
         {lines.map((l) => (
           <li key={l.key}>

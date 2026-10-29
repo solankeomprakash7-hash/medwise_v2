@@ -1,8 +1,9 @@
 # DESIGN — how MedWise looks and feels
 
 ## Principles
-1. **Readable at 3 am on a phone.** Large type, high contrast, one task per screen.
-2. **Calm and clinical, not flashy.** No gradients, glow, or animation beyond simple transitions.
+1. **Readable at 3 am on a phone.** Large type, high contrast, big tap targets (44 px).
+2. **Clinical and modern, not flashy.** White cards on cream, a navy header, soft shadows. No gradients,
+   glow, or animation beyond simple transitions.
 3. **The recommendation is the hero.** Everything else supports it.
 4. **Colour carries meaning**, so use it sparingly and consistently.
 
@@ -11,19 +12,24 @@ MedWise's editorial identity ("NEJM × The Economist"), adapted for a clinical t
 
 | Token | Use | Value |
 | --- | --- | --- |
-| `--cream` | Page background | *fill exact hex* |
-| `--ink` | Main text | *fill exact hex* |
-| `--gold` | Brand accent: logo, active step, links | *fill exact hex* |
-| `--red` | **Safety alerts only** (allergy, toxicity, out-of-scope) | *fill exact hex* |
-| `--green` | "Accept" and success states | choose a muted green |
-| `--rule` | Hairline borders and dividers (1 px) | *fill exact hex* |
+| `--cream` | Page background | `#f9f7f2` |
+| `--ink` | Main text | `#1a1a1a` |
+| `--navy` | Header, recommendation card, selected answers, main buttons | `#0e1b2f` |
+| `--accent` | Brand blue: logo, links, info messages, "covered" | `#005a8d` |
+| `--red` | **Safety alerts only** (allergy, toxicity, out-of-scope) | `#c41e3a` |
+| `--green` | "Accept", completed sections | `#2f6b3a` |
+| `--rule` | Hairline borders and dividers (1 px) | `#d1d5db` |
+| `--muted` | Small labels and hints | `#5b6472` |
+
+Palette taken from the first prototype (DECISIONS 2026-10-29). Amber is used only for the DEMO banner.
 
 Red is reserved for danger. Never use it for branding, buttons or headings in the app.
 
 | Role | Font | Use |
 | --- | --- | --- |
 | Display | Playfair Display | Logo, page titles only |
-| Body | EB Garamond, or a clean sans for small UI text if Garamond reads poorly on phones | Reasoning, explanations |
+| Screens | Inter | Forms, labels, buttons, cards |
+| Reading | EB Garamond | AI reasoning and quoted guideline passages |
 | Data | DM Mono | Doses, intervals, CrCl, SOFA, versions |
 
 Minimum text size 16 px on phones. Doses always in DM Mono so they stand out and align.
@@ -33,10 +39,13 @@ Motif: hairline rules and the five-segment ruler. Use the ruler for the **narrow
 
 ## Screens
 ### 1. Patient entry
-- Step-by-step: Basics → Source & severity → Organs → Exposures → Host & allergies → Review.
-- Progress bar at the top; Back / Next at the bottom, thumb-reachable.
-- Pick-lists and toggles instead of typing wherever possible.
-- Review step shows everything on one page before "Get recommendation".
+- **One scrolling page, no "Next" screens**, in five section cards: Patient → Infection → Kidney & liver →
+  Resistance risk → Host & allergies. Each card shows its number, then a green tick and "Complete" when done.
+- Sticky bottom bar: "n of 5 sections complete" with a small progress bar, and **Get recommendation**.
+  If anything is missing, the page scrolls to the first unfinished section and each unfinished section
+  lists what it still needs. The page itself is the review: there is no separate review step.
+- Tap buttons and chips instead of typing wherever possible; selected answers turn navy.
+- Out-of-scope stops (age < 18, pregnancy, neutropenia) appear in red directly under the answer.
 
 ### 2. Result (cards in this exact order)
 *Updated 2026-10-29 with ideas from the first prototype (DECISIONS.md).*
