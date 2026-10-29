@@ -11,7 +11,9 @@ app must not be used for patients.
 | --- | --- | --- |
 | `vocabulary.csv` | Allowed answers for every input field, taken from the input table in `docs/CLINICAL_RULES.md`. Every other table must use these exact spellings | Draft. Dialysis types (haemodialysis / peritoneal / CRRT) to be confirmed |
 | `coverage.csv` | Checklist: every source × setting × severity combination, and whether it has a regimen yet | All `empty` |
-| `regimens.csv` | Regimen for each source × setting × severity × MDR risk tier | Empty: SSC 2026 and IDSA 2026 give no empiric regimens; needs ICMR 2022 / syndrome guidelines |
+| `regimens.csv` | **Base** regimen for each source × setting × severity, for a patient with no high-risk MDR organism | Empty: SSC 2026 and IDSA 2026 give no empiric regimens; needs ICMR 2022 / syndrome guidelines |
+| `mdr_thresholds.csv` | For each organism, the risk score at which it counts as high risk | Organisms listed; thresholds empty (panel decision) |
+| `mdr_coverage.csv` | For an exact set of high-risk organisms: `add` a drug to, or `replace`, the base regimen. A set with no row → no recommendation, "Discuss with ID / microbiology" | Empty (columns only) |
 | `mdr_risk.csv` | Risk factors and how much they raise the risk of each MDR organism | Draft: 4 factors × 6 organisms from SSC 2026 rec 25 and IDSA 2026; weights empty (panel) |
 | `drugs.csv` | Dose, interval, infusion, renal / hepatic adjustment, interactions, monitoring, site penetration | Draft: 27 drugs from IDSA 2026 Table 1, normal-renal doses only; other columns empty |
 | `provenance.csv` | Where every drafted row came from (guideline, page, recommendation) and known gaps | Every drugs / mdr_risk / regimens row must have an entry |
@@ -27,8 +29,10 @@ Hospital cut-off % and minimum isolates are stored in the database (`hospitals` 
 - Antibiotics in the last 90 days: `drug:days` (e.g. `cefixime:5`). Allergies: `drug:reaction` (e.g. `penicillin:anaphylaxis`).
 - Every regimen and risk rule cites its source in `guideline_ref` (guideline, year, section or recommendation number).
 - Every row in `drugs.csv`, `mdr_risk.csv` and `regimens.csv` has a matching row in `provenance.csv`
-  (`row_key` = drug name; `risk_factor|organism`; `source|setting|severity|risk_tier`).
-- MDR weights may be empty only while `VERSION` ends in `-draft`.
+  (`row_key` = drug name; `risk_factor|organism`; `source|setting|severity`; `organisms|source|severity`).
+- MDR weights and thresholds may be empty only while `VERSION` ends in `-draft`.
+- MDR organism codes are the `prior_mdr` values except `none`: esbl, cre, mrsa, pseudomonas, vre, other.
+  `other` currently lumps CRAB and *S. maltophilia*, which IDSA treats separately (panel to decide).
 
 ## How a row becomes live
 1. Drafted with its `guideline_ref` (by the panel, or by Claude Code on Dr. Solanke's instruction, marked draft).

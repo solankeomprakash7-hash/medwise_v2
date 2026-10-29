@@ -19,9 +19,12 @@ Advisory group sign-off: ☐ ID physician ☐ Microbiologist ☐ Intensivist ☐
 MedWise is **not a lookup table** (one diagnosis → one drug for every patient). It reasons in layers:
 
 1. **Patient**: source, severity, organ function, exposures.
-2. **Risk**: likely organisms and chance of resistance (MDR risk tier per organism).
-3. **Evidence**: guideline regimen for this source × severity × risk tier, filtered by the local
-   antibiogram cut-offs and by allergies.
+2. **Risk**: likely organisms and chance of resistance, **per organism** (ESBL, CRE, MRSA, Pseudomonas,
+   VRE, other). An organism is **high risk** when the weights of its matching risk factors add up to its
+   threshold (SSC 2026 rec 25–26: cover a specific MDR pathogen only when its risk is high).
+3. **Evidence**: the **base regimen** for this source × setting × severity, then **MDR coverage** for each
+   high-risk organism (add a drug, or replace the base regimen), filtered by the local antibiogram
+   cut-offs and by allergies.
 4. **Pharmacology**: dose, interval, infusion strategy, renal/hepatic adjustment, site penetration.
 5. **Safety**: side effects, interactions, monitoring.
 6. **Clinician decides**: accept · modify · override.
@@ -56,7 +59,9 @@ no AI). The **AI layer** receives the patient summary and the shortlist, chooses
 | Table | Columns |
 | --- | --- |
 | `mdr_risk.csv` | risk_factor, organism, weight, rule_text, guideline_ref |
-| `regimens.csv` | source, setting, severity, risk_tier, first_choice, alternative, beta_lactam_allergy_alt, guideline_ref |
+| `mdr_thresholds.csv` | organism, high_risk_threshold, basis |
+| `regimens.csv` | source, setting, severity, first_choice, alternative, beta_lactam_allergy_alt, guideline_ref — **base regimen, no high MDR risk** |
+| `mdr_coverage.csv` | organisms (the exact set of high-risk organisms, `;`-separated), source (or `any`), severity (or `any`), action (`add` / `replace`), regimen, beta_lactam_allergy_alt, guideline_ref, notes |
 | `drugs.csv` | drug, standard_dose, interval, infusion, max_dose, renal_bands, hepatic_adjustment, interactions, monitoring, site_penetration_notes |
 | `antibiogram_template.csv` | year, unit (ICU/ward), organism, antibiotic, isolates_n, percent_susceptible |
 | `settings.csv` (per hospital) | empiric_cutoff_percent (default set by stewardship committee), min_isolates |
@@ -67,6 +72,8 @@ no AI). The **AI layer** receives the patient summary and the shortlist, chooses
 - If the AI's choice is not on the shortlist → show rules' first choice + "AI output rejected" flag.
 - If no regimen survives the filters (e.g. pan-resistance, multiple allergies) → no recommendation;
   show "Discuss with ID / microbiology".
+- If the set of high-risk organisms has no matching row in `mdr_coverage.csv` → no recommendation;
+  show "Discuss with ID / microbiology". The engine never combines coverage rows on its own.
 - Anaphylaxis to a class → exclude the whole class and flag cross-reactivity.
 - Pregnancy, age < 18, neutropenic fever → out of scope message, no recommendation.
 - Always show: "Decision support only — verify with clinical judgement and local policy."

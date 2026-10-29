@@ -10,11 +10,19 @@ export const KNOWLEDGE_DIR = join(process.cwd(), "knowledge");
 export const TABLE_COLUMNS = {
   vocabulary: ["field", "value", "label", "multi"],
   coverage: ["source", "setting", "severity", "status", "panel_note"],
+  // Base regimen for a patient with no high-risk MDR organism.
   regimens: [
-    "source", "setting", "severity", "risk_tier", "first_choice", "alternative",
-    "beta_lactam_allergy_alt", "guideline_ref",
+    "source", "setting", "severity", "first_choice", "alternative", "beta_lactam_allergy_alt",
+    "guideline_ref",
   ],
   mdr_risk: ["risk_factor", "organism", "weight", "rule_text", "guideline_ref"],
+  // An organism is high risk when its matching risk-factor weights add up to this threshold.
+  mdr_thresholds: ["organism", "high_risk_threshold", "basis"],
+  // What to do for an exact set of high-risk organisms: add a drug to, or replace, the base regimen.
+  mdr_coverage: [
+    "organisms", "source", "severity", "action", "regimen", "beta_lactam_allergy_alt",
+    "guideline_ref", "notes",
+  ],
   drugs: [
     "drug", "standard_dose", "interval", "infusion", "max_dose", "renal_bands",
     "hepatic_adjustment", "interactions", "monitoring", "site_penetration_notes",

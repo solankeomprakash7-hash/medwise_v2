@@ -68,8 +68,8 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
   // Provenance: every drafted row in drugs, mdr_risk and regimens must say where it came from.
   const provenance = new Set<string>();
   for (const [i, row] of tables.provenance.entries()) {
-    if (!["drugs", "mdr_risk", "regimens"].includes(row.table)) {
-      problems.push(`provenance.csv line ${i + 2}: table must be drugs, mdr_risk or regimens`);
+    if (!["drugs", "mdr_risk", "regimens", "mdr_coverage"].includes(row.table)) {
+      problems.push(`provenance.csv line ${i + 2}: table must be drugs, mdr_risk, regimens or mdr_coverage`);
     }
     if (!row.source || !row.location) problems.push(`provenance.csv line ${i + 2}: source and location are required`);
     provenance.add(`${row.table}|${row.row_key}`);
@@ -127,7 +127,6 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     for (const field of ["source", "setting", "severity"]) {
       if (!allowed(field, row[field])) problems.push(`${where}: unknown ${field} "${row[field]}"`);
     }
-    if (!row.risk_tier) problems.push(`${where}: risk_tier is empty`);
     if (!row.first_choice) problems.push(`${where}: first_choice is empty`);
     if (!row.guideline_ref) problems.push(`${where}: guideline_ref is empty (every regimen must cite its source)`);
     for (const column of ["first_choice", "alternative", "beta_lactam_allergy_alt"]) {
@@ -135,7 +134,7 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
         if (!drugs.has(drug)) problems.push(`${where}: ${column} names "${drug}", which has no row in drugs.csv`);
       }
     }
-    const regimenKey = [row.source, row.setting, row.severity, row.risk_tier].join("|");
+    const regimenKey = [row.source, row.setting, row.severity].join("|");
     if (!traced("regimens", regimenKey)) problems.push(`${where}: "${regimenKey}" has no entry in provenance.csv`);
     const status = coverage.get(`${row.source} / ${row.setting} / ${row.severity}`);
     if (status === "empty" || status === "not_applicable") {
@@ -159,6 +158,56 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
       problems.push(`${where}: "${row.risk_factor}|${row.organism}" has no entry in provenance.csv`);
     }
     if (!row.guideline_ref) problems.push(`${where}: guideline_ref is empty`);
+  }
+
+  // MDR organisms are the prior_mdr input values except "none".
+  const organisms = [...(vocab.get("prior_mdr") ?? [])].filter((o) => o !== "none");
+
+  // MDR thresholds: one row per organism; empty only while the knowledge base is a draft.
+  const thresholdOrganisms = new Set<string>();
+  for (const [i, row] of tables.mdr_thresholds.entries()) {
+    const where = `mdr_thresholds.csv line ${i + 2}`;
+    if (!organisms.includes(row.organism)) problems.push(`${where}: unknown organism "${row.organism}"`);
+    if (thresholdOrganisms.has(row.organism)) problems.push(`${where}: "${row.organism}" appears twice`);
+    thresholdOrganisms.add(row.organism);
+    if (row.high_risk_threshold === "") {
+      if (!isDraft) problems.push(`${where}: high_risk_threshold is empty; it must be set before sign-off`);
+    } else if (!(Number(row.high_risk_threshold) > 0)) {
+      problems.push(`${where}: high_risk_threshold "${row.high_risk_threshold}" must be a number above 0`);
+    }
+    if (!row.basis) problems.push(`${where}: basis is empty (say where the threshold comes from)`);
+  }
+  for (const organism of organisms) {
+    if (!thresholdOrganisms.has(organism)) problems.push(`mdr_thresholds.csv: "${organism}" has no threshold row`);
+  }
+
+  // MDR coverage: the exact set of high-risk organisms -> add to, or replace, the base regimen.
+  const coverageKeys = new Set<string>();
+  for (const [i, row] of tables.mdr_coverage.entries()) {
+    const where = `mdr_coverage.csv line ${i + 2}`;
+    const set = splitList(row.organisms);
+    if (set.length === 0) problems.push(`${where}: organisms is empty`);
+    for (const organism of set) {
+      if (!organisms.includes(organism)) problems.push(`${where}: unknown organism "${organism}"`);
+    }
+    if (new Set(set).size !== set.length) problems.push(`${where}: an organism is listed twice`);
+    if (row.source !== "any" && !allowed("source", row.source)) problems.push(`${where}: unknown source "${row.source}"`);
+    if (row.severity !== "any" && !allowed("severity", row.severity)) problems.push(`${where}: unknown severity "${row.severity}"`);
+    if (row.action !== "add" && row.action !== "replace") problems.push(`${where}: action must be add or replace`);
+    if (!row.regimen) problems.push(`${where}: regimen is empty`);
+    if (!row.guideline_ref) problems.push(`${where}: guideline_ref is empty (every coverage rule must cite its source)`);
+    for (const column of ["regimen", "beta_lactam_allergy_alt"]) {
+      for (const drug of regimenDrugs(row[column])) {
+        if (!drugs.has(drug)) problems.push(`${where}: ${column} names "${drug}", which has no row in drugs.csv`);
+      }
+    }
+    // Organism order does not matter: "esbl;mrsa" and "mrsa;esbl" are the same set.
+    const key = [[...set].sort().join(";"), row.source, row.severity].join("|");
+    if (coverageKeys.has(key)) problems.push(`${where}: another row already covers "${key}"`);
+    coverageKeys.add(key);
+    if (!traced("mdr_coverage", [row.organisms, row.source, row.severity].join("|"))) {
+      problems.push(`${where}: "${[row.organisms, row.source, row.severity].join("|")}" has no entry in provenance.csv`);
+    }
   }
 
   // Antibiogram template

@@ -5,6 +5,7 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | MDR design option (b): base regimen per source × setting × severity, per-organism risk scores with thresholds, and `mdr_coverage.csv` rules (add / replace) for each exact set of high-risk organisms; `risk_tier` removed from `regimens.csv`. CLINICAL_RULES.md updated with Dr. Solanke's approval | SSC 2026 rec 25–26 are per pathogen; an unlisted organism combination stops with "Discuss with ID / microbiology" rather than guessing |
 | 2026-10-29 | Every drafted knowledge-base row is traced in `knowledge/provenance.csv` (source, page, gaps); checked automatically | Traceability without changing the table design in CLINICAL_RULES.md |
 | 2026-10-29 | Drafted from the full SSC 2026 and IDSA 2026 texts: 27 drug doses (normal renal function) and 24 MDR risk rows (weights empty); no regimens | Neither guideline gives empiric regimens; regimens wait for ICMR 2022 / syndrome guidelines chosen by the panel |
 | 2026-10-29 | MedWise covers any adult sepsis patient through rule tables (source × setting × severity × MDR risk), not stored cases; Case 1 and 2 are only the first golden tests | Clarified by Dr. Solanke: it is a general decision-support tool |

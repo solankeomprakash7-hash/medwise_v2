@@ -63,7 +63,9 @@ titles of cited papers).
 ### Design consequence: MDR risk per organism
 Recs 25–26 are written **per pathogen** ("a specific MDR pathogen"). This supports option (b): a base regimen
 per source × setting × severity, plus organism-specific additions when that organism's risk is high, rather
-than one overall risk tier per patient. **Decision for Dr. Solanke and the panel.**
+than one overall risk tier per patient. **Decided 2026-10-29 by Dr. Solanke: option (b).** `CLINICAL_RULES.md`
+now uses base regimens (`regimens.csv`) + per-organism thresholds (`mdr_thresholds.csv`) + coverage rules
+(`mdr_coverage.csv`).
 
 ### Gaps between the MedWise input form and SSC
 - The form asks for prior MDR organisms in the last **90 days**; SSC and IDSA both use **12 months**, and SSC
@@ -148,7 +150,10 @@ therapy (⚠ web search).
   interactions, monitoring and site penetration are empty.
 - `mdr_risk.csv`: 4 risk factors × 6 organism groups from SSC rec 25 and IDSA p2. **Weights are empty**:
   no source gives them; the panel must set them (or choose design option (b)).
-- `regimens.csv`: **empty**. Needs ICMR 2022 and/or syndrome guidelines (section 1).
+- `regimens.csv` (base regimens) and `mdr_coverage.csv`: **empty**. Base regimens need ICMR 2022 and/or
+  syndrome guidelines (section 1). Coverage rules could draw on IDSA 2026 preferred agents, but IDSA is
+  written for **confirmed** organisms, so using it for empiric cover is a panel decision.
+- `mdr_thresholds.csv`: organisms listed, thresholds empty (no guideline gives numbers).
 
 ## 7. Documents still needed
 1. **ICMR Treatment Guidelines for Antimicrobial Use in Common Syndromes, 2022**: empiric regimens for India.
