@@ -260,7 +260,7 @@ export default function EntryForm({ options }: { options: Options }) {
               {/* Wait until typing is finished: "6" on the way to "62" must not stop the form. */}
               {!typingAge && inRange(form.age, 0, 17.99) && <Stop message="Age under 18 is outside MedWise version 1." onStartAgain={startAgain} />}
               {choice("sex")}
-              <NumberField label={LABELS.weight_kg} value={form.weight_kg} onChange={(v) => set("weight_kg", v)} />
+              <NumberField label={LABELS.weight_kg} value={form.weight_kg} onChange={(v) => set("weight_kg", v)} decimal />
               {form.sex === "female" && choice("pregnancy")}
               {form.pregnancy === "yes" && <Stop message="Pregnancy is outside MedWise version 1." onStartAgain={startAgain} />}
             </>
@@ -276,7 +276,7 @@ export default function EntryForm({ options }: { options: Options }) {
           )}
           {step === 2 && (
             <>
-              <NumberField label={LABELS.crcl_ml_min} value={form.crcl_ml_min} onChange={(v) => set("crcl_ml_min", v)} />
+              <NumberField label={LABELS.crcl_ml_min} value={form.crcl_ml_min} onChange={(v) => set("crcl_ml_min", v)} decimal />
               {choice("dialysis")}
               {choice("hepatic")}
             </>
@@ -458,10 +458,19 @@ function MultiChoice(props: { legend: string; options: { value: string; label: s
   );
 }
 
+// A text box that opens the number keypad and keeps digits only (and one decimal point if allowed).
+// Used instead of type="number", which misbehaves on some phones and keyboards.
+const digitsOnly = (text: string, decimal: boolean) => {
+  const kept = text.replace(decimal ? /[^0-9.]/g : /[^0-9]/g, "");
+  const [whole, ...rest] = kept.split(".");
+  return rest.length ? `${whole}.${rest.join("")}` : whole;
+};
+
 function NumberField(props: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  decimal?: boolean;
   onFocus?: () => void;
   onBlur?: () => void;
 }) {
@@ -473,10 +482,13 @@ function NumberField(props: {
       </label>
       <input
         id={id}
-        type="number"
-        inputMode="decimal"
+        type="text"
+        inputMode={props.decimal ? "decimal" : "numeric"}
+        pattern={props.decimal ? "[0-9.]*" : "[0-9]*"}
+        autoComplete="off"
+        maxLength={6}
         value={props.value}
-        onChange={(e) => props.onChange(e.target.value)}
+        onChange={(e) => props.onChange(digitsOnly(e.target.value, props.decimal ?? false))}
         onFocus={props.onFocus}
         onBlur={props.onBlur}
         className="min-h-12 w-40 rounded border border-ink bg-white px-3 font-mono text-xl"
@@ -518,10 +530,13 @@ function DrugRows(props: {
               <label className="flex w-24 flex-col text-base">
                 Days
                 <input
-                  type="number"
+                  type="text"
                   inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
+                  maxLength={2}
                   value={row.extra}
-                  onChange={(e) => update(i, { extra: e.target.value })}
+                  onChange={(e) => update(i, { extra: digitsOnly(e.target.value, false) })}
                   className="mt-1 min-h-12 rounded border border-ink bg-white px-3 font-mono text-lg"
                 />
               </label>
