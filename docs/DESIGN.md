@@ -39,14 +39,27 @@ Motif: hairline rules and the five-segment ruler. Use the ruler for the **narrow
 - Review step shows everything on one page before "Get recommendation".
 
 ### 2. Result (cards in this exact order)
-1. **Recommendation**: drug(s) in large type, dose line in DM Mono, spectrum bar.
+*Updated 2026-10-29 with ideas from the first prototype (DECISIONS.md).*
+1. **Recommendation**: drug(s) in large type, dose line in DM Mono, AWaRe tag (Access / Watch / Reserve),
+   spectrum bar.
 2. **How to give it**: dose, interval, infusion (e.g. "3-h extended infusion"), renal adjustment.
-3. **Will it reach the site?**: penetration for the chosen source.
-4. **Safety**: side effects, interactions, monitoring. Red only for true alerts.
-5. **Why this antibiotic**: short reasoning plus the guideline cited.
-6. **Flags**: e.g. "Exclude obstruction", "Source control needed", "Review at 48–72 h".
-7. **Footer**: knowledge-base version, guideline versions, and the line
-   "Decision support only — verify with clinical judgement and local policy."
+3. **Coverage**: a grid of what the regimen covers — gram-positive, gram-negative, Pseudomonas, MRSA, ESBL,
+   CRE, anaerobes, atypicals — each yes / limited / no, from `drug_spectrum.csv`.
+4. **Spectrum fit**: coverage **needed** for this patient (judged by the AI) vs **given** (from the table)
+   vs **excess** (given but not needed). Words only — **no score or percentage** (CLAUDE.md rule 5).
+5. **Will it reach the site?**: penetration for the chosen source.
+6. **Safety**: side effects, interactions, monitoring. Red only for true alerts.
+7. **Why this antibiotic**: 3–4 short patient-specific reasons, then the reasoning with each guideline
+   passage cited (guideline, page).
+8. **Flags**: e.g. "Exclude obstruction", "Source control needed", "Differs from guideline table".
+9. **Stewardship and timeline**: actions (e.g. de-escalate, stop, IV → oral, review duration) and the
+   review points: now (hour 0–1: cultures, first dose), 24 h, 48–72 h (culture results, de-escalate).
+10. **Footer**: knowledge-base version, guideline versions, and the lines
+   "Decision support only — verify with clinical judgement and local policy." and
+   "Review at 48–72 h with culture results; de-escalate when possible."
+
+Until the knowledge base is signed off and the real AI is connected, the screen shows a clear
+**"DEMO — not for patient care"** banner.
 
 Sticky bottom bar: **Accept** (green) · **Modify** · **Override**. Modify and Override open a short
 reason form (pick-list plus optional text).

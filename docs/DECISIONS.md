@@ -5,6 +5,10 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | Result screen redesigned with ideas from the first prototype (Medwiseee): AWaRe tag, coverage grid, spectrum fit (needed / given / excess, no score), short "why" reasons, stewardship actions and 0–1 h / 24 h / 48–72 h timeline; "DEMO" banner until signed off. DESIGN.md and PRODUCT.md updated with Dr. Solanke's approval | Clinicians found these useful in the prototype; rewritten to keep rules 1, 2 and 5 |
+| 2026-10-29 | Not taken from the prototype: AI-written doses, confidence % / fit scores, "Verified Provider", unchecked AI citations, free-text clinical fields, an AI endpoint open without login, organism-directed therapy | Break CLAUDE.md rules 1, 2, 4, 5 or PRODUCT.md scope |
+| 2026-10-29 | `drug_spectrum.csv` added (CLINICAL_RULES.md updated with approval): coverage given comes only from this table; the AI judges only coverage needed. AWaRe left empty rather than copied from the prototype's unsourced list | Coverage is clinical content (rule 1); WHO AWaRe list needed as the source |
+| 2026-10-29 | No vitals / NEWS2 / qSOFA added to the entry screen for now | SOFA and sepsis/shock already capture severity; less typing at the bedside |
 | 2026-10-29 | Patient entry screen (`/new`): 6 steps per DESIGN.md; answers from `vocabulary.csv`; drug names letters only with suggestions from `drug_classes.csv`; out-of-scope stops shown in red under the answer that caused them; "Get recommendation" runs the server's input and allergy checks and shows "Details complete" (no recommendation until the result screen exists) | Never show a stand-in AI answer for a real patient; screen and safety core use the same checks |
 | 2026-10-29 | Patient details kept only in the open page (not in browser storage, not saved) until login and the database step | Privacy; nothing to protect on the device |
 | 2026-10-29 | `next.config.ts` ships the `knowledge` folder with the server code (`outputFileTracingIncludes`) | Server checks read the tables at run time on Vercel |

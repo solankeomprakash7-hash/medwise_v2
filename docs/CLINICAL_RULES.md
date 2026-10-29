@@ -64,6 +64,7 @@ from the guideline table for this patient, both are shown and the difference is 
 | `regimens.csv` | source, setting, severity, first_choice, alternative, beta_lactam_allergy_alt, guideline_ref — **base regimen, no high MDR risk** |
 | `mdr_coverage.csv` | organisms (the exact set of high-risk organisms, `;`-separated), source (or `any`), severity (or `any`), action (`add` / `replace`), regimen, beta_lactam_allergy_alt, guideline_ref, notes |
 | `drug_classes.csv` | drug, class, beta_lactam (yes/no), source — includes common drugs patients are allergic to that MedWise does not prescribe |
+| `drug_spectrum.csv` | drug, gram_positive, gram_negative, pseudomonas, mrsa, esbl, cre, anaerobes, atypicals (each yes / limited / no), aware (Access / Watch / Reserve), source, aware_source — coverage **given** by each drug; the AI judges only the coverage **needed** |
 | `drugs.csv` | drug, standard_dose, interval, infusion, max_dose, renal_bands, hepatic_adjustment, interactions, monitoring, site_penetration_notes |
 | `antibiogram_template.csv` | year, unit (ICU/ward), organism, antibiotic, isolates_n, percent_susceptible |
 | `settings.csv` (per hospital) | empiric_cutoff_percent (default set by stewardship committee), min_isolates |

@@ -144,6 +144,28 @@ describe("knowledge base checks catch mistakes", () => {
     expect(problems).toContain('drug_classes.csv: "meropenem" (in drugs.csv) has no class, so allergies to it cannot be checked');
   });
 
+  it("a coverage value other than yes, limited or no, and a wrong AWaRe group", () => {
+    const problems = brokenCopy((dir) => {
+      const spectrum = join(dir, "drug_spectrum.csv");
+      writeFileSync(spectrum, readFileSync(spectrum, "utf8").replace(/^ceftriaxone,yes,yes,no,/m, "ceftriaxone,yes,yes,maybe,").replace(/^(vancomycin(?:,[a-z]+){8}),,/m, "$1,Green,"));
+    });
+    expect(problems.some((p) => p.endsWith("pseudomonas must be yes, limited or no"))).toBe(true);
+    expect(problems.some((p) => p.endsWith("aware must be Access, Watch or Reserve"))).toBe(true);
+  });
+
+  it("AWaRe group left empty after sign-off", () => {
+    const problems = brokenCopy((dir) => writeFileSync(join(dir, "VERSION"), "v1.0\n"));
+    expect(problems.some((p) => p.endsWith("aware is empty; it must be set before sign-off"))).toBe(true);
+  });
+
+  it("a prescribable drug with no coverage row", () => {
+    const problems = brokenCopy((dir) => {
+      const spectrum = join(dir, "drug_spectrum.csv");
+      writeFileSync(spectrum, readFileSync(spectrum, "utf8").replace(/^linezolid,.*\n/m, ""));
+    });
+    expect(problems).toContain('drug_spectrum.csv: "linezolid" (in drugs.csv) has no coverage row');
+  });
+
   it("wrong columns", () => {
     const problems = brokenCopy((dir) => writeFileSync(join(dir, "drugs.csv"), "drug,dose\n"));
     expect(problems.some((p) => p.startsWith("drugs.csv: columns should be"))).toBe(true);

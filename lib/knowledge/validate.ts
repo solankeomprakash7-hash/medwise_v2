@@ -35,6 +35,10 @@ const REQUIRED_INPUTS = [
 // Rough guard for CLAUDE.md rule 4: words or numbers that suggest a patient identifier.
 const IDENTIFIER_PATTERNS = [/\buhid\b/i, /\bip\s*no\b/i, /\bdob\b/i, /\bdate of birth\b/i, /\b\d{10}\b/, /\bmr\.?\s|\bmrs\.?\s|\bms\.?\s/i];
 
+export const SPECTRUM_COLUMNS = [
+  "gram_positive", "gram_negative", "pseudomonas", "mrsa", "esbl", "cre", "anaerobes", "atypicals",
+] as const;
+
 export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
   const problems: string[] = [];
   const tables = {} as Record<TableName, Row[]>;
@@ -110,6 +114,28 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
   }
   for (const drug of drugs) {
     if (!classed.has(drug)) problems.push(`drug_classes.csv: "${drug}" (in drugs.csv) has no class, so allergies to it cannot be checked`);
+  }
+
+  // Drug spectrum: every drug MedWise can recommend has a coverage row; AWaRe may be empty only in a draft.
+  const isDraft = version.endsWith("-draft");
+  const covered = new Set<string>();
+  for (const [i, row] of tables.drug_spectrum.entries()) {
+    const where = `drug_spectrum.csv line ${i + 2}`;
+    if (covered.has(row.drug)) problems.push(`${where}: "${row.drug}" appears twice`);
+    covered.add(row.drug);
+    if (!drugs.has(row.drug)) problems.push(`${where}: "${row.drug}" is not in drugs.csv`);
+    for (const column of SPECTRUM_COLUMNS) {
+      if (!["yes", "limited", "no"].includes(row[column])) problems.push(`${where}: ${column} must be yes, limited or no`);
+    }
+    if (row.aware === "") {
+      if (!isDraft) problems.push(`${where}: aware is empty; it must be set before sign-off`);
+    } else if (!["Access", "Watch", "Reserve"].includes(row.aware)) {
+      problems.push(`${where}: aware must be Access, Watch or Reserve`);
+    }
+    if (!row.source) problems.push(`${where}: source is empty`);
+  }
+  for (const drug of drugs) {
+    if (!covered.has(drug)) problems.push(`drug_spectrum.csv: "${drug}" (in drugs.csv) has no coverage row`);
   }
 
   // Coverage checklist: every source × setting × severity exactly once
