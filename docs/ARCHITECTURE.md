@@ -77,5 +77,13 @@ Row-level security: users can only read and write rows of their own hospital.
 API keys only in Vercel and Supabase environment settings. Never in code, never in the browser,
 never in GitHub.
 
+## Live addresses (Vercel)
+| Site | Branch | Address |
+| --- | --- | --- |
+| Production | `main` | https://medwisev2.vercel.app |
+| Staging (test) | `staging` | https://medwisev2-git-staging-med-wise.vercel.app |
+
+Vercel also makes a one-off address for every build; those are not needed day to day.
+
 ## Release rule
 `staging` first → run golden tests → I check on my phone → then `production`.
