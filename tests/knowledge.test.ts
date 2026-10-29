@@ -122,6 +122,20 @@ describe("knowledge base checks catch mistakes", () => {
     expect(problems.some((p) => p.endsWith("first_choice must be one regimen (put others in alternative)"))).toBe(true);
   });
 
+  it("evidence passage with a duplicate ID, unknown guideline and wrong tag", () => {
+    const problems = brokenCopy((dir) =>
+      append(dir, "evidence.csv", "ssc-16,who2030,p1,1,prose,,pneumonia,any,any,timing,Some text"));
+    expect(problems).toContain("evidence.csv ssc-16: passage_id appears twice");
+    expect(problems).toContain('evidence.csv ssc-16: guideline "who2030" is not in guidelines.csv');
+    expect(problems).toContain('evidence.csv ssc-16: unknown sources tag "pneumonia"');
+  });
+
+  it("evidence table passage with a missing cell", () => {
+    const problems = brokenCopy((dir) =>
+      append(dir, "evidence.csv", "ncdc-x,ncdc2025,p1,8,table,A | B | C,any,any,any,regimen,only | two"));
+    expect(problems).toContain("evidence.csv ncdc-x: number of cells in text does not match table_columns");
+  });
+
   it("wrong columns", () => {
     const problems = brokenCopy((dir) => writeFileSync(join(dir, "drugs.csv"), "drug,dose\n"));
     expect(problems.some((p) => p.startsWith("drugs.csv: columns should be"))).toBe(true);

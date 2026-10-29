@@ -19,7 +19,7 @@
 
 ## 1. The most important finding: neither guideline gives empiric regimens
 
-- **SSC 2026, p751:** "Specific guidance on antibiotic selection is beyond the scope of this guideline."
+- **SSC 2026, p750:** "Specific guidance on antibiotic selection is beyond the scope of this guideline."
   It refers readers to IDSA and ESCMID for MDR pathogens.
 - **IDSA 2026, p2:** "While empiric treatment suggestions are beyond the scope of this guidance…" Its
   suggestions assume the **pathogen and its susceptibilities are already known**, and they are written for
@@ -48,20 +48,20 @@ syndrome (section 7 below).
 | 24 | Early source control, ideally within 6 h | Conditional, very low | 749 |
 | **25** | **High risk of a specific MDR pathogen: include empiric cover for that pathogen** | Conditional, very low | 749 |
 | **26** | **Low risk of a specific MDR pathogen: do not cover it empirically** | Conditional, very low | 749 |
-| 27 | No routine empiric antifungal therapy | Conditional, low | 751 |
+| 27 | No routine empiric antifungal therapy | Conditional, low | 750 |
 | 28 | No anaerobic cover without anaerobic risk factors (e.g. most lung and urinary sources) | Conditional, very low | 751 |
 | 29 | Anaerobic cover **with** risk factors: intra-abdominal, deep gynaecological/obstetric, necrotising soft-tissue infection, head and neck, CNS abscess or empyema | Conditional, very low | 751 |
 | **33** | **Prolonged infusion of beta-lactams for maintenance, after an initial loading dose** | **Strong, moderate** | 754 |
-| 34 | Therapeutic drug monitoring case by case | Conditional, very low | 755 |
+| 34 | Therapeutic drug monitoring case by case | Conditional, very low | 754 |
 | 36 | De-escalate when the organism and susceptibilities are known | Strong, very low | 755 |
-| 39 | Shorter over longer duration, with adequate source control | Conditional, very low | 757 |
+| 39 | Shorter over longer duration, with adequate source control | Conditional, very low | 756 |
 
 **MDR risk factors (rec 25 remark, p749–750):** colonisation with the MDR pathogen of concern, previous
 infection with it (**in the prior year**), prolonged use of broad-spectrum antibiotics, and prolonged
 hospitalisation in a unit with a high prevalence of that pathogen. SSC lists the MDR pathogens as
 *A. baumannii*, ESBL-producing Gram-negatives, CRE, VRE, MDR *Pseudomonas* and MRSA.
 
-**Rec 33 details (p754–755):** prolonged infusion means extended (over at least half the dosing interval) or
+**Rec 33 details (p754):** prolonged infusion means extended (over at least half the dosing interval) or
 continuous. "Administering a loading dose of the antibiotic before prolonged infusion is crucial."
 
 **Neutropenia:** the SSC 2026 text does **not** address neutropenic patients (the word appears only in the
@@ -89,22 +89,22 @@ now uses base regimens (`regimens.csv`) + per-organism thresholds (`mdr_threshol
 - **Definition (p2):** complicated UTI includes pyelonephritis, **febrile or bacteraemic UTI,
   catheter-associated UTI**, or prostatitis. So urosepsis counts as **cUTI** (Question 1.2), not as
   "infection outside the urinary tract" (Question 1.3).
-- **ESBL-E, cUTI (Q1.2, p6):** TMP-SMX, ciprofloxacin or levofloxacin preferred **when susceptible**;
+- **ESBL-E, cUTI (Q1.2, p7):** TMP-SMX, ciprofloxacin or levofloxacin preferred **when susceptible**;
   cefepime-enmetazobactam or a carbapenem preferred when resistance or intolerance precludes them; IV
   fosfomycin, aminoglycosides and piperacillin-tazobactam are alternatives.
-- **ESBL-E, outside the urinary tract (Q1.3, p7):** ertapenem, imipenem, meropenem preferred;
+- **ESBL-E, outside the urinary tract (Q1.3, p8):** ertapenem, imipenem, meropenem preferred;
   **imipenem or meropenem preferred if critically ill or hypoalbuminaemic**.
-- **Piperacillin-tazobactam (Q1.4, p8):** alternative for ESBL-E cUTI **only if not critically ill and no
+- **Piperacillin-tazobactam (Q1.4, p9):** alternative for ESBL-E cUTI **only if not critically ill and no
   bacteraemia**; not suggested outside the urinary tract.
-- **Cefepime (Q1.5, p9):** avoid for ESBL-E cUTI or infections outside the urinary tract.
-- **AmpC risk organisms (Q2.3, Q2.5, p12–14):** cefepime suggested (MIC ≤8); piperacillin-tazobactam not
+- **Cefepime (Q1.5, p10):** avoid for ESBL-E cUTI or infections outside the urinary tract.
+- **AmpC risk organisms (Q2.3, Q2.5, p13–14):** cefepime suggested (MIC ≤8); piperacillin-tazobactam not
   suggested for invasive infection.
-- **CRE (Q3.2, Q3.5, Q3.8, p16–21):** depends on the carbapenemase (KPC, NDM, OXA-48). **NDM** (common in
+- **CRE (Q3.2, Q3.5, Q3.8, p17–22):** depends on the carbapenemase (KPC, NDM, OXA-48). **NDM** (common in
   India): aztreonam-avibactam or cefiderocol preferred; ceftazidime-avibactam + aztreonam if
   aztreonam-avibactam is unavailable. Routine combination therapy not suggested.
-- **DTR *P. aeruginosa* (Q4.2, Q4.3, p22–23):** ceftolozane-tazobactam, ceftazidime-avibactam,
+- **DTR *P. aeruginosa* (Q4.2, Q4.3, p23–24):** ceftolozane-tazobactam, ceftazidime-avibactam,
   imipenem-relebactam (ceftolozane-tazobactam preferred for pneumonia); cefiderocol alternative.
-- **CRAB (Q5.1, p27):** sulbactam-durlobactam with imipenem or meropenem preferred.
+- **CRAB (Q5.1, p28):** sulbactam-durlobactam with imipenem or meropenem preferred.
 - **Doses (Table 1, p3–4):** adult doses for **normal kidney and liver function only**. Kidney adjustments
   are in IDSA's Supplementary Material, which was not supplied. These doses are drafted into
   `knowledge/drugs.csv` with `renal_bands` left empty.

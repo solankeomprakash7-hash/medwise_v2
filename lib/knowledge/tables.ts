@@ -28,6 +28,13 @@ export const TABLE_COLUMNS = {
     "hepatic_adjustment", "interactions", "monitoring", "site_penetration_notes",
   ],
   antibiogram_template: ["year", "unit", "organism", "antibiotic", "isolates_n", "percent_susceptible"],
+  // Guidelines MedWise uses; every result shows their versions (CLAUDE.md rule 6).
+  guidelines: ["guideline", "title", "version", "published", "citation"],
+  // Guideline passages copied word for word; the only text the AI may cite (CLAUDE.md rule 2).
+  evidence: [
+    "passage_id", "guideline", "location", "pdf_page", "format", "table_columns", "sources", "settings",
+    "organisms", "topics", "text",
+  ],
   // Where each drafted row came from (guideline, page, recommendation) and known gaps.
   provenance: ["table", "row_key", "fields", "source", "location", "note"],
   golden_tests: [

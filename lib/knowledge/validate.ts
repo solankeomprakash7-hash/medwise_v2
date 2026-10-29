@@ -207,6 +207,39 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     }
   }
 
+  // Guidelines and evidence library
+  const guidelines = new Set(tables.guidelines.map((row) => row.guideline));
+  for (const [i, row] of tables.guidelines.entries()) {
+    if (!row.guideline || !row.title || !row.version) problems.push(`guidelines.csv line ${i + 2}: guideline, title and version are required`);
+  }
+  const passageIds = new Set<string>();
+  const tagFields: [string, string, string[]][] = [
+    ["sources", "source", []],
+    ["settings", "setting", []],
+    ["organisms", "prior_mdr", ["none"]],
+  ];
+  for (const [i, row] of tables.evidence.entries()) {
+    const where = `evidence.csv ${row.passage_id || `line ${i + 2}`}`;
+    if (!row.passage_id) problems.push(`evidence.csv line ${i + 2}: passage_id is empty`);
+    if (passageIds.has(row.passage_id)) problems.push(`${where}: passage_id appears twice`);
+    passageIds.add(row.passage_id);
+    if (!guidelines.has(row.guideline)) problems.push(`${where}: guideline "${row.guideline}" is not in guidelines.csv`);
+    if (!row.location) problems.push(`${where}: location is empty`);
+    if (!/^\d+(-\d+)?$/.test(row.pdf_page)) problems.push(`${where}: pdf_page "${row.pdf_page}" should be a page or range like 36-37`);
+    if (row.format !== "prose" && row.format !== "table") problems.push(`${where}: format must be prose or table`);
+    if (row.format === "table" && row.text.split(" | ").length !== row.table_columns.split(" | ").length) {
+      problems.push(`${where}: number of cells in text does not match table_columns`);
+    }
+    if (!row.text) problems.push(`${where}: text is empty`);
+    if (!row.topics) problems.push(`${where}: topics is empty`);
+    for (const [column, field, excluded] of tagFields) {
+      for (const tag of splitList(row[column])) {
+        if (tag !== "any" && (!allowed(field, tag) || excluded.includes(tag))) problems.push(`${where}: unknown ${column} tag "${tag}"`);
+      }
+      if (splitList(row[column]).length === 0) problems.push(`${where}: ${column} is empty (use "any")`);
+    }
+  }
+
   // Antibiogram template
   for (const [i, row] of tables.antibiogram_template.entries()) {
     if (row.unit !== "ICU" && row.unit !== "ward") problems.push(`antibiogram_template.csv line ${i + 2}: unit must be ICU or ward`);

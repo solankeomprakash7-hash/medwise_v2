@@ -5,6 +5,9 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | Evidence library `knowledge/evidence.csv`: 42 guideline passages (SSC 2026, IDSA 2026, NCDC/ICMR 2025) copied word for word, extracted and checked by script against the PDFs; record with PDF fingerprints in `EVIDENCE_VERIFIED.md` | The AI may cite only these passages; code checks citations against them (CLAUDE.md rule 2) |
+| 2026-10-29 | Guideline PDFs are not stored on `main`; NCDC is on the `sources` branch. SSC and IDSA are copyrighted (Wolters Kluwer, OUP): only short passages are kept, for internal decision support; **check licensing before commercial launch** | Copyright; keeps the code repository small |
+| 2026-10-29 | Page numbers corrected after automatic checking: IDSA questions 1.2–5.1 are one page later than first stated; SSC rec 27, 34, 39 and the "beyond the scope" sentence are p750, p754, p756, p750 | Automatic page finding is more reliable than reading two-column PDF text |
 | 2026-10-29 | The AI makes the regimen decision from guidelines and evidence, within code-enforced checks (doses from tables, drug list, allergies, out-of-scope stops, verified citations). **Replaces** "AI chooses only from the rules engine's shortlist" (2026-10-26) and CLAUDE.md rules 1–2 | Owner wants evidence-based AI reasoning rather than a fixed lookup; safety rails keep doses and citations from being invented. Risks discussed: invented content, run-to-run variation, auditability, regulatory classification (CDSCO open item) |
 | 2026-10-29 | Knowledge-base tables become the AI's reference and safety net; MDR weights/thresholds no longer mandatory; AI answer differing from the table is shown with both and flagged | Follows from the line above |
 | 2026-10-29 | Golden tests run each patient 3 times through the AI; all runs must pass | Checks consistency, not only correctness |
