@@ -128,9 +128,10 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
       if (!allowed(field, row[field])) problems.push(`${where}: unknown ${field} "${row[field]}"`);
     }
     if (!row.first_choice) problems.push(`${where}: first_choice is empty`);
+    if (splitList(row.first_choice).length > 1) problems.push(`${where}: first_choice must be one regimen (put others in alternative)`);
     if (!row.guideline_ref) problems.push(`${where}: guideline_ref is empty (every regimen must cite its source)`);
     for (const column of ["first_choice", "alternative", "beta_lactam_allergy_alt"]) {
-      for (const drug of regimenDrugs(row[column])) {
+      for (const drug of splitList(row[column]).flatMap(regimenDrugs)) {
         if (!drugs.has(drug)) problems.push(`${where}: ${column} names "${drug}", which has no row in drugs.csv`);
       }
     }
@@ -197,7 +198,7 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     if (!row.regimen) problems.push(`${where}: regimen is empty`);
     if (!row.guideline_ref) problems.push(`${where}: guideline_ref is empty (every coverage rule must cite its source)`);
     for (const column of ["regimen", "beta_lactam_allergy_alt"]) {
-      for (const drug of regimenDrugs(row[column])) {
+      for (const drug of splitList(row[column]).flatMap(regimenDrugs)) {
         if (!drugs.has(drug)) problems.push(`${where}: ${column} names "${drug}", which has no row in drugs.csv`);
       }
     }

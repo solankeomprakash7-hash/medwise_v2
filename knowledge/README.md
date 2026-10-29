@@ -10,12 +10,12 @@ app must not be used for patients.
 | File | What it holds | Status |
 | --- | --- | --- |
 | `vocabulary.csv` | Allowed answers for every input field, taken from the input table in `docs/CLINICAL_RULES.md`. Every other table must use these exact spellings | Draft. Dialysis types (haemodialysis / peritoneal / CRRT) to be confirmed |
-| `coverage.csv` | Checklist: every source × setting × severity combination, and whether it has a regimen yet | All `empty` |
-| `regimens.csv` | **Base** regimen for each source × setting × severity, for a patient with no high-risk MDR organism | Empty: SSC 2026 and IDSA 2026 give no empiric regimens; needs ICMR 2022 / syndrome guidelines |
+| `coverage.csv` | Checklist: every source × setting × severity combination, and whether it has a regimen yet | 14 `draft`, 50 `empty` |
+| `regimens.csv` | **Base** regimen for each source × setting × severity, for a patient with no high-risk MDR organism | Draft: 14 rows from NCDC/ICMR 2025 (lung, urinary, unknown source; no healthcare-associated) |
 | `mdr_thresholds.csv` | For each organism, the risk score at which it counts as high risk | Organisms listed; thresholds empty (panel decision) |
-| `mdr_coverage.csv` | For an exact set of high-risk organisms: `add` a drug to, or `replace`, the base regimen. A set with no row → no recommendation, "Discuss with ID / microbiology" | Empty (columns only) |
-| `mdr_risk.csv` | Risk factors and how much they raise the risk of each MDR organism | Draft: 4 factors × 6 organisms from SSC 2026 rec 25 and IDSA 2026; weights empty (panel) |
-| `drugs.csv` | Dose, interval, infusion, renal / hepatic adjustment, interactions, monitoring, site penetration | Draft: 27 drugs from IDSA 2026 Table 1, normal-renal doses only; other columns empty |
+| `mdr_coverage.csv` | For an exact set of high-risk organisms: `add` a drug to, or `replace`, the base regimen. A set with no row → no recommendation, "Discuss with ID / microbiology" | Draft: 9 rules from NCDC/ICMR 2025; no ESBL rule yet |
+| `mdr_risk.csv` | Risk factors and how much they raise the risk of each MDR organism | Draft: SSC 2026 rec 25, IDSA 2026 and NCDC 2025 (CRO) factors; weights empty (panel) |
+| `drugs.csv` | Dose, interval, infusion, renal / hepatic adjustment, interactions, monitoring, site penetration | Draft: 36 drugs from IDSA 2026 Table 1 and NCDC 2025, normal-renal doses only; other columns empty |
 | `provenance.csv` | Where every drafted row came from (guideline, page, recommendation) and known gaps | Every drugs / mdr_risk / regimens row must have an entry |
 | `antibiogram_template.csv` | Format a hospital uses to upload its antibiogram | Columns only |
 | `golden_tests.csv` | Test patients with the expected answer. Must all pass before anything goes live (rule 8) | 2 reference cases, inputs incomplete |
@@ -26,6 +26,7 @@ Hospital cut-off % and minimum isolates are stored in the database (`hospitals` 
 - Lower-case codes from `vocabulary.csv` (e.g. `septic_shock`, not "Septic shock").
 - Several values in one cell are separated by `;` (e.g. `diabetes;copd`).
 - Combination regimens use ` + ` (e.g. `ceftriaxone + azithromycin`). Every drug named must have a row in `drugs.csv`.
+- Several alternative regimens in one cell are separated by `;` (e.g. `ertapenem; amikacin`). `first_choice` holds exactly one regimen.
 - Antibiotics in the last 90 days: `drug:days` (e.g. `cefixime:5`). Allergies: `drug:reaction` (e.g. `penicillin:anaphylaxis`).
 - Every regimen and risk rule cites its source in `guideline_ref` (guideline, year, section or recommendation number).
 - Every row in `drugs.csv`, `mdr_risk.csv` and `regimens.csv` has a matching row in `provenance.csv`

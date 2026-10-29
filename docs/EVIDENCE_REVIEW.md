@@ -11,7 +11,11 @@
 >   Gram-Negative Infections. *Clin Infect Dis* 2026, doi:10.1093/cid/ciag481 (current as of 1 Mar 2026;
 >   replaces all earlier versions, including 2024).
 >
-> **Not yet read:** ICMR 2022 and syndrome-specific guidelines. Points from those are marked ⚠.
+> - **NCDC/ICMR 2025:** National Treatment Guidelines for Antimicrobial Use in Infectious Disease Syndromes,
+>   **Version 2.0, November 2025**, NCDC and ICMR, Ministry of Health and Family Welfare (157 pages; printed
+>   page numbers cited). This is India's current national empiric guideline and is newer than ICMR 2019/2022.
+>
+> **Not read:** syndrome-specific international guidelines. Points from web searches are marked ⚠.
 
 ## 1. The most important finding: neither guideline gives empiric regimens
 
@@ -20,6 +24,9 @@
 - **IDSA 2026, p2:** "While empiric treatment suggestions are beyond the scope of this guidance…" Its
   suggestions assume the **pathogen and its susceptibilities are already known**, and they are written for
   the **US** context.
+
+**NCDC/ICMR 2025 fills this gap:** it gives empiric first-line and alternative regimens with doses, by
+syndrome (section 7 below).
 
 **What this means for MedWise:**
 - SSC 2026 supplies the **principles**: timing, when to add MDR cover, anaerobic cover, infusion method,
@@ -146,18 +153,57 @@ therapy (⚠ web search).
    febrile-neutropenia protocol and discuss with haematology/oncology and ID."
 
 ## 6. What is drafted so far (all `v0.1-draft`, traced in `knowledge/provenance.csv`)
-- `drugs.csv`: 27 drugs from IDSA 2026 Table 1. Dose, interval and infusion only; renal, hepatic,
-  interactions, monitoring and site penetration are empty.
+- `drugs.csv`: 36 drugs: 27 from IDSA 2026 Table 1, 9 added from NCDC 2025 (e.g. piperacillin-tazobactam,
+  cefoperazone-sulbactam, ceftriaxone, azithromycin, doxycycline, teicoplanin, vancomycin, linezolid), and
+  colistin / polymyxin B doses from NCDC. Renal, hepatic, interactions, monitoring and site penetration empty.
+- `regimens.csv`: **14 base regimens** from NCDC 2025 (lung, urinary and unknown source; see section 7).
+- `mdr_coverage.csv`: **9 rules** from NCDC 2025 (Pseudomonas and MRSA for lung; MRSA for unknown source;
+  carbapenem-resistant organisms for lung, urinary and unknown source).
 - `mdr_risk.csv`: 4 risk factors × 6 organism groups from SSC rec 25 and IDSA p2. **Weights are empty**:
   no source gives them; the panel must set them (or choose design option (b)).
-- `regimens.csv` (base regimens) and `mdr_coverage.csv`: **empty**. Base regimens need ICMR 2022 and/or
-  syndrome guidelines (section 1). Coverage rules could draw on IDSA 2026 preferred agents, but IDSA is
-  written for **confirmed** organisms, so using it for empiric cover is a panel decision.
 - `mdr_thresholds.csv`: organisms listed, thresholds empty (no guideline gives numbers).
 
-## 7. Documents still needed
-1. **ICMR Treatment Guidelines for Antimicrobial Use in Common Syndromes, 2022**: empiric regimens for India.
-2. The syndrome guidelines the panel chooses (section 1), or the hospital's empiric antibiotic policy.
-3. A renal and hepatic dosing reference (and IDSA's Supplementary Material, if wanted).
-4. A febrile-neutropenia guideline, only to define the out-of-scope group.
-5. Guidance for MRSA cover (vancomycin, linezolid) and their dosing.
+## 7. NCDC/ICMR 2025: what was drafted and what the panel must check
+
+| MedWise source / setting | NCDC section (printed page) | How it was mapped |
+| --- | --- | --- |
+| Lung, community-acquired (sepsis and shock) | §12.5 CAP, "Inpatient ICU" row (p83) | NCDC splits ward vs ICU, not sepsis vs shock; both mapped to the ICU row. First choice ceftriaxone + azithromycin, **matching Case 1** |
+| Lung, hospital-acquired and ventilator-associated | §18.3 HAP/VAP (p107) | The table has only a "VAP" row; applied to HAP too |
+| Urinary, community-acquired | §5.2 acute pyelonephritis (p39) | §3.4 says shock with a known source follows the site table |
+| Urinary, hospital-acquired | §18.6 CAUTI "severely ill" (p111) | No separate non-catheter hospital UTI row |
+| Unknown source, community / hospital | §3.4 sepsis syndrome (p29–30) | Direct |
+| Healthcare-associated (all sources) | — | **Not drafted**: NCDC has no healthcare-associated category |
+
+**Conflicts and questions for the panel**
+1. **Community-acquired septic shock without a source (§3.4):** NCDC first line is meropenem **+ teicoplanin**
+   (routine anti-MRSA cover). SSC 2026 rec 26 suggests **against** MDR cover when that pathogen's risk is low.
+2. **Doses differ between NCDC and IDSA:** meropenem (NCDC 1 g q8h, no infusion time; IDSA 1–2 g q8h over 3 h),
+   imipenem-cilastatin, IV fosfomycin (NCDC 4 g q6h; IDSA 6 g q8h), teicoplanin (§3.4 vs §12.5). `drugs.csv`
+   currently keeps the IDSA row where both exist; every conflict is listed in `provenance.csv`.
+3. **Infusion time:** NCDC does not state infusion durations; SSC 2026 rec 33 strongly recommends prolonged
+   beta-lactam infusion after a loading dose.
+4. **No ESBL-specific empiric rule in NCDC.** So a patient like **Case 2** (high ESBL risk) currently gets
+   **no recommendation** ("Discuss with ID / microbiology") until the panel adds an ESBL coverage row
+   (IDSA 2026 Q1.2/Q1.3 support a carbapenem; see section 3).
+5. **Pseudomonas risk factors for CAP (§12.5):** structural lung disease (e.g. bronchiectasis), healthcare
+   exposure or antibiotics in the last 90 days, immunocompromise. These apply to pneumonia only, but
+   `mdr_risk.csv` has **no source column**, so they are not drafted yet. Bronchiectasis is not a MedWise input.
+6. **MRSA triggers** (necrotising pneumonia, preceding influenza, suspected central-line infection) are not
+   MedWise inputs.
+7. **Rickettsial cover:** NCDC adds doxycycline for community-acquired sepsis from endemic areas; "endemic
+   area" is not a MedWise input.
+8. **Carbapenem-resistant organisms (CRO):** NCDC triggers are carbapenem use or a CRO culture in the
+   **last 3 months**, and recent BL-BLI exposure (VAP, severe CAUTI). Drafted in `mdr_risk.csv` for `cre` and
+   `other`. NCDC prefers polymyxin B over colistin unless the urine is the source.
+9. **Beta-lactam allergy alternatives:** NCDC gives none; that column is empty everywhere.
+10. **`mdr_coverage.csv` has no "alternative" column:** NCDC's alternatives are kept in its notes. Adding the
+    column would be a small change to `CLINICAL_RULES.md`.
+11. **Febrile neutropenia:** NCDC §17.1 (p97) gives regimens (stable: piperacillin-tazobactam; unstable:
+    meropenem + vancomycin + polymyxin B) but **no ANC definition** (it mentions continuing until ANC > 500).
+    Bringing neutropenic sepsis into scope later is possible from this national source; for now it stays out.
+
+## 8. Documents still needed
+1. A renal and hepatic dosing reference for `renal_bands` (and IDSA's Supplementary Material, if wanted).
+2. Beta-lactam allergy guidance (which alternatives for rash vs anaphylaxis).
+3. The hospital's own antibiogram and empiric policy, which NCDC repeatedly says should guide hospital-onset
+   infections.
