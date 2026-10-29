@@ -20,6 +20,8 @@ export const TABLE_COLUMNS = {
     "hepatic_adjustment", "interactions", "monitoring", "site_penetration_notes",
   ],
   antibiogram_template: ["year", "unit", "organism", "antibiotic", "isolates_n", "percent_susceptible"],
+  // Where each drafted row came from (guideline, page, recommendation) and known gaps.
+  provenance: ["table", "row_key", "fields", "source", "location", "note"],
   golden_tests: [
     "case_id", "origin", "review_status", "age", "sex", "weight_kg", "source", "setting",
     "source_control", "severity", "sofa", "crcl_ml_min", "dialysis", "hepatic", "antibiotics_90d",

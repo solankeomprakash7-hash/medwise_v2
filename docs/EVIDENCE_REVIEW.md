@@ -1,118 +1,158 @@
 # EVIDENCE REVIEW — draft notes for the advisory group
 
-> **Status: DRAFT, not signed off.** This file is background reading for Dr. Solanke and the clinical
-> advisory group. It is **not** clinical content of the app. Nothing here changes `CLINICAL_RULES.md`
-> or `/knowledge`; any change there needs Dr. Solanke's explicit instruction.
+> **Status: DRAFT, not signed off.** Background reading for Dr. Solanke and the clinical advisory group.
+> It is **not** clinical content of the app. Nothing here changes `CLINICAL_RULES.md`; drafted
+> knowledge-base rows are marked draft and traced in `knowledge/provenance.csv`.
 >
-> **How this was researched (2026-10-29):** web searches only. The cloud session could not open the
-> journal sites (Springer, OUP, LWW, Healio were blocked), so most points below come from abstracts,
-> executive-summary tables and secondary summaries. **Every point must be checked against the full
-> guideline text before it goes into a signed-off table.** Items marked ⚠ were not confirmed in a primary
-> source.
+> **Sources read in full (2026-10-29), from PDFs supplied by Dr. Solanke:**
+> - **SSC 2026:** Prescott HC et al. Surviving Sepsis Campaign: International Guidelines for Management of
+>   Sepsis and Septic Shock 2026. *Crit Care Med* 2026;54(4) (Infection section, p745–758).
+> - **IDSA 2026:** Tamma PD et al. IDSA 2026 Guidance on the Treatment of Antimicrobial-Resistant
+>   Gram-Negative Infections. *Clin Infect Dis* 2026, doi:10.1093/cid/ciag481 (current as of 1 Mar 2026;
+>   replaces all earlier versions, including 2024).
+>
+> **Not yet read:** ICMR 2022 and syndrome-specific guidelines. Points from those are marked ⚠.
 
-## 1. Which guideline versions to use
+## 1. The most important finding: neither guideline gives empiric regimens
 
-| Guideline | Current version found | Citation (to verify) | Suggested action |
+- **SSC 2026, p751:** "Specific guidance on antibiotic selection is beyond the scope of this guideline."
+  It refers readers to IDSA and ESCMID for MDR pathogens.
+- **IDSA 2026, p2:** "While empiric treatment suggestions are beyond the scope of this guidance…" Its
+  suggestions assume the **pathogen and its susceptibilities are already known**, and they are written for
+  the **US** context.
+
+**What this means for MedWise:**
+- SSC 2026 supplies the **principles**: timing, when to add MDR cover, anaerobic cover, infusion method,
+  de-escalation.
+- IDSA 2026 supplies **which drugs work against each resistant organism**, and their doses.
+- The **empiric regimen for each source × setting × severity** (`regimens.csv`) has to come from other
+  documents. Suggested: **ICMR 2022**, plus syndrome guidelines (e.g. ATS/IDSA community-acquired pneumonia,
+  ATS/IDSA HAP/VAP, SIS/IDSA intra-abdominal, IDSA skin and soft tissue, IDSA meningitis, IDSA
+  catheter-related bloodstream infection, IDSA complicated UTI), or the hospital's own empiric policy.
+  **The panel must choose which documents are the sources.**
+
+## 2. SSC 2026 statements MedWise relies on (verified in the full text)
+
+| No. | Statement (shortened) | Strength / certainty | Page |
 | --- | --- | --- | --- |
-| Surviving Sepsis Campaign (adult) | **2026**, published 23 Mar 2026 | *Critical Care Medicine* 2026 (executive summary, Apr 2026 issue) and *Intensive Care Medicine* 2026, doi:10.1007/s00134-026-08361-1 | Use as planned |
-| IDSA AMR gram-negative guidance | **2026**, published Aug 2026 — **replaces the 2024 version** | *Clinical Infectious Diseases* 2026, doi:10.1093/cid/ciag481 | Use **2026**, not 2024 |
-| ICMR Treatment Guidelines for Antimicrobial Use in Common Syndromes | **2022** edition (after 2017 1st and 2019 2nd editions); online chapters at amrtg.icmr.org.in | ICMR, New Delhi, 2022 | Confirm 2022 is the latest; obtain the PDF |
-| Febrile neutropenia (for scope only) | IDSA 2010 (Freifeld et al., *CID* 2011); ASCO/IDSA outpatient update 2018 | — | Use only to **define** the out-of-scope group |
+| 16 | Possible, probable or definite **septic shock**: antimicrobials immediately, ideally within 1 h | Strong, very low | 746 |
+| 17 | Probable or definite **sepsis without shock**: antimicrobials immediately, ideally within 1 h | Strong, very low | 746 |
+| 18 | **Possible** sepsis without shock: rapid investigation; antimicrobials within 3 h if concern persists | Conditional, very low | 746 |
+| 24 | Early source control, ideally within 6 h | Conditional, very low | 749 |
+| **25** | **High risk of a specific MDR pathogen: include empiric cover for that pathogen** | Conditional, very low | 749 |
+| **26** | **Low risk of a specific MDR pathogen: do not cover it empirically** | Conditional, very low | 749 |
+| 27 | No routine empiric antifungal therapy | Conditional, low | 751 |
+| 28 | No anaerobic cover without anaerobic risk factors (e.g. most lung and urinary sources) | Conditional, very low | 751 |
+| 29 | Anaerobic cover **with** risk factors: intra-abdominal, deep gynaecological/obstetric, necrotising soft-tissue infection, head and neck, CNS abscess or empyema | Conditional, very low | 751 |
+| **33** | **Prolonged infusion of beta-lactams for maintenance, after an initial loading dose** | **Strong, moderate** | 754 |
+| 34 | Therapeutic drug monitoring case by case | Conditional, very low | 755 |
+| 36 | De-escalate when the organism and susceptibilities are known | Strong, very low | 755 |
+| 39 | Shorter over longer duration, with adequate source control | Conditional, very low | 757 |
 
-### Points from SSC 2026 relevant to MedWise
-- Antimicrobials within about **1 hour** for septic shock and for probable/definite sepsis without shock.
-  Possible sepsis without shock: rapid assessment, antimicrobials within **3 hours** if concern persists.
-- **Empiric MDR cover only when the risk of that specific MDR organism is high**; suggested *against* when
-  risk is low. This supports MedWise's per-organism MDR-risk tiers.
-- No empiric anaerobic cover when anaerobic risk is low (e.g. most CAP and UTI). No routine empiric antifungals.
-- **Beta-lactams: a loading dose, then prolonged infusion for maintenance** (strong recommendation,
-  moderate certainty; upgraded from 2021). ⚠ Exact recommendation number and wording to be confirmed.
-- De-escalate once the organism and susceptibilities are known.
-- ⚠ Whether SSC 2026 excludes or addresses neutropenic patients was **not** confirmed.
+**MDR risk factors (rec 25 remark, p749–750):** colonisation with the MDR pathogen of concern, previous
+infection with it (**in the prior year**), prolonged use of broad-spectrum antibiotics, and prolonged
+hospitalisation in a unit with a high prevalence of that pathogen. SSC lists the MDR pathogens as
+*A. baumannii*, ESBL-producing Gram-negatives, CRE, VRE, MDR *Pseudomonas* and MRSA.
 
-### Points from IDSA 2026 relevant to MedWise (⚠ secondary summaries only)
-- Covers ESBL-E, AmpC-E, CRE, DTR *P. aeruginosa*, CRAB and *S. maltophilia*.
-- **Carbapenems remain preferred for invasive ESBL-E infections outside the urinary tract.**
-  This is relevant to Case 2 (meropenem for high-ESBL-risk urosepsis), but the panel should decide
-  whether urosepsis with suspected bacteraemia counts as "outside the urinary tract".
-- Changed from 2024: piperacillin-tazobactam moved from "suggest against" to an **alternative** for
-  ESBL-E **urinary** infections; pivmecillinam added for ESBL-E cystitis; newer agents preferred for invasive
-  CRAB (sulbactam-durlobactam + a carbapenem), invasive *S. maltophilia*, and DTR *P. aeruginosa* pneumonia.
-- Uses expert consensus, not GRADE; IDSA plans updates every 1–2 years, so MedWise must track versions.
-- Note: the IDSA guidance is mostly about **known** resistant organisms. Its empiric advice is limited,
-  so the empiric decision rules will lean more on SSC 2026, ICMR and the local antibiogram.
+**Rec 33 details (p754–755):** prolonged infusion means extended (over at least half the dosing interval) or
+continuous. "Administering a loading dose of the antibiotic before prolonged infusion is crucial."
 
-### Points from ICMR relevant to MedWise
-- Empiric antibiotics are restricted to a short list of conditions; **severe sepsis/septic shock and
-  febrile neutropenia** are both on it.
-- Cultures from all likely sites **before** the first dose.
-- De-escalation is described as safe, **including in febrile neutropenia and septic shock**.
-- ⚠ The 2022 regimen and dosing tables were not retrieved.
+**Neutropenia:** the SSC 2026 text does **not** address neutropenic patients (the word appears only in the
+titles of cited papers).
 
-## 2. Open question: meropenem dose in Case 2 (CrCl 40)
+### Design consequence: MDR risk per organism
+Recs 25–26 are written **per pathogen** ("a specific MDR pathogen"). This supports option (b): a base regimen
+per source × setting × severity, plus organism-specific additions when that organism's risk is high, rather
+than one overall risk tier per patient. **Decision for Dr. Solanke and the panel.**
 
-`CLINICAL_RULES.md` Case 2 expects **meropenem 1 g q8h, 3-hour extended infusion** with CrCl 40.
+### Gaps between the MedWise input form and SSC
+- The form asks for prior MDR organisms in the last **90 days**; SSC and IDSA both use **12 months**, and SSC
+  counts **colonisation** as well as infection.
+- "Prolonged" broad-spectrum antibiotic use is not defined by SSC; the panel must define it.
+- "Prolonged hospitalisation in a high-prevalence unit" is not captured; the form asks only "admission in
+  90 days yes/no". Unit prevalence could come from the hospital's antibiogram.
 
-What the sources say:
-- **Product labels (US and UK):** dose adjustment needed at CrCl ≤ 50 (UK: < 51). For **CrCl 26–50 the usual
-  dose is given every 12 hours**; CrCl 10–25: half dose q12h; CrCl < 10: half dose q24h.
-- **Extended-infusion protocols** (e.g. Stanford 2026, GlobalRPh summary): normal renal function 1 g over
-  3 h q8h; **CrCl 26–50: 1 g over 3 h q12h**; below 26, many protocols switch to a short infusion. ⚠ One trial
-  protocol used 500 mg over 3 h q12h for CrCl < 50, so sources differ.
-- **Loading dose:** extended-infusion protocols start with **1 g over 30 minutes** before the first 3-hour
-  infusion. SSC 2026 also says "loading dose, then prolonged infusion". In general practice the **first dose
-  is not reduced for kidney function**; only maintenance is. ⚠ Not confirmed in a primary source for meropenem.
+## 3. IDSA 2026 points MedWise relies on (verified in the full text)
 
-**Suggestion for the panel (not a change):** Case 2's expected answer probably needs to be
-**meropenem 1 g IV over 30 min now (loading dose), then 1 g over 3 h every 12 h (CrCl 26–50)**, unless the
-panel deliberately wants q8h (for example because sepsis-related augmented clearance or fluid shifts
-make the CrCl estimate unreliable in the first 24–48 h). Either way, the decision should be written down,
-because the golden test will check the exact dose.
+- **Empiric considerations (p2):** prior microbiology within 12 months; antibiotic exposure in the preceding
+  3 months; local epidemiology and cumulative susceptibility data. Common empiric regimens often lack activity
+  against CRAB and *S. maltophilia*; covering them should be individualised.
+- **Definition (p2):** complicated UTI includes pyelonephritis, **febrile or bacteraemic UTI,
+  catheter-associated UTI**, or prostatitis. So urosepsis counts as **cUTI** (Question 1.2), not as
+  "infection outside the urinary tract" (Question 1.3).
+- **ESBL-E, cUTI (Q1.2, p6):** TMP-SMX, ciprofloxacin or levofloxacin preferred **when susceptible**;
+  cefepime-enmetazobactam or a carbapenem preferred when resistance or intolerance precludes them; IV
+  fosfomycin, aminoglycosides and piperacillin-tazobactam are alternatives.
+- **ESBL-E, outside the urinary tract (Q1.3, p7):** ertapenem, imipenem, meropenem preferred;
+  **imipenem or meropenem preferred if critically ill or hypoalbuminaemic**.
+- **Piperacillin-tazobactam (Q1.4, p8):** alternative for ESBL-E cUTI **only if not critically ill and no
+  bacteraemia**; not suggested outside the urinary tract.
+- **Cefepime (Q1.5, p9):** avoid for ESBL-E cUTI or infections outside the urinary tract.
+- **AmpC risk organisms (Q2.3, Q2.5, p12–14):** cefepime suggested (MIC ≤8); piperacillin-tazobactam not
+  suggested for invasive infection.
+- **CRE (Q3.2, Q3.5, Q3.8, p16–21):** depends on the carbapenemase (KPC, NDM, OXA-48). **NDM** (common in
+  India): aztreonam-avibactam or cefiderocol preferred; ceftazidime-avibactam + aztreonam if
+  aztreonam-avibactam is unavailable. Routine combination therapy not suggested.
+- **DTR *P. aeruginosa* (Q4.2, Q4.3, p22–23):** ceftolozane-tazobactam, ceftazidime-avibactam,
+  imipenem-relebactam (ceftolozane-tazobactam preferred for pneumonia); cefiderocol alternative.
+- **CRAB (Q5.1, p27):** sulbactam-durlobactam with imipenem or meropenem preferred.
+- **Doses (Table 1, p3–4):** adult doses for **normal kidney and liver function only**. Kidney adjustments
+  are in IDSA's Supplementary Material, which was not supplied. These doses are drafted into
+  `knowledge/drugs.csv` with `renal_bands` left empty.
+- **Availability:** several agents (e.g. sulbactam-durlobactam, aztreonam-avibactam, cefiderocol,
+  plazomicin, eravacycline) may be unavailable or costly in India. The panel should remove those that are
+  not on the formulary.
 
-**Consequence for the knowledge base:** `drugs.csv` as planned has no **loading dose** column and no
-rule for "first dose unadjusted, maintenance adjusted". Suggest adding `loading_dose` and
-`loading_infusion`, and defining the format of `renal_bands` (for example
-`>50: 1 g q8h EI 3h; 26-50: 1 g q12h EI 3h; 10-25: 500 mg q12h; <10: 500 mg q24h; HD: after dialysis`).
+IDSA does **not** cover MRSA, VRE, ceftriaxone, piperacillin-tazobactam dosing, vancomycin, linezolid or
+azithromycin. These need other sources.
 
-## 3. Open question: neutropenia rule
+## 4. Open question: meropenem dose in Case 2 (CrCl 40)
 
-Problem: `CLINICAL_RULES.md` says "neutropenic fever → out of scope", but the input form offers
-"neutropenia" as a normal immunocompromise option, with no definition.
+`CLINICAL_RULES.md` Case 2 expects **meropenem 1 g q8h, 3-hour extended infusion**.
 
-What the sources say:
-- Standard definition (IDSA): **fever** (single oral temperature ≥ 38.3 °C, or ≥ 38.0 °C sustained over 1 h)
-  **plus ANC < 500/µL, or expected to fall below 500/µL within 48 h**. Some institutions use ANC < 1000.
-- Neutropenic sepsis has a **different empiric algorithm**: an anti-pseudomonal beta-lactam
-  (cefepime, piperacillin-tazobactam or a carbapenem) for everyone, with vancomycin only for specific
-  indications. MedWise's MDR-risk-tier logic was not designed or tested for this group, and the
-  50-patient study was not in neutropenic patients.
+- **IDSA 2026 Table 1:** meropenem 1–2 g IV every 8 h over 3 h for infections other than uncomplicated UTI,
+  **assuming normal kidney function**. It gives no CrCl 26–50 dose in the main text.
+- **SSC 2026 rec 33:** loading dose, then prolonged infusion.
+- **Product labels (US and UK)** ⚠ (from web search, not supplied PDFs): CrCl 26–50 → the usual dose
+  **every 12 hours**.
+- **Extended-infusion protocols** ⚠ (web search): CrCl 26–50 → 1 g over 3 h every 12 h, after a 1 g loading
+  dose over 30 min.
+
+**Suggestion for the panel (not a change):** expected answer **meropenem 1 g IV over 30 min (loading dose),
+then 1 g over 3 h every 12 h**, unless the panel deliberately keeps q8h (for example because CrCl estimates
+are unreliable early in sepsis) and records why. Also confirm meropenem rather than ertapenem: IDSA prefers
+meropenem or imipenem for critically ill patients (Q1.3). For cUTI specifically (Q1.2), a carbapenem is
+preferred when fluoroquinolone or TMP-SMX resistance is likely; the hospital antibiogram decides this.
+
+**Consequence for the knowledge base:** `drugs.csv` needs a **loading dose** and a defined **renal_bands**
+format, and a renal-dosing source must be chosen (product label, a national formulary, or a hospital protocol).
+
+## 5. Open question: neutropenia rule
+
+Neither SSC 2026 nor IDSA 2026 addresses neutropenic sepsis. Febrile neutropenia has its own guidelines
+(IDSA 2010 and later; ⚠ not read). ICMR lists febrile neutropenia among the conditions needing empiric
+therapy (⚠ web search).
 
 **Suggestion for the panel (not a change):**
 1. Keep neutropenic sepsis **out of scope** in version 1.
-2. Define it as **ANC < 500/µL, or expected to fall below 500/µL within 48 h** (or the hospital's own
-   definition, if different).
-3. Replace the "neutropenia" option in the immunocompromise list with a **separate required question**:
+2. Define it as **ANC < 500/µL, or expected to fall below 500/µL within 48 h** ⚠ (standard IDSA definition,
+   from secondary sources), or the hospital's own definition.
+3. Replace the "neutropenia" option in the immunocompromise list with a separate required question:
    "ANC < 500/µL or expected to fall below 500 within 48 h? yes / no / not known". **Yes** → out-of-scope
-   message, no recommendation. **Not known** → ask for a CBC result before recommending, or show a warning.
+   message. **Not known** → ask for a CBC result or show a warning.
 4. Out-of-scope message: "Neutropenic sepsis is outside MedWise version 1. Follow your hospital's
    febrile-neutropenia protocol and discuss with haematology/oncology and ID."
 
-## 4. What MedWise still needs from the full texts
-- Exact SSC 2026 recommendation numbers and wording, for the `guideline_ref` columns.
-- IDSA 2026 empiric-therapy statements and preferred/alternative tables (ESBL-E, AmpC-E, CRE, DTR-PA).
-- ICMR 2022 sepsis and source-specific empiric regimens, and their dosing tables.
-- A dosing reference for `drugs.csv`, chosen by the panel (product label, BNF/Sanford, or a hospital protocol).
+## 6. What is drafted so far (all `v0.1-draft`, traced in `knowledge/provenance.csv`)
+- `drugs.csv`: 27 drugs from IDSA 2026 Table 1. Dose, interval and infusion only; renal, hepatic,
+  interactions, monitoring and site penetration are empty.
+- `mdr_risk.csv`: 4 risk factors × 6 organism groups from SSC rec 25 and IDSA p2. **Weights are empty**:
+  no source gives them; the panel must set them (or choose design option (b)).
+- `regimens.csv`: **empty**. Needs ICMR 2022 and/or syndrome guidelines (section 1).
 
-## Sources
-- SSC 2026 (adult): https://link.springer.com/article/10.1007/s00134-026-08361-1 ·
-  executive summary https://journals.lww.com/ccmjournal/fulltext/2026/04000/executive_summary__surviving_sepsis_campaign_.4.aspx ·
-  SCCM page https://www.sccm.org/clinical-resources/guidelines/guidelines/surviving-sepsis-campaign-international-guidelines-for-management-of-sepsis-and-septic-shock-2026
-- IDSA 2026 AMR guidance: https://academic.oup.com/cid/advance-article/doi/10.1093/cid/ciag481/8756906 ·
-  summaries: https://www.acpjournals.org/doi/10.7326/acph-20260819-idsa-offers-updated-guidance-on-resistant-gram ·
-  https://www.healio.com/news/infectious-disease/20260826/idsa-updates-guidance-on-resistant-gramnegative-infections ·
-  https://clinician.nejm.org/managing-resistant-gram-negative-infections-updated-idsa-guidance-CLINgwNA60460
-- ICMR: https://www.icmr.gov.in/guidelines · 2019 edition https://www.icmr.gov.in/icmrobject/custom_data/pdf/resource-guidelines/Treatment_Guidelines_2019_Final.pdf ·
-  online chapters https://amrtg.icmr.org.in/chapter3-antimicrobial-therapy.html
-- Meropenem label: https://labeling.pfizer.com/ShowLabeling.aspx?id=18351 · UK SmPC https://www.medicines.org.uk/emc/product/10204/smpc/print ·
-  extended-infusion protocol https://med.stanford.edu/content/dam/sm/bugsanddrugs/documents/antimicrobial-dosing-protocols/SHC-Extended-Infusion-Beta-lactams.pdf
-- Febrile neutropenia definition: IDSA 2010 guideline (Freifeld et al., *Clin Infect Dis* 2011;52:e56–93) — secondary summaries only checked.
+## 7. Documents still needed
+1. **ICMR Treatment Guidelines for Antimicrobial Use in Common Syndromes, 2022**: empiric regimens for India.
+2. The syndrome guidelines the panel chooses (section 1), or the hospital's empiric antibiotic policy.
+3. A renal and hepatic dosing reference (and IDSA's Supplementary Material, if wanted).
+4. A febrile-neutropenia guideline, only to define the out-of-scope group.
+5. Guidance for MRSA cover (vancomycin, linezolid) and their dosing.

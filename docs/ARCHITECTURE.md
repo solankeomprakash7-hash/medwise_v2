@@ -33,7 +33,7 @@ Created 2026-10-28 (Phase 2, step 1). Folders marked *empty* hold only a README 
 /lib/rules           rules engine: mdr-risk, regimen-filter, dosing, safety — empty
 /lib/ai              Claude call, prompt, JSON checking — empty
 /lib/knowledge       reads the knowledge-base tables and checks them for mistakes
-/knowledge           CSV tables + VERSION + vocabulary + coverage checklist (see knowledge/README.md); no clinical rows yet
+/knowledge           CSV tables + VERSION + vocabulary + coverage checklist + provenance (see knowledge/README.md); draft rows only
 /tests               golden test set runner (placeholder) + banned-wording check
 /docs                PRODUCT, CLINICAL_RULES, DESIGN, ARCHITECTURE, DECISIONS, EVIDENCE_REVIEW (draft)
 /supabase/migrations database structure, as SQL files applied in date order

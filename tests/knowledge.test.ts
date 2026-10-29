@@ -69,6 +69,16 @@ describe("knowledge base checks catch mistakes", () => {
     expect(problems).toContain("golden_tests.csv REF-01: notes looks like it may contain a patient identifier; remove it");
   });
 
+  it("drug row with no record of where it came from", () => {
+    const problems = brokenCopy((dir) => append(dir, "drugs.csv", "linezolid,600 mg,every 12 h,,,,,,,"));
+    expect(problems).toContain('drugs.csv line 29: "linezolid" has no entry in provenance.csv');
+  });
+
+  it("MDR weight left empty after sign-off", () => {
+    const problems = brokenCopy((dir) => writeFileSync(join(dir, "VERSION"), "v1.0\n"));
+    expect(problems).toContain("mdr_risk.csv line 2: weight is empty; every weight must be set before sign-off");
+  });
+
   it("wrong columns", () => {
     const problems = brokenCopy((dir) => writeFileSync(join(dir, "drugs.csv"), "drug,dose\n"));
     expect(problems.some((p) => p.startsWith("drugs.csv: columns should be"))).toBe(true);

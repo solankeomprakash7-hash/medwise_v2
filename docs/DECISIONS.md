@@ -5,6 +5,8 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | Every drafted knowledge-base row is traced in `knowledge/provenance.csv` (source, page, gaps); checked automatically | Traceability without changing the table design in CLINICAL_RULES.md |
+| 2026-10-29 | Drafted from the full SSC 2026 and IDSA 2026 texts: 27 drug doses (normal renal function) and 24 MDR risk rows (weights empty); no regimens | Neither guideline gives empiric regimens; regimens wait for ICMR 2022 / syndrome guidelines chosen by the panel |
 | 2026-10-29 | MedWise covers any adult sepsis patient through rule tables (source × setting × severity × MDR risk), not stored cases; Case 1 and 2 are only the first golden tests | Clarified by Dr. Solanke: it is a general decision-support tool |
 | 2026-10-29 | Golden test set to grow to cover every source, severity, MDR tier, renal band, allergy and out-of-scope stop; the 50 MAHACRITICON study patients (de-identified) to be entered as test cases | Two cases are far too few to protect patients |
 | 2026-10-29 | Knowledge base built before login. Claude Code may draft rows from the guidelines, marked draft with citations; the advisory group corrects and signs off | Core of the app and needs the most panel time |

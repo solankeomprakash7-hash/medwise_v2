@@ -63,6 +63,19 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     problems.push(`VERSION "${version}" should look like v0.1-draft or v1.0`);
   }
 
+  const isDraft = version.endsWith("-draft");
+
+  // Provenance: every drafted row in drugs, mdr_risk and regimens must say where it came from.
+  const provenance = new Set<string>();
+  for (const [i, row] of tables.provenance.entries()) {
+    if (!["drugs", "mdr_risk", "regimens"].includes(row.table)) {
+      problems.push(`provenance.csv line ${i + 2}: table must be drugs, mdr_risk or regimens`);
+    }
+    if (!row.source || !row.location) problems.push(`provenance.csv line ${i + 2}: source and location are required`);
+    provenance.add(`${row.table}|${row.row_key}`);
+  }
+  const traced = (table: string, key: string) => provenance.has(`${table}|${key}`);
+
   // Vocabulary
   const vocab = new Map<string, Set<string>>();
   const multi = new Map<string, boolean>();
@@ -83,6 +96,7 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     else if (row.drug !== row.drug.toLowerCase()) problems.push(`drugs.csv line ${i + 2}: write "${row.drug}" in lower case`);
     else if (drugs.has(row.drug)) problems.push(`drugs.csv line ${i + 2}: "${row.drug}" appears twice`);
     drugs.add(row.drug);
+    if (row.drug && !traced("drugs", row.drug)) problems.push(`drugs.csv line ${i + 2}: "${row.drug}" has no entry in provenance.csv`);
   }
 
   // Coverage checklist: every source × setting × severity exactly once
@@ -121,6 +135,8 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
         if (!drugs.has(drug)) problems.push(`${where}: ${column} names "${drug}", which has no row in drugs.csv`);
       }
     }
+    const regimenKey = [row.source, row.setting, row.severity, row.risk_tier].join("|");
+    if (!traced("regimens", regimenKey)) problems.push(`${where}: "${regimenKey}" has no entry in provenance.csv`);
     const status = coverage.get(`${row.source} / ${row.setting} / ${row.severity}`);
     if (status === "empty" || status === "not_applicable") {
       problems.push(`${where}: coverage.csv still marks this combination "${status}"`);
@@ -134,7 +150,14 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     if (row.organism === "none" || !allowed("prior_mdr", row.organism)) {
       problems.push(`${where}: unknown organism "${row.organism}"`);
     }
-    if (!/^-?\d+(\.\d+)?$/.test(row.weight)) problems.push(`${where}: weight "${row.weight}" is not a number`);
+    if (row.weight === "") {
+      if (!isDraft) problems.push(`${where}: weight is empty; every weight must be set before sign-off`);
+    } else if (!/^-?\d+(\.\d+)?$/.test(row.weight)) {
+      problems.push(`${where}: weight "${row.weight}" is not a number`);
+    }
+    if (!traced("mdr_risk", `${row.risk_factor}|${row.organism}`)) {
+      problems.push(`${where}: "${row.risk_factor}|${row.organism}" has no entry in provenance.csv`);
+    }
     if (!row.guideline_ref) problems.push(`${where}: guideline_ref is empty`);
   }
 
