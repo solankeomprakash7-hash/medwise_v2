@@ -5,6 +5,10 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | Recommendation pipeline built with a stand-in AI (no paid API yet): input checks and out-of-scope stops before any AI call, evidence pack, safety checks, doses from `drugs.csv`, guideline-table comparison | Safety core tested before any real AI answer can reach a clinician; real Claude client plugs into the same interface later |
+| 2026-10-29 | Any recorded allergy → no recommendation, until a signed-off drug-class table exists | Allergy classes must come from signed-off tables (rule 1); without them an allergy cannot be checked, so the app fails safe |
+| 2026-10-29 | AI citations must quote at least 3 words copied word for word from a passage in that patient's evidence pack; any number + dose unit in the AI's text is rejected | Enforces rules 1–2 in code |
+| 2026-10-29 | SSC 2026 and IDSA 2026 PDFs stored on the private `sources` branch with NCDC | Needed to repeat the word-for-word evidence check |
 | 2026-10-29 | Evidence library `knowledge/evidence.csv`: 42 guideline passages (SSC 2026, IDSA 2026, NCDC/ICMR 2025) copied word for word, extracted and checked by script against the PDFs; record with PDF fingerprints in `EVIDENCE_VERIFIED.md` | The AI may cite only these passages; code checks citations against them (CLAUDE.md rule 2) |
 | 2026-10-29 | Guideline PDFs are not stored on `main`; NCDC is on the `sources` branch. SSC and IDSA are copyrighted (Wolters Kluwer, OUP): only short passages are kept, for internal decision support; **check licensing before commercial launch** | Copyright; keeps the code repository small |
 | 2026-10-29 | Page numbers corrected after automatic checking: IDSA questions 1.2–5.1 are one page later than first stated; SSC rec 27, 34, 39 and the "beyond the scope" sentence are p750, p754, p756, p750 | Automatic page finding is more reliable than reading two-column PDF text |

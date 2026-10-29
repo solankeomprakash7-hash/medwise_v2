@@ -45,8 +45,8 @@ Hospital cut-off % and minimum isolates are stored in the database (`hospitals` 
 - ` … ` marks words left out of the source. Nothing else may be changed.
 - Tags (`sources`, `settings`, `organisms`) use vocabulary codes or `any`; code uses them to pick passages
   for each patient.
-- **After adding or editing a passage**, run the word-for-word check with the guideline PDFs (not stored in
-  this repository except NCDC on the `sources` branch):
+- **After adding or editing a passage**, run the word-for-word check with the guideline PDFs (kept on the
+  private `sources` branch: `ssc2026.pdf`, `idsa2026.pdf`, `amr17.pdf`; not on `main`):
   `npm run verify:evidence -- ssc2026=<pdf> idsa2026=<pdf> ncdc2025=<pdf>`
   and update `EVIDENCE_VERIFIED.md`.
 

@@ -1,0 +1,104 @@
+import type { AiClient } from "@/lib/ai/client";
+import { SYSTEM_PROMPT, buildUserMessage } from "@/lib/ai/prompt";
+import { checkAnswer } from "./checks";
+import { doseLines } from "./doses";
+import type { DoseLine } from "./doses";
+import { checkInput } from "./input";
+import type { Knowledge } from "./kb";
+import { buildEvidencePack } from "./pack";
+import type { AntibiogramRow } from "./pack";
+import { guidelineTable, sameRegimen } from "./table";
+import type { TableView } from "./table";
+
+export const DISCLAIMERS = [
+  "Decision support only — verify with clinical judgement and local policy.",
+  "Review at 48–72 h with culture results; de-escalate when possible.",
+];
+export const DISCUSS = "Discuss with ID / microbiology.";
+
+export interface Result {
+  status: "recommendation" | "no_recommendation" | "out_of_scope" | "missing_input" | "invalid_input";
+  messages: string[];
+  regimen?: { name: string; drugs: DoseLine[] };
+  alternatives?: { name: string; drugs: DoseLine[] }[];
+  mdrAssessment?: { organism: string; risk: "high" | "low"; reason: string }[];
+  reasoning?: string;
+  citations?: { passage_id: string; guideline: string; location: string; quote: string }[];
+  flags: string[];
+  guidelineTable?: TableView;
+  versions: { knowledgeBase: string; guidelines: { guideline: string; title: string; version: string }[] };
+  disclaimers: string[];
+  // Kept for the audit trail (saved with the case), not shown to clinicians.
+  audit: { aiModel?: string; aiRaw?: string };
+}
+
+export async function recommend(
+  rawInput: unknown,
+  ai: AiClient,
+  kb: Knowledge,
+  antibiogram: AntibiogramRow[] = [],
+): Promise<Result> {
+  const versions = {
+    knowledgeBase: kb.version,
+    guidelines: kb.guidelines.map((g) => ({ guideline: g.guideline, title: g.title, version: g.version })),
+  };
+  const flags = kb.version.endsWith("-draft")
+    ? [`Knowledge base ${kb.version} is a draft and not signed off: not for patient care.`]
+    : [];
+  const base = { flags, versions, disclaimers: DISCLAIMERS, audit: {} };
+
+  // 1. Inputs (no AI call if anything is missing or out of scope).
+  const input = checkInput(rawInput, kb);
+  if (!input.ok) {
+    const status = input.kind === "out_of_scope" ? "out_of_scope" : input.kind === "missing" ? "missing_input" : "invalid_input";
+    return { ...base, status, messages: input.messages };
+  }
+  const patient = input.patient;
+
+  // 2. Evidence pack, 3. AI decides.
+  const pack = buildEvidencePack(patient, kb, antibiogram);
+  let raw: string;
+  try {
+    raw = await ai.complete(SYSTEM_PROMPT, buildUserMessage(pack));
+  } catch {
+    return { ...base, status: "no_recommendation", messages: ["The AI did not answer.", DISCUSS], audit: { aiModel: ai.model } };
+  }
+  const audit = { aiModel: ai.model, aiRaw: raw };
+
+  // 4. Safety checks.
+  const check = checkAnswer(raw, pack);
+  if (!check.ok) return { ...base, status: "no_recommendation", messages: [...check.problems, DISCUSS], audit };
+  const answer = check.answer;
+
+  // 5. Doses from the tables, comparison with the guideline table, citations with their locations.
+  const evidence = new Map(kb.evidence.map((e) => [e.passage_id, e]));
+  const highRisk = answer.mdr_assessment.filter((m) => m.risk === "high").map((m) => m.organism);
+  const table = guidelineTable(pack, highRisk);
+  const resultFlags = [...flags, ...answer.flags];
+  if (table.note) resultFlags.push(table.note);
+  else if (
+    table.firstChoice &&
+    ![table.firstChoice, ...table.alternatives].some((option) => sameRegimen(option, answer.regimen))
+  ) {
+    resultFlags.push(`Differs from guideline table: the table suggests ${table.firstChoice}.`);
+  }
+
+  return {
+    ...base,
+    status: "recommendation",
+    messages: [],
+    regimen: { name: answer.regimen, drugs: doseLines(answer.regimen, patient, kb) },
+    alternatives: answer.alternatives.map((name) => ({ name, drugs: doseLines(name, patient, kb) })),
+    mdrAssessment: answer.mdr_assessment,
+    reasoning: answer.reasoning,
+    citations: answer.citations.map((c) => ({
+      passage_id: c.passage_id,
+      guideline: evidence.get(c.passage_id)?.guideline ?? "",
+      location: evidence.get(c.passage_id)?.location ?? "",
+      quote: c.quote,
+    })),
+    flags: resultFlags,
+    guidelineTable: table,
+    audit,
+  };
+}
