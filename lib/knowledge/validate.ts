@@ -63,8 +63,6 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     problems.push(`VERSION "${version}" should look like v0.1-draft or v1.0`);
   }
 
-  const isDraft = version.endsWith("-draft");
-
   // Provenance: every drafted row in drugs, mdr_risk and regimens must say where it came from.
   const provenance = new Set<string>();
   for (const [i, row] of tables.provenance.entries()) {
@@ -150,9 +148,8 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     if (row.organism === "none" || !allowed("prior_mdr", row.organism)) {
       problems.push(`${where}: unknown organism "${row.organism}"`);
     }
-    if (row.weight === "") {
-      if (!isDraft) problems.push(`${where}: weight is empty; every weight must be set before sign-off`);
-    } else if (!/^-?\d+(\.\d+)?$/.test(row.weight)) {
+    // Weights are optional (DECISIONS 2026-10-29: the AI weighs MDR risk); if given, they must be numbers.
+    if (row.weight !== "" && !/^-?\d+(\.\d+)?$/.test(row.weight)) {
       problems.push(`${where}: weight "${row.weight}" is not a number`);
     }
     if (!traced("mdr_risk", `${row.risk_factor}|${row.organism}`)) {
@@ -171,9 +168,8 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     if (!organisms.includes(row.organism)) problems.push(`${where}: unknown organism "${row.organism}"`);
     if (thresholdOrganisms.has(row.organism)) problems.push(`${where}: "${row.organism}" appears twice`);
     thresholdOrganisms.add(row.organism);
-    if (row.high_risk_threshold === "") {
-      if (!isDraft) problems.push(`${where}: high_risk_threshold is empty; it must be set before sign-off`);
-    } else if (!(Number(row.high_risk_threshold) > 0)) {
+    // Thresholds are optional (DECISIONS 2026-10-29); if given, they must be above 0.
+    if (row.high_risk_threshold !== "" && !(Number(row.high_risk_threshold) > 0)) {
       problems.push(`${where}: high_risk_threshold "${row.high_risk_threshold}" must be a number above 0`);
     }
     if (!row.basis) problems.push(`${where}: basis is empty (say where the threshold comes from)`);

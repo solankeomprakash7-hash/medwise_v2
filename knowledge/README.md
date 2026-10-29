@@ -31,7 +31,7 @@ Hospital cut-off % and minimum isolates are stored in the database (`hospitals` 
 - Every regimen and risk rule cites its source in `guideline_ref` (guideline, year, section or recommendation number).
 - Every row in `drugs.csv`, `mdr_risk.csv` and `regimens.csv` has a matching row in `provenance.csv`
   (`row_key` = drug name; `risk_factor|organism`; `source|setting|severity`; `organisms|source|severity`).
-- MDR weights and thresholds may be empty only while `VERSION` ends in `-draft`.
+- MDR weights and thresholds are optional (the AI weighs MDR risk; DECISIONS 2026-10-29). If filled, they must be numbers.
 - MDR organism codes are the `prior_mdr` values except `none`: esbl, cre, mrsa, pseudomonas, vre, other.
   `other` currently lumps CRAB and *S. maltophilia*, which IDSA treats separately (panel to decide).
 

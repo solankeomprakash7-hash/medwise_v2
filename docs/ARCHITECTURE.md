@@ -6,9 +6,9 @@
 ```
 Clinician (phone/desktop) ──► MedWise server (Vercel) ──► Result screen ──► Accept / Modify / Override
                                 │                                                │
-                                ├─ 1. Rules engine (no AI)                       │
-                                ├─ 2. AI layer (Claude API) — picks + explains   │
-                                └─ 3. Safety check                               │
+                                ├─ 1. Input checks + evidence pack (code)        │
+                                ├─ 2. AI layer (Claude API) — decides + explains │
+                                └─ 3. Safety checks + doses (code)               │
                                 │                                                ▼
                                 └──── reads ◄── Database (Supabase, India region) ◄── saves decision
                                              knowledge base · antibiograms · cases · decisions
@@ -58,12 +58,14 @@ Versions: Node 22, Next.js 16, React 19, Tailwind 4, Vitest 5.
 
 ## Recommendation flow
 1. Browser sends the form inputs to `/api/recommend`. **No identifiers** are sent.
-2. Server validates inputs; missing required field → error.
-3. **Rules engine** reads the knowledge base + this hospital's antibiogram and returns:
-   MDR tier per organism, shortlist of allowed regimens, renal-adjusted doses, flags.
-4. **AI layer** gets a patient summary + shortlist → returns JSON (`choice_id`, reasoning, refs, flags).
-5. **Safety check**: choice on shortlist? JSON valid? If not, use rules' first choice + flag.
-6. Server adds doses from `drugs.csv`, versions, disclaimers → sends result.
+2. Server validates inputs; missing required field → error; out-of-scope patient → stop (no AI call).
+3. **Evidence pack** (code): patient summary, relevant guideline passages from the evidence library,
+   matching knowledge-base rows, this hospital's antibiogram, allowed drug list, allergy-excluded classes.
+4. **AI layer** decides → JSON (`regimen`, `alternatives`, `mdr_assessment`, `reasoning`, `citations`, `flags`).
+5. **Safety checks** (code): drugs in `drugs.csv`, no allergy conflict, citations found word for word,
+   valid JSON. Any failure → no recommendation, "Discuss with ID / microbiology". Differs from the
+   guideline table → show both + flag.
+6. Server adds doses from `drugs.csv` (kidney/liver adjusted), versions, disclaimers → sends result.
 7. Case (de-identified) + result saved. Clinician's decision saved via `/api/decision`.
 
 ## Database tables

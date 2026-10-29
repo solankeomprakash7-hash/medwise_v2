@@ -80,9 +80,9 @@ describe("knowledge base checks catch mistakes", () => {
     expect(problems).toContain(`drugs.csv line ${nextLine("drugs.csv")}: "${FAKE}" has no entry in provenance.csv`);
   });
 
-  it("MDR weight left empty after sign-off", () => {
-    const problems = brokenCopy((dir) => writeFileSync(join(dir, "VERSION"), "v1.0\n"));
-    expect(problems).toContain("mdr_risk.csv line 2: weight is empty; every weight must be set before sign-off");
+  it("MDR weight that is not a number", () => {
+    const problems = brokenCopy((dir) => append(dir, "mdr_risk.csv", "admission_90d:yes,esbl,high,text,ref"));
+    expect(problems).toContain(`mdr_risk.csv line ${nextLine("mdr_risk.csv")}: weight "high" is not a number`);
   });
 
   it("MDR coverage naming an unknown organism and a drug with no dose row", () => {
@@ -106,9 +106,12 @@ describe("knowledge base checks catch mistakes", () => {
     expect(problems).toContain(`mdr_coverage.csv line ${nextLine("mdr_coverage.csv") + 1}: another row already covers "esbl;mrsa|any|any"`);
   });
 
-  it("MDR threshold left empty after sign-off", () => {
-    const problems = brokenCopy((dir) => writeFileSync(join(dir, "VERSION"), "v1.0\n"));
-    expect(problems).toContain("mdr_thresholds.csv line 2: high_risk_threshold is empty; it must be set before sign-off");
+  it("MDR threshold below zero", () => {
+    const problems = brokenCopy((dir) => {
+      const thresholds = join(dir, "mdr_thresholds.csv");
+      writeFileSync(thresholds, readFileSync(thresholds, "utf8").replace("esbl,,", "esbl,-1,"));
+    });
+    expect(problems).toContain('mdr_thresholds.csv line 2: high_risk_threshold "-1" must be a number above 0');
   });
 
   it("more than one regimen in first_choice", () => {

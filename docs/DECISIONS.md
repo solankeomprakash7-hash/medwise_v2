@@ -5,6 +5,9 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | The AI makes the regimen decision from guidelines and evidence, within code-enforced checks (doses from tables, drug list, allergies, out-of-scope stops, verified citations). **Replaces** "AI chooses only from the rules engine's shortlist" (2026-10-26) and CLAUDE.md rules 1–2 | Owner wants evidence-based AI reasoning rather than a fixed lookup; safety rails keep doses and citations from being invented. Risks discussed: invented content, run-to-run variation, auditability, regulatory classification (CDSCO open item) |
+| 2026-10-29 | Knowledge-base tables become the AI's reference and safety net; MDR weights/thresholds no longer mandatory; AI answer differing from the table is shown with both and flagged | Follows from the line above |
+| 2026-10-29 | Golden tests run each patient 3 times through the AI; all runs must pass | Checks consistency, not only correctness |
 | 2026-10-29 | NCDC/ICMR National Treatment Guidelines v2.0 (Nov 2025) used as the main source for base regimens; 14 base regimens, 9 MDR coverage rules and 9 drug doses drafted from it (lung, urinary, unknown source). Healthcare-associated setting not drafted | India's current national empiric guideline; SSC and IDSA give no empiric regimens |
 | 2026-10-29 | Where NCDC and IDSA doses differ, `drugs.csv` keeps the IDSA row for now and the conflict is listed in `provenance.csv` for the panel | One dose per drug; the panel decides |
 | 2026-10-29 | MDR design option (b): base regimen per source × setting × severity, per-organism risk scores with thresholds, and `mdr_coverage.csv` rules (add / replace) for each exact set of high-risk organisms; `risk_tier` removed from `regimens.csv`. CLINICAL_RULES.md updated with Dr. Solanke's approval | SSC 2026 rec 25–26 are per pathogen; an unlisted organism combination stops with "Discuss with ID / microbiology" rather than guessing |
