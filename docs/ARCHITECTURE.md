@@ -28,7 +28,7 @@ Stewardship admin ──► uploads antibiogram, views reports
 ## Folder layout
 Created 2026-10-28 (Phase 2, step 1). Folders marked *empty* hold only a README for now.
 ```
-/app                 screens: home page; /new = patient entry (one page, 5 section cards) and result screen (app/new/ResultView.tsx, 10 cards per DESIGN.md), via the server action app/new/actions.ts; admin and login still to come
+/app                 screens: home page (Sculpture.tsx = shared logo and decorative shapes); /new = patient entry (one page, 5 section cards) and result screen (app/new/ResultView.tsx, 10 cards per DESIGN.md), via the server action app/new/actions.ts; admin and login still to come
 /app/api             server routes (recommend, decision, upload) — empty
 /lib/ai              AI answer format (answer.ts), instructions (prompt.ts), AI client interface + test stand-in (client.ts), DEMO stand-in used by the screen (demo.ts), real Claude client (claude.ts: Claude Opus 5.5, used only when ANTHROPIC_API_KEY is set; otherwise demo.ts)
 /lib/recommend       the recommendation: input checks, allergy checks (allergy.ts), coverage and spectrum fit (spectrum.ts), review timeline (timeline.ts), evidence pack, safety checks, doses, guideline-table comparison (recommend.ts)

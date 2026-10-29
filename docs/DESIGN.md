@@ -2,38 +2,45 @@
 
 ## Principles
 1. **Readable at 3 am on a phone.** Large type, high contrast, big tap targets (44 px).
-2. **Clinical, modern and inviting.** White cards on cream, a navy header, soft shadows, simple line icons.
-   Gentle motion only: cards rise into place, the "working it out" screen breathes. All motion is switched
-   off when the phone asks for reduced motion. No gradients or glow.
+2. **Soft, molded and inviting ("claymorphism", DECISIONS 2026-10-29).** Inflated rounded forms lit from the
+   upper left: a broad grounding shadow, a light inset on the upper-left edge and a darker inset on the
+   lower-right. Text stays crisp and flat (no shadow on text). No glass, gradients, glow or sharp edges.
 3. **The recommendation is the hero.** Everything else supports it.
 4. **Colour carries meaning**, so use it sparingly and consistently.
+5. **Motion is short and only on touch:** buttons rise slightly on hover and press down when tapped (180 ms).
+   No floating, bouncing or staggered entrances; nothing moves when the phone asks for reduced motion.
 
 ## Brand
-MedWise's editorial identity ("NEJM × The Economist"), adapted for a clinical tool:
+Tokens live in `app/globals.css` as `--dp-*` variables:
 
 | Token | Use | Value |
 | --- | --- | --- |
-| `--cream` | Page background | `#f9f7f2` |
-| `--ink` | Main text | `#1a1a1a` |
-| `--navy` | Header, recommendation card, selected answers, main buttons | `#0e1b2f` |
-| `--accent` | Brand blue: logo, links, info messages, "covered" | `#005a8d` |
-| `--red` | **Safety alerts only** (allergy, toxicity, out-of-scope) | `#c41e3a` |
-| `--green` | "Accept", completed sections | `#2f6b3a` |
-| `--rule` | Hairline borders and dividers (1 px) | `#d1d5db` |
-| `--muted` | Small labels and hints | `#5b6472` |
+| `--dp-color-ground` | Page background | `#f1f2fa` |
+| `--dp-color-ink` / `-ink-secondary` | Text / small labels and hints | `#383139` / `#48404b` |
+| `--dp-color-accent` (pink) | Opening cushion, recommendation card, main action button, "Main" source badge | `#f6a3ca` |
+| `--dp-color-surface` (cream) | Trays: form sections, result cards, footer, bottom bars | `#fffdf7` |
+| `--dp-color-surface-support` (mint) | Completed sections, key reasons, "matches guideline table", covered | `#c0efdc` |
+| `--dp-color-surface-compare` (lavender) | Selected answers (pressed in), AWaRe tag, AI-written interaction box, card icons | `#ded0f9` |
+| `--dp-color-surface-warm` (butter) | Notices: DEMO banner, "still to complete", kidney-dose notes, "differs from table" | `#f9e7a8` |
+| `--dp-color-surface-cool` (blue) | Coverage "Yes", timeline steps, "+ Add" buttons | `#c5e5fb` |
+| `--red` | **Safety alerts only** (allergy, toxicity, out-of-scope, coverage needed but not given) | `#b3123a` |
+| `--green` | "Accept", completed progress | `#2f6b3a` |
 
-Palette taken from the first prototype (DECISIONS 2026-10-29). Amber is used only for the DEMO banner.
-
+Radii: trays 70 px (smaller on phones), cushions 38 px, small cushions 25 px, buttons and answers fully round.
 Red is reserved for danger. Never use it for branding, buttons or headings in the app.
 
 | Role | Font | Use |
 | --- | --- | --- |
-| Display | Playfair Display | Logo, page titles only |
-| Screens | Inter | Forms, labels, buttons, cards |
-| Reading | EB Garamond | AI reasoning and quoted guideline passages |
+| Everything | Instrument Sans | Titles (bold, tight tracking), labels, reasoning, quotes |
 | Data | DM Mono | Doses, intervals, CrCl, SOFA, versions |
 
-Minimum text size 16 px on phones. Doses always in DM Mono so they stand out and align.
+Reading text 16 px or larger. 15 px for secondary lines and 13 px only for bold uppercase labels and chips.
+Doses always in DM Mono so they stand out and align.
+
+Answers: raised cream pills; when chosen they press in, turn lavender and show a recessed dot (single choice)
+or a tick (multiple choice). Focus is a solid 3 px ink outline, separate from the shading.
+Opening screens (home, new patient): a large pink cushion with the title on the left and a static cluster of
+pastel shapes on the right (below the title on phones). The shapes are decoration only.
 
 Motif: hairline rules and the five-segment ruler. Use the ruler for the **narrow → broad spectrum bar**
 (ceftriaxone · amikacin · pip-taz · ertapenem · meropenem · colistin), with a marker for the chosen drug.
@@ -45,16 +52,16 @@ Motif: hairline rules and the five-segment ruler. Use the ruler for the **narrow
 - Sticky bottom bar: "n of 5 sections complete" with a small progress bar, and **Get recommendation**.
   If anything is missing, the page scrolls to the first unfinished section and each unfinished section
   lists what it still needs. The page itself is the review: there is no separate review step.
-- Tap buttons and chips instead of typing wherever possible; selected answers turn navy.
+- Tap buttons and chips instead of typing wherever possible; chosen answers press in and turn lavender.
 - **Suspected source: one or more.** With two or more ticked, a "Main source" row appears (main marked on its chip).
 - While the recommendation is worked out, a "Working it out" screen lists the real steps
-  (patient checks → guideline passages → AI → safety checks → doses).
+  (patient checks → guideline passages → AI → safety checks → doses). It does not animate.
 - Out-of-scope stops (age < 18, pregnancy, neutropenia) appear in red directly under the answer.
 
 ### 2. Result (cards in this exact order)
 *Updated 2026-10-29 with ideas from the first prototype (DECISIONS.md).*
-1. **Recommendation** (navy hero card): drug(s) in large type, dose line in DM Mono, AWaRe tag
-   (Access / Watch / Reserve), a chip "Matches / Differs from guideline table", and a white
+1. **Recommendation** (pink hero cushion): drug(s) in large type, dose line in DM Mono, AWaRe tag
+   (Access / Watch / Reserve), a chip "Matches / Differs from guideline table", and a cream
    **"Why this antibiotic"** box: the AI's one-sentence reason plus the key reasons as ticked chips;
    alternatives underneath. Spectrum bar still to design.
 2. **How to give it**: dose, interval, infusion (e.g. "3-h extended infusion"), renal adjustment.
@@ -66,7 +73,7 @@ Motif: hairline rules and the five-segment ruler. Use the ruler for the **narrow
 6. **Safety and interactions**: the AI-written interaction notes in a dashed box labelled
    "AI-written — verify before acting", then the knowledge-base interactions and monitoring. Red only for true alerts.
 
-Cards 2–9 fold open and closed (tap the title). Open at first: How to give it, Coverage, Safety, and Flags when
+Cards 2–9 fold open and closed (tap the title; a recessed + / − circle shows the state). Open at first: How to give it, Coverage, Safety, and Flags when
 any flag is a safety alert. Coverage shows a three-step bar next to the words Yes / Limited / No (no score).
 7. **Why this antibiotic**: 3–4 short patient-specific reasons, then the reasoning with each guideline
    passage cited (guideline, page).

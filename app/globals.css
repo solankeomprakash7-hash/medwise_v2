@@ -1,57 +1,157 @@
 @import "tailwindcss";
 
 /*
- * Colour tokens from docs/DESIGN.md (palette taken from the first prototype, DECISIONS 2026-10-29).
- * Red is for safety alerts only.
+ * Design tokens from docs/DESIGN.md (claymorphism, DECISIONS 2026-10-29).
+ * Red is for safety alerts only. Light falls from the upper left on every molded form.
  */
 :root {
-  --cream: #f9f7f2;
-  --ink: #1a1a1a;
-  --navy: #0e1b2f;
-  --accent: #005a8d;
-  --red: #c41e3a;
+  --dp-color-ground: #f1f2fa;
+  --dp-color-ink: #383139;
+  --dp-color-ink-secondary: #48404b;
+  --dp-color-accent: #f6a3ca;
+  --dp-color-surface-support: #c0efdc;
+  --dp-color-surface-compare: #ded0f9;
+  --dp-color-surface-warm: #f9e7a8;
+  --dp-color-surface-cool: #c5e5fb;
+  --dp-color-surface: #fffdf7;
+  --dp-typography-face: "Claymorphism Instrument", var(--font-instrument), sans-serif;
+  --dp-typography-body: 16px;
+  --dp-typography-small: 15px;
+  --dp-typography-metadata: 13px;
+  --dp-typography-caption: 12px;
+  --dp-typography-reading-leading: 1.55;
+  --dp-typography-emphasis: 700;
+  --dp-spacing-gap: 24px;
+  --dp-spacing-gap-compact: 20px;
+  --dp-spacing-paragraph-gap: 18px;
+  --dp-radius-surface: 38px;
+  --dp-radius-tray: 70px;
+  --dp-radius-control: 999px;
+  --dp-radius-disclosure: 25px;
+  --dp-border-focus-width: 3px;
+  --dp-motion-interaction: 180ms;
+
+  /* Safety and decision colours (DESIGN.md): red only for alerts, green for Accept and completed. */
+  --red: #b3123a;
   --green: #2f6b3a;
-  --rule: #d1d5db;
-  --muted: #5b6472;
+  --rule: #e2dce6;
+
+  /* Clay shading: broad grounding shadow, light inset upper-left, darker inset lower-right. */
+  --clay-raised: 14px 16px 34px rgb(56 49 57 / 0.13), inset 5px 5px 10px rgb(255 255 255 / 0.75),
+    inset -6px -7px 12px rgb(56 49 57 / 0.09);
+  --clay-small: 6px 8px 16px rgb(56 49 57 / 0.12), inset 3px 3px 6px rgb(255 255 255 / 0.8),
+    inset -3px -4px 7px rgb(56 49 57 / 0.08);
+  --clay-pressed: inset 4px 5px 9px rgb(56 49 57 / 0.16), inset -3px -3px 7px rgb(255 255 255 / 0.85);
 }
 
 @theme inline {
-  --color-cream: var(--cream);
-  --color-ink: var(--ink);
-  --color-navy: var(--navy);
-  --color-accent: var(--accent);
+  --color-ground: var(--dp-color-ground);
+  --color-ink: var(--dp-color-ink);
+  --color-ink-2: var(--dp-color-ink-secondary);
+  --color-pink: var(--dp-color-accent);
+  --color-mint: var(--dp-color-surface-support);
+  --color-lavender: var(--dp-color-surface-compare);
+  --color-butter: var(--dp-color-surface-warm);
+  --color-sky: var(--dp-color-surface-cool);
+  --color-surface: var(--dp-color-surface);
   --color-red: var(--red);
   --color-green: var(--green);
   --color-rule: var(--rule);
-  --color-muted: var(--muted);
-  --font-display: var(--font-playfair);
-  --font-serif: var(--font-garamond);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--dp-typography-face);
   --font-mono: var(--font-dm-mono);
+  --radius-tray: var(--dp-radius-tray);
+  --radius-surface: var(--dp-radius-surface);
+  --radius-disclosure: var(--dp-radius-disclosure);
 }
 
 body {
-  background: var(--cream);
-  color: var(--ink);
-  font-family: var(--font-inter), system-ui, sans-serif;
-  font-size: 17px;
+  background: var(--dp-color-ground);
+  color: var(--dp-color-ink);
+  font-family: var(--dp-typography-face);
+  font-size: var(--dp-typography-body);
+  line-height: var(--dp-typography-reading-leading);
 }
 
-/* Cards rise gently into place; the thinking screen pulses. Off for people who ask for reduced motion. */
-@keyframes rise {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: none; }
+/* Visible focus, kept separate from the shading. */
+:focus-visible {
+  outline: var(--dp-border-focus-width) solid var(--dp-color-ink);
+  outline-offset: 3px;
 }
-@keyframes breathe {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.08); opacity: 0.85; }
+/* Card titles sit flush with their tray, so their focus ring is drawn just inside the edge. */
+summary:focus-visible {
+  outline-offset: -4px;
 }
-.rise { animation: rise 0.45s ease-out both; }
-.rise:nth-child(2) { animation-delay: 0.06s; }
-.rise:nth-child(3) { animation-delay: 0.12s; }
-.rise:nth-child(4) { animation-delay: 0.18s; }
-.rise:nth-child(n + 5) { animation-delay: 0.24s; }
-.breathe { animation: breathe 1.8s ease-in-out infinite; }
+
+@layer components {
+  /* Shared container: cream tray with the large radius (smaller on phones so content keeps its room). */
+  .clay-tray {
+    background: var(--dp-color-surface);
+    border-radius: clamp(34px, 8vw, var(--dp-radius-tray));
+    box-shadow: var(--clay-raised);
+  }
+  /* Cushion: a molded object inside or beside a tray. Set the colour with a bg-* utility. */
+  .clay-cushion {
+    border-radius: var(--dp-radius-surface);
+    box-shadow: var(--clay-raised);
+  }
+  .clay-small {
+    border-radius: var(--dp-radius-disclosure);
+    box-shadow: var(--clay-small);
+  }
+  /* Recessed well: inputs, selected answers, the disclosure circle. */
+  .clay-well {
+    box-shadow: var(--clay-pressed);
+  }
+  /* Thick pill button: rises slightly on hover, presses down when tapped. */
+  .clay-button {
+    border-radius: var(--dp-radius-control);
+    box-shadow: var(--clay-small);
+    font-weight: var(--dp-typography-emphasis);
+    transition:
+      transform var(--dp-motion-interaction) ease,
+      box-shadow var(--dp-motion-interaction) ease;
+  }
+  .clay-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+  .clay-button:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: var(--clay-pressed);
+  }
+  /* A tappable answer: raised when free, pressed in when chosen. */
+  .clay-option {
+    border-radius: var(--dp-radius-control);
+    background: var(--dp-color-surface);
+    box-shadow: var(--clay-small);
+    transition:
+      transform var(--dp-motion-interaction) ease,
+      box-shadow var(--dp-motion-interaction) ease,
+      background-color var(--dp-motion-interaction) ease;
+  }
+  .clay-option:hover {
+    transform: translateY(-1px);
+  }
+  .clay-option:has(:checked) {
+    background: var(--dp-color-surface-compare);
+    box-shadow: var(--clay-pressed);
+    transform: none;
+  }
+  .clay-option:has(:focus-visible) {
+    outline: var(--dp-border-focus-width) solid var(--dp-color-ink);
+    outline-offset: 3px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rise, .breathe { animation: none; }
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+  .clay-button:hover:not(:disabled),
+  .clay-button:active:not(:disabled),
+  .clay-option:hover {
+    transform: none;
+  }
 }

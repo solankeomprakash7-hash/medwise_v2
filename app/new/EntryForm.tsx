@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useTransition } from "react";
+import { Fragment, useEffect, useId, useRef, useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import type { Result } from "@/lib/recommend/recommend";
 import { getRecommendation } from "./actions";
 import ResultView from "./ResultView";
+import Sculpture, { Logo } from "../Sculpture";
 
 // Patient entry (docs/DESIGN.md, screen 1). Details live only in this page's memory: nothing is stored
 // in the browser, and there are no free-text fields where a name or ID could be typed.
@@ -307,33 +308,36 @@ export default function EntryForm({ options }: { options: Options }) {
 
   return (
     <div className="flex w-full flex-1 flex-col">
-      <header className="bg-navy text-white">
-        <div className="mx-auto max-w-2xl px-4 pb-6 pt-5">
-          <div className="flex items-center gap-3">
-            <Logo />
-            <div>
-              <p className="font-display text-2xl leading-none">MedWise</p>
-              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/70">Empiric antibiotics · adult sepsis</p>
+      <header className="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-6 sm:pt-6">
+        <div className={`clay-cushion bg-pink ${result ? "px-6 py-4" : "grid items-center gap-4 p-6 sm:p-9 md:grid-cols-[1.4fr_1fr]"}`}>
+          <div>
+            <div className="flex items-center gap-3">
+              <Logo className="size-9" />
+              <div>
+                <p className="text-xl font-bold leading-none tracking-[-0.02em]">MedWise</p>
+                <p className="mt-1 text-[13px] font-bold uppercase tracking-[0.14em] text-ink-2">Empiric antibiotics · adult sepsis</p>
+              </div>
             </div>
+            {!result && (
+              <>
+                <h1 className="mt-6 text-[clamp(44px,8vw,80px)] font-bold leading-[0.95] tracking-[-0.04em]">New patient</h1>
+                <p className="mt-4 max-w-md text-lg">
+                  Fill in the five sections on this page. No names, hospital numbers or dates of birth: none are needed.
+                </p>
+              </>
+            )}
           </div>
-          {!result && (
-            <>
-              <h1 className="mt-6 font-display text-3xl">New patient</h1>
-              <p className="mt-1 text-base text-white/80">
-                Fill in the five sections on this page. No names, hospital numbers or dates of birth: none are needed.
-              </p>
-            </>
-          )}
+          {!result && <Sculpture className="mx-auto w-full max-w-[170px] md:max-w-[260px]" />}
         </div>
       </header>
 
       {result && (
-        <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-40 pt-5">
+        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-44 pt-6 sm:px-6">
           <ResultView result={result} onEdit={() => setResult(null)} onStartAgain={startAgain} />
         </main>
       )}
-      <main className={`mx-auto -mt-2 w-full max-w-2xl flex-1 px-4 pb-36 ${result ? "hidden" : ""}`}>
-        <div className="flex flex-col gap-4">
+      <main className={`mx-auto w-full max-w-3xl flex-1 px-4 pb-40 pt-6 sm:px-6 ${result ? "hidden" : ""}`}>
+        <div className="flex flex-col gap-6">
           {SECTIONS.map((section, i) => (
             <section
               key={section.title}
@@ -341,24 +345,24 @@ export default function EntryForm({ options }: { options: Options }) {
                 sectionRefs.current[i] = el;
               }}
               aria-labelledby={`${listId}-s${i}`}
-              className="scroll-mt-4 rounded-xl border border-rule bg-white p-4 shadow-sm sm:p-5"
+              className="clay-tray scroll-mt-4 px-5 py-6 sm:px-9 sm:py-8"
             >
-              <div className="flex items-center gap-3 border-b border-rule pb-3">
+              <div className="flex items-center gap-3">
                 <span
                   aria-hidden
-                  className={`flex size-9 shrink-0 items-center justify-center rounded-full font-mono text-base ${
-                    isDone(i) ? "bg-green text-white" : "bg-navy/10 text-navy"
+                  className={`clay-small flex size-11 shrink-0 items-center justify-center !rounded-full font-mono text-base font-bold ${
+                    isDone(i) ? "bg-mint" : "bg-lavender"
                   }`}
                 >
                   {isDone(i) ? "✓" : i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 id={`${listId}-s${i}`} className="text-lg font-semibold leading-tight text-navy">
+                  <h2 id={`${listId}-s${i}`} className="text-xl font-bold leading-tight tracking-[-0.02em]">
                     {section.title}
                   </h2>
-                  <p className="text-sm text-muted">{section.hint}</p>
+                  <p className="text-[15px] text-ink-2">{section.hint}</p>
                 </div>
-                <span className={`text-sm font-semibold ${isDone(i) ? "text-green" : "text-muted"}`}>
+                <span className={`rounded-full px-3 py-1 text-[13px] font-bold ${isDone(i) ? "bg-mint" : "bg-ground"}`}>
                   {isDone(i) ? "Complete" : problems[i].missing.length ? `${problems[i].missing.length} to answer` : "Check"}
                 </span>
               </div>
@@ -372,7 +376,7 @@ export default function EntryForm({ options }: { options: Options }) {
                   ))}
                 </Alert>
               )}
-              <div className="mt-4 flex flex-col gap-6">{fields[i]}</div>
+              <div className="mt-6 flex flex-col gap-6">{fields[i]}</div>
             </section>
           ))}
         </div>
@@ -385,35 +389,35 @@ export default function EntryForm({ options }: { options: Options }) {
       </main>
 
       {result?.status === "recommendation" && (
-        <nav className="fixed inset-x-0 bottom-0 border-t border-rule bg-white/95 backdrop-blur" aria-label="Decision">
-          <div className="mx-auto max-w-2xl px-4 py-3">
+        <nav className="fixed inset-x-0 bottom-0 z-40 px-3 pb-3" aria-label="Decision">
+          <div className="clay-cushion mx-auto max-w-3xl bg-surface px-4 py-3">
             {/* All three equally easy to reach (DESIGN.md). Disabled until decisions can be saved (rule 7). */}
             <div className="flex gap-3">
-              <button type="button" disabled className="min-h-12 flex-1 rounded-lg bg-green text-lg font-semibold text-white disabled:opacity-50">
+              <button type="button" disabled className="clay-button min-h-12 flex-1 bg-green text-lg text-white disabled:opacity-60">
                 Accept
               </button>
-              <button type="button" disabled className="min-h-12 flex-1 rounded-lg border border-navy text-lg disabled:opacity-50">
+              <button type="button" disabled className="clay-button min-h-12 flex-1 bg-surface text-lg disabled:opacity-60">
                 Modify
               </button>
-              <button type="button" disabled className="min-h-12 flex-1 rounded-lg border border-navy text-lg disabled:opacity-50">
+              <button type="button" disabled className="clay-button min-h-12 flex-1 bg-surface text-lg disabled:opacity-60">
                 Override
               </button>
             </div>
-            <p className="mt-1 text-center text-sm text-muted">Decisions are saved once login is added.</p>
+            <p className="mt-1.5 text-center text-[15px] text-ink-2">Decisions are saved once login is added.</p>
           </div>
         </nav>
       )}
       {pending && <Thinking />}
-      <nav className={`fixed inset-x-0 bottom-0 border-t border-rule bg-white/95 backdrop-blur ${result ? "hidden" : ""}`} aria-label="Progress">
-        <div className="mx-auto flex max-w-2xl items-center gap-4 px-4 py-3">
-          <div className="flex-1">
-            <p className="text-sm text-muted">
+      <nav className={`fixed inset-x-0 bottom-0 z-40 px-3 pb-3 ${result ? "hidden" : ""}`} aria-label="Progress">
+        <div className="clay-cushion mx-auto flex max-w-3xl items-center gap-3 bg-surface py-3 pl-5 pr-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] leading-tight text-ink-2">
               <span className="font-mono text-ink">{doneCount}</span> of <span className="font-mono text-ink">{SECTIONS.length}</span> sections
               complete
             </p>
             <ol className="mt-1.5 flex gap-1" aria-hidden>
               {SECTIONS.map((s, i) => (
-                <li key={s.title} className={`h-1.5 flex-1 rounded-full ${isDone(i) ? "bg-green" : "bg-rule"}`} />
+                <li key={s.title} className={`clay-well h-2.5 flex-1 rounded-full ${isDone(i) ? "bg-green" : "bg-ground"}`} />
               ))}
             </ol>
           </div>
@@ -421,7 +425,7 @@ export default function EntryForm({ options }: { options: Options }) {
             type="button"
             onClick={submit}
             disabled={pending}
-            className="min-h-12 rounded-lg bg-navy px-5 text-lg font-semibold text-white shadow-sm disabled:opacity-60"
+            className="clay-button min-h-13 shrink-0 bg-pink px-5 text-base disabled:opacity-70 sm:px-7 sm:text-lg"
           >
             {pending ? "Working…" : "Get recommendation"}
           </button>
@@ -431,21 +435,34 @@ export default function EntryForm({ options }: { options: Options }) {
   );
 }
 
-// A simple mark: a shield with a cross, in the brand blue.
-function Logo() {
-  return (
-    <svg viewBox="0 0 32 32" className="size-10" aria-hidden>
-      <path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7L16 2Z" fill="var(--accent)" />
-      <path d="M14 10h4v4h4v4h-4v4h-4v-4h-4v-4h4z" fill="white" />
-    </svg>
-  );
-}
-
+// Answers are clay pills: raised when free, pressed in (lavender) when chosen; see .clay-option in globals.css.
 const optionClass =
-  "flex min-h-11 cursor-pointer items-center justify-center rounded-lg border px-3 py-2 text-center text-base leading-snug transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent";
-const optionState = (selected: boolean) =>
-  selected ? "border-navy bg-navy font-semibold text-white" : "border-rule bg-cream/60 text-ink hover:border-accent";
-const legendClass = "mb-2 text-sm font-semibold uppercase tracking-wider text-muted";
+  "clay-option flex min-h-12 min-w-0 cursor-pointer items-center justify-center gap-2 px-4 py-2 text-center text-base leading-snug";
+const optionState = (selected: boolean) => (selected ? "font-bold" : "");
+const legendClass = "mb-3 text-[13px] font-bold uppercase tracking-[0.12em] text-ink-2";
+
+// Long answers such as "Bloodstream/unknown" may wrap after the slash, never mid-word.
+const breakable = (label: string) => (
+  <span className="min-w-0">
+    {label.split("/").map((part, i, all) => (
+      <Fragment key={i}>
+        {part}
+        {i < all.length - 1 && (
+          <>
+            /<wbr />
+          </>
+        )}
+      </Fragment>
+    ))}
+  </span>
+);
+
+// The recessed dot of a single-choice answer.
+const Dot = ({ on }: { on: boolean }) => (
+  <span aria-hidden className="clay-well flex size-4 shrink-0 items-center justify-center rounded-full bg-ground">
+    {on && <span className="size-2 rounded-full bg-ink" />}
+  </span>
+);
 
 function Choice(props: {
   legend: string;
@@ -459,13 +476,14 @@ function Choice(props: {
   return (
     <fieldset>
       <legend className={legendClass}>{props.legend}</legend>
-      <div className={`grid gap-2 ${grid}`}>
+      <div className={`grid gap-3 ${grid}`}>
         {props.options.map((o) => {
           const selected = props.value === o.value;
           return (
             <label key={o.value} className={`${optionClass} ${optionState(selected)}`}>
               <input type="radio" name={name} value={o.value} checked={selected} onChange={() => props.onChange(o.value)} className="sr-only" />
-              {o.label}
+              <Dot on={selected} />
+              {breakable(o.label)}
             </label>
           );
         })}
@@ -486,14 +504,14 @@ function MultiChoice(props: { legend: string; options: { value: string; label: s
       <legend className={legendClass}>
         {props.legend} <span className="font-normal normal-case tracking-normal">· all that apply, or None</span>
       </legend>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         {props.options.map((o) => {
           const selected = props.value.includes(o.value);
           return (
-            <label key={o.value} className={`${optionClass} rounded-full px-4 ${optionState(selected)}`}>
+            <label key={o.value} className={`${optionClass} ${optionState(selected)}`}>
               <input type="checkbox" checked={selected} onChange={() => toggle(o.value)} className="sr-only" />
               {selected && <span aria-hidden className="mr-1.5">✓</span>}
-              {o.label}
+              {breakable(o.label)}
             </label>
           );
         })}
@@ -523,16 +541,16 @@ function SourcePicker(props: {
         <legend className={legendClass}>
           {LABELS.source} <span className="font-normal normal-case tracking-normal">· one or more</span>
         </legend>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {props.options.map((o) => {
             const selected = picked.includes(o.value);
             return (
               <label key={o.value} className={`${optionClass} relative ${optionState(selected)}`}>
                 <input type="checkbox" checked={selected} onChange={() => toggle(o.value)} className="sr-only" />
                 {selected && <span aria-hidden className="mr-1.5">✓</span>}
-                {o.label}
+                {breakable(o.label)}
                 {o.value === props.main && picked.length > 1 && (
-                  <span className="absolute -top-2 right-2 rounded-full bg-accent px-2 text-xs font-semibold text-white">Main</span>
+                  <span className="clay-small absolute -top-2.5 right-3 !rounded-full bg-pink px-2.5 text-[13px] font-bold">Main</span>
                 )}
               </label>
             );
@@ -540,15 +558,16 @@ function SourcePicker(props: {
         </div>
       </fieldset>
       {picked.length > 1 && (
-        <fieldset className="rounded-lg bg-accent/5 p-3">
+        <fieldset className="clay-small bg-lavender/60 p-4">
           <legend className="sr-only">Main source</legend>
-          <p className="text-sm text-ink">
-            <span className="font-semibold">Main source</span> — the guideline table comparison uses it; the AI must cover all of them.
+          <p className="text-[15px]">
+            <span className="font-bold">Main source</span> — the guideline table comparison uses it; the AI must cover all of them.
           </p>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-3">
             {picked.map((v) => (
-              <label key={v} className={`${optionClass} rounded-full px-4 ${optionState(v === props.main)}`}>
+              <label key={v} className={`${optionClass} ${optionState(v === props.main)}`}>
                 <input type="radio" name="main-source" checked={v === props.main} onChange={() => makeMain(v)} className="sr-only" />
+                <Dot on={v === props.main} />
                 {label(v)}
               </label>
             ))}
@@ -575,23 +594,20 @@ function Thinking() {
     return () => clearInterval(timer);
   }, []);
   return (
-    <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center bg-navy/85 p-6 backdrop-blur-sm">
-      <div className="rise w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
-        <div className="breathe mx-auto flex size-16 items-center justify-center rounded-full bg-accent/10">
-          <svg viewBox="0 0 32 32" className="size-10" aria-hidden>
-            <path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7L16 2Z" fill="var(--accent)" />
-            <path d="M14 10h4v4h4v4h-4v4h-4v-4h-4v-4h4z" fill="white" />
-          </svg>
+    <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center bg-ink/55 p-6">
+      <div className="clay-cushion w-full max-w-sm bg-surface p-7">
+        <div className="clay-cushion mx-auto flex size-20 items-center justify-center !rounded-full bg-pink">
+          <Logo className="size-11" />
         </div>
-        <p className="mt-4 text-center font-display text-2xl text-navy">Working it out</p>
-        <p className="text-center text-sm text-muted">This can take up to a minute.</p>
+        <p className="mt-5 text-center text-2xl font-bold tracking-[-0.02em]">Working it out</p>
+        <p className="text-center text-[15px] text-ink-2">This can take up to a minute.</p>
         <ol className="mt-5 flex flex-col gap-2.5">
           {THINKING_STEPS.map((step, i) => (
-            <li key={step} className={`flex items-center gap-3 text-sm ${i <= shown ? "text-ink" : "text-muted/60"}`}>
+            <li key={step} className={`flex items-center gap-3 text-[15px] ${i <= shown ? "font-bold" : "text-ink-2"}`}>
               <span
                 aria-hidden
-                className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs ${
-                  i < shown ? "bg-green text-white" : i === shown ? "breathe bg-accent text-white" : "bg-rule text-white"
+                className={`flex size-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold ${
+                  i < shown ? "clay-small !rounded-full bg-mint" : i === shown ? "clay-small !rounded-full bg-pink" : "clay-well bg-ground"
                 }`}
               >
                 {i < shown ? "✓" : i + 1}
@@ -638,7 +654,7 @@ function NumberField(props: {
         onChange={(e) => props.onChange(digitsOnly(e.target.value, props.decimal ?? false))}
         onFocus={props.onFocus}
         onBlur={props.onBlur}
-        className="min-h-12 w-full max-w-40 rounded-lg border border-rule bg-cream/60 px-3 font-mono text-xl focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+        className="clay-well min-h-13 w-full max-w-40 rounded-full bg-ground px-5 font-mono text-xl"
       />
     </div>
   );
@@ -662,19 +678,19 @@ function DrugRows(props: {
       {props.legend && <legend className={legendClass}>{props.legend}</legend>}
       <div className="flex flex-col gap-3">
         {props.rows.map((row, i) => (
-          <div key={i} className="flex flex-wrap items-end gap-2 rounded-lg border border-rule bg-cream/40 p-3">
-            <label className="flex flex-1 flex-col text-base">
+          <div key={i} className="clay-small flex flex-wrap items-end gap-3 bg-ground/70 p-4">
+            <label className="flex flex-1 flex-col text-[15px] font-bold">
               {props.what[0].toUpperCase() + props.what.slice(1)}
               <input
                 list={props.listId}
                 value={row.drug}
                 onChange={(e) => update(i, { drug: e.target.value })}
                 autoComplete="off"
-                className="mt-1 min-h-12 rounded-lg border border-rule bg-white px-3 text-lg"
+                className="clay-well mt-1.5 min-h-12 rounded-full bg-surface px-3 text-lg"
               />
             </label>
             {props.extra?.kind === "days" && (
-              <label className="flex w-24 flex-col text-base">
+              <label className="flex w-24 flex-col text-[15px] font-bold">
                 Days
                 <input
                   type="text"
@@ -684,17 +700,17 @@ function DrugRows(props: {
                   maxLength={2}
                   value={row.extra}
                   onChange={(e) => update(i, { extra: digitsOnly(e.target.value, false) })}
-                  className="mt-1 min-h-12 rounded-lg border border-rule bg-white px-3 font-mono text-lg"
+                  className="clay-well mt-1.5 min-h-12 rounded-full bg-surface px-3 font-mono text-lg"
                 />
               </label>
             )}
             {props.extra?.kind === "reaction" && (
-              <label className="flex w-40 flex-col text-base">
+              <label className="flex w-40 flex-col text-[15px] font-bold">
                 Reaction
                 <select
                   value={row.extra}
                   onChange={(e) => update(i, { extra: e.target.value })}
-                  className="mt-1 min-h-12 rounded-lg border border-rule bg-white px-2 text-lg"
+                  className="clay-well mt-1.5 min-h-12 rounded-full bg-surface px-2 text-lg"
                 >
                   <option value="">Choose…</option>
                   {props.extra.options.map((o) => (
@@ -708,7 +724,7 @@ function DrugRows(props: {
             <button
               type="button"
               onClick={() => props.onChange(props.rows.filter((_, j) => j !== i))}
-              className="min-h-12 px-3 text-base underline"
+              className="min-h-12 px-3 text-base font-bold underline underline-offset-4"
               aria-label={`Remove ${row.drug || props.what}`}
             >
               Remove
@@ -718,7 +734,7 @@ function DrugRows(props: {
         <button
           type="button"
           onClick={() => props.onChange([...props.rows, { drug: "", extra: "" }])}
-          className="min-h-11 self-start rounded-lg border border-dashed border-accent px-4 text-base font-semibold text-accent"
+          className="clay-button min-h-12 self-start bg-sky px-5 text-base"
         >
           + Add {props.what}
         </button>
@@ -738,7 +754,7 @@ function Stop({ message, onStartAgain }: { message: string; onStartAgain: () => 
     <div ref={ref} className="scroll-mb-28 -mt-2">
       <Alert tone="danger" title="Outside MedWise version 1 — no recommendation">
         <p>{message}</p>
-        <button type="button" onClick={onStartAgain} className="mt-3 min-h-11 underline">
+        <button type="button" onClick={onStartAgain} className="clay-button mt-3 min-h-12 bg-surface px-5 text-base">
           Start a new patient
         </button>
       </Alert>
@@ -748,14 +764,15 @@ function Stop({ message, onStartAgain }: { message: string; onStartAgain: () => 
 
 
 function Alert({ tone, title, children }: { tone: "danger" | "info" | "success"; title: string; children: ReactNode }) {
+  // Red stays for safety alerts only (DESIGN.md): a red-edged cream cushion. Notices use butter yellow.
   const style = {
-    danger: "border-red bg-red/5 text-red",
-    info: "border-accent bg-accent/5 text-accent",
-    success: "border-green bg-green/5 text-green",
+    danger: "border-2 border-red bg-surface text-red",
+    info: "bg-butter",
+    success: "bg-mint",
   }[tone];
   return (
-    <div role={tone === "danger" ? "alert" : "status"} className={`mt-4 rounded-lg border-l-4 p-4 text-base ${style}`}>
-      <p className="font-semibold">{title}</p>
+    <div role={tone === "danger" ? "alert" : "status"} className={`clay-small mt-5 p-5 text-base ${style}`}>
+      <p className="font-bold">{title}</p>
       <div className="mt-1 text-ink">{children}</div>
     </div>
   );
