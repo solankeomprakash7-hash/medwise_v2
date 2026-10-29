@@ -5,7 +5,7 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
-| 2026-10-29 | Number boxes changed from type="number" to text boxes with the numeric keypad (inputmode) that keep digits only (and one decimal point for weight and CrCl) | Dr. Solanke still could not type the age on his phone; type="number" is known to misbehave on some phones and keyboards |
+| 2026-10-29 | Number boxes changed from type="number" to text boxes with the numeric keypad (inputmode) that keep digits only (and one decimal point for weight and CrCl) | Dr. Solanke still could not type the age on a phone; type="number" is known to misbehave on some phones and keyboards |
 | 2026-10-29 | Age "under 18" stop now waits until the clinician leaves the age box (Next stays blocked either way) | Bug reported by Dr. Solanke: on a phone the alert appeared after the first digit ("6" of "62") and interrupted typing |
 | 2026-10-29 | Result screen built (10 cards, DESIGN.md order) with a DEMO stand-in that takes the guideline table's choice and passes through all real safety checks; "DEMO — not for patient care" banner | Shows the full screen and every check working before the paid AI is connected |
 | 2026-10-29 | Coverage given and spectrum fit computed by code from `drug_spectrum.csv`; "needed but not given" is a red flag; excess coverage shown in words | Rules 1 and 5; makes over-treatment visible |
