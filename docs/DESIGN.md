@@ -46,6 +46,13 @@ Motif: hairline rules and the five-segment ruler. Use the ruler for the **narrow
 (ceftriaxone · amikacin · pip-taz · ertapenem · meropenem · colistin), with a marker for the chosen drug.
 
 ## Screens
+### 0. Home (the introduction)
+Pink opening cushion (what MedWise is, one-line promise, "Find the right antibiotic" button, demo notice) →
+four small fact cushions → cream tray with the problem ("It is not knowledge. It is synthesis."; too narrow /
+too broad), how it works (4 steps; vertical on phones) and what you get → lavender "Before you start" questions
+(who it is for, what it does not do, where the advice comes from) → pink closing with "Start with a new patient"
+→ cream footer. Wording comes from `PRODUCT.md`. No study figures, numbers or testimonials on this page.
+
 ### 1. Patient entry
 - **One scrolling page, no "Next" screens**, in five section cards: Patient → Infection → Kidney & liver →
   Resistance risk → Host & allergies. Each card shows its number, then a green tick and "Complete" when done.

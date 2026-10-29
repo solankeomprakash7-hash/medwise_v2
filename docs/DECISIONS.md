@@ -5,6 +5,7 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | Home page introduces MedWise: what it is, the problem (synthesis, too narrow vs too broad), how it works, what you get, who it is for and what it does not do, with two "start" buttons. No study figures or invented numbers; says plainly that it is a demo, not for patient care | Owner: visitors should understand the app and the need at a glance |
 | 2026-10-29 | New look: claymorphism (soft molded forms, pink / cream / mint / lavender / butter / blue pastels, Instrument Sans, DM Mono kept for doses). Red still only for safety alerts; motion only on hover and tap, none for reduced motion | Owner request for this visual style; replaces the navy/blue look and the entrance animations |
 | 2026-10-29 | Suspected source: one or more, one marked "main"; the AI must cover all; the guideline-table comparison uses the main source; extra sources add a "check coverage" flag | Owner choice; patients often have more than one possible source |
 | 2026-10-29 | Real AI built (Claude Opus 5.5, server only, `lib/ai/claude.ts`), switched on only when `ANTHROPIC_API_KEY` is set in Vercel; otherwise the DEMO stand-in. Server-side fallback to another Claude model if it declines; the model used is recorded | Owner: build now, add the paid key later |
