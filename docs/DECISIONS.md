@@ -5,6 +5,7 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | Branches: `main` = production site, `staging` = test site (Vercel); changes go to `staging` first | Release rule in ARCHITECTURE.md: test on staging and check on phone before production |
 | 2026-10-28 | Docs moved into `docs/`; original zip kept in the repo | Matches the paths in `CLAUDE.md`; owner wants the original bundle kept |
 | 2026-10-28 | Empty project: Next.js 16 + TypeScript + Tailwind 4, Vitest for tests, GitHub Actions runs checks on every push | Phase 2 step 1; checks catch mistakes before anything reaches staging |
 | 2026-10-28 | Automatic test fails if "confidence %", "validated" or "approved" appears in app code | Enforces rule 5 without relying on memory |
