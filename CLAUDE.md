@@ -23,7 +23,7 @@ administration, reasoning and safety notes. **The clinician always makes the fin
 6. **Every result shows** the knowledge-base version and the guideline versions it used.
 7. **Every Accept / Modify / Override is saved**; Modify and Override require a reason.
 8. **The golden test set must pass** before anything is deployed to the live site.
-9. A user only ever sees data from their own hospital.
+9. A user only ever sees data from their own hospital. (Exception: the owner sees all hospitals — DECISIONS 2026-10-29.)
 
 ## Read these before working on the matching area
 | File | Read it when you are working on… |
@@ -32,6 +32,7 @@ administration, reasoning and safety notes. **The clinician always makes the fin
 | `docs/CLINICAL_RULES.md` | the rules engine, AI prompt, result screen, tests |
 | `docs/DESIGN.md` | any screen, component or styling |
 | `docs/ARCHITECTURE.md` | project structure, database, server code, deployment |
+| `docs/EVIDENCE_REVIEW.md` | guideline versions and open clinical questions (draft, not signed off) |
 | `docs/DECISIONS.md` | before changing an earlier decision — and add to it after any new one |
 
 ## After every session
