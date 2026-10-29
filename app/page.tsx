@@ -1,4 +1,6 @@
-// Placeholder home page. The patient-entry screens come in a later step.
+import Link from "next/link";
+
+// Home page. Login and the result screen come in later steps.
 export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 py-12">
@@ -7,7 +9,10 @@ export default function Home() {
       <p className="text-lg leading-8">
         Empiric antibiotic decision support for adult sepsis.
       </p>
-      <p className="mt-4 text-lg leading-8">This site is being set up. No clinical features yet.</p>
+      <p className="mt-4 text-lg leading-8">This site is being set up. No recommendations are given yet.</p>
+      <Link href="/new" className="mt-8 inline-flex min-h-12 items-center self-start rounded bg-ink px-6 text-lg text-cream">
+        New patient
+      </Link>
       <footer className="mt-auto border-t border-rule pt-4 text-base">
         Decision support only — verify with clinical judgement and local policy.
       </footer>
