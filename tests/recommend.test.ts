@@ -21,6 +21,7 @@ const goodAnswer = {
   regimen: "ceftriaxone + azithromycin",
   alternatives: ["ceftriaxone + doxycycline"],
   mdr_assessment: lowRisk,
+  why_this_choice: "Covers the usual and atypical pneumonia organisms; no MDR risk, so nothing broader is needed.",
   key_reasons: ["Community-acquired pneumonia with sepsis", "No MDR risk factors", "Atypical cover needed"],
   coverage_needed: [
     { category: "gram_positive", needed: true, reason: "Pneumococcus" },
@@ -32,6 +33,7 @@ const goodAnswer = {
     { category: "anaerobes", needed: false, reason: "Lung source without anaerobic risk" },
     { category: "atypicals", needed: true, reason: "Community-acquired pneumonia" },
   ],
+  interactions: [{ drug: "azithromycin", text: "Can prolong the QT interval; check the ECG and other QT-prolonging drugs." }],
   stewardship: [{ action: "review_at_48_72h", text: "Review cultures and narrow if possible." }],
   reasoning: "Community-acquired pneumonia with sepsis and no MDR risk factors. The national guideline's ICU row gives ceftriaxone with azithromycin. COPD alone is not a Pseudomonas risk factor here.",
   citations: [
@@ -83,6 +85,33 @@ describe("recommendation with a correct AI answer", () => {
   });
 });
 
+describe("more than one suspected source", () => {
+  const twoSources = { ...pneumonia, extra_sources: ["urinary"] };
+
+  it("gives the AI the passages for every source, and compares with the main source's table row", async () => {
+    const { ai, result } = ask(goodAnswer, twoSources);
+    const r = await result;
+    expect(ai.lastUserMessage).toContain("ncdc-12.5-icu");
+    expect(ai.lastUserMessage).toContain("ncdc-5.2"); // urinary passage
+    expect(r.status).toBe("recommendation");
+    expect(r.flags.some((f) => f.startsWith("Differs from guideline table"))).toBe(false);
+    expect(r.flags.join(" ")).toContain("Check that the regimen also covers: Urinary.");
+  });
+
+  it("shows the AI's one-line reason and its interaction notes", async () => {
+    const r = await ask(goodAnswer).result;
+    expect(r.whyThisChoice).toBe(goodAnswer.why_this_choice);
+    expect(r.interactions?.[0].drug).toBe("azithromycin");
+  });
+
+  it("rejects an unknown extra source or one repeating the main source", async () => {
+    for (const extra of [["kidney"], ["lung"]]) {
+      const r = await ask(goodAnswer, { ...pneumonia, extra_sources: extra }).result;
+      expect(r.status).toBe("invalid_input");
+    }
+  });
+});
+
 describe("safety checks stop unsafe AI answers", () => {
   const stopped = async (answer: unknown, expected: string, patient: object = pneumonia) => {
     const r = await ask(answer, patient).result;
@@ -112,6 +141,14 @@ describe("safety checks stop unsafe AI answers", () => {
       { ...goodAnswer, citations: [{ passage_id: "ncdc-5.2", quote: "Collect urine and blood specimens" }] },
       "is not in the evidence given for this patient",
     ));
+
+  it("a dose inside an AI-written interaction note", () =>
+    stopped({ ...goodAnswer, interactions: [{ drug: "azithromycin", text: "Reduce to 250 mg if on statins." }] }, "contains a dose"));
+
+  it("an interaction note for a drug that is not in the regimen", () =>
+    stopped({ ...goodAnswer, interactions: [{ drug: "meropenem", text: "Lowers valproate levels." }] }, '"meropenem", which is not in the regimen'));
+
+  it('a "why this choice" over 40 words', () => stopped({ ...goodAnswer, why_this_choice: "word ".repeat(41) }, "the limit is 40"));
 
   it("reasoning over 150 words", () => stopped({ ...goodAnswer, reasoning: "word ".repeat(151) }, "the limit is 150"));
 

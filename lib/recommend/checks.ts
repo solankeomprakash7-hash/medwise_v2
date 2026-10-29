@@ -8,6 +8,7 @@ import { COVERAGE_KEYS } from "./spectrum";
 export type AnswerCheck = { ok: true; answer: AiAnswer } | { ok: false; problems: string[] };
 
 export const MAX_REASONING_WORDS = 150;
+export const MAX_WHY_WORDS = 40;
 
 // Anything that looks like a dose: a number followed by a dose unit (rule 1: the AI never writes a dose).
 const DOSE = /\d+(?:[.,]\d+)?\s*(?:mg\/kg|mg|mcg|µg|g|gm|grams?|mu|iu|units?|lakhs?|million)\b/i;
@@ -52,7 +53,8 @@ export function checkAnswer(raw: string, pack: EvidencePack): AnswerCheck {
 
   // No doses anywhere in the AI's text.
   const texts = [
-    answer.regimen, ...answer.alternatives, answer.reasoning, ...answer.flags, ...answer.key_reasons,
+    answer.regimen, ...answer.alternatives, answer.reasoning, answer.why_this_choice, ...answer.flags, ...answer.key_reasons,
+    ...answer.interactions.map((i) => i.text),
     ...answer.mdr_assessment.map((m) => m.reason), ...answer.coverage_needed.map((c) => c.reason),
     ...answer.stewardship.map((s) => s.text),
   ];
@@ -61,6 +63,15 @@ export function checkAnswer(raw: string, pack: EvidencePack): AnswerCheck {
   // Reasoning length.
   const words = answer.reasoning.trim().split(/\s+/).length;
   if (words > MAX_REASONING_WORDS) problems.push(`The reasoning is ${words} words; the limit is ${MAX_REASONING_WORDS}.`);
+
+  const whyWords = answer.why_this_choice.trim().split(/\s+/).length;
+  if (whyWords > MAX_WHY_WORDS) problems.push(`"Why this choice" is ${whyWords} words; the limit is ${MAX_WHY_WORDS}.`);
+
+  // Interactions: only for drugs in the chosen regimen.
+  const chosen = new Set(regimenDrugs(answer.regimen));
+  for (const i of answer.interactions) {
+    if (!chosen.has(i.drug.trim().toLowerCase())) problems.push(`Interaction note for "${i.drug}", which is not in the regimen.`);
+  }
 
   // MDR assessment: known organisms, each at most once.
   const seen = new Set<string>();

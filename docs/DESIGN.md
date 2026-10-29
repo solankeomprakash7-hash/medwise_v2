@@ -2,8 +2,9 @@
 
 ## Principles
 1. **Readable at 3 am on a phone.** Large type, high contrast, big tap targets (44 px).
-2. **Clinical and modern, not flashy.** White cards on cream, a navy header, soft shadows. No gradients,
-   glow, or animation beyond simple transitions.
+2. **Clinical, modern and inviting.** White cards on cream, a navy header, soft shadows, simple line icons.
+   Gentle motion only: cards rise into place, the "working it out" screen breathes. All motion is switched
+   off when the phone asks for reduced motion. No gradients or glow.
 3. **The recommendation is the hero.** Everything else supports it.
 4. **Colour carries meaning**, so use it sparingly and consistently.
 
@@ -45,19 +46,28 @@ Motif: hairline rules and the five-segment ruler. Use the ruler for the **narrow
   If anything is missing, the page scrolls to the first unfinished section and each unfinished section
   lists what it still needs. The page itself is the review: there is no separate review step.
 - Tap buttons and chips instead of typing wherever possible; selected answers turn navy.
+- **Suspected source: one or more.** With two or more ticked, a "Main source" row appears (main marked on its chip).
+- While the recommendation is worked out, a "Working it out" screen lists the real steps
+  (patient checks → guideline passages → AI → safety checks → doses).
 - Out-of-scope stops (age < 18, pregnancy, neutropenia) appear in red directly under the answer.
 
 ### 2. Result (cards in this exact order)
 *Updated 2026-10-29 with ideas from the first prototype (DECISIONS.md).*
-1. **Recommendation**: drug(s) in large type, dose line in DM Mono, AWaRe tag (Access / Watch / Reserve),
-   spectrum bar.
+1. **Recommendation** (navy hero card): drug(s) in large type, dose line in DM Mono, AWaRe tag
+   (Access / Watch / Reserve), a chip "Matches / Differs from guideline table", and a white
+   **"Why this antibiotic"** box: the AI's one-sentence reason plus the key reasons as ticked chips;
+   alternatives underneath. Spectrum bar still to design.
 2. **How to give it**: dose, interval, infusion (e.g. "3-h extended infusion"), renal adjustment.
 3. **Coverage**: a grid of what the regimen covers — gram-positive, gram-negative, Pseudomonas, MRSA, ESBL,
    CRE, anaerobes, atypicals — each yes / limited / no, from `drug_spectrum.csv`.
 4. **Spectrum fit**: coverage **needed** for this patient (judged by the AI) vs **given** (from the table)
    vs **excess** (given but not needed). Words only — **no score or percentage** (CLAUDE.md rule 5).
 5. **Will it reach the site?**: penetration for the chosen source.
-6. **Safety**: side effects, interactions, monitoring. Red only for true alerts.
+6. **Safety and interactions**: the AI-written interaction notes in a dashed box labelled
+   "AI-written — verify before acting", then the knowledge-base interactions and monitoring. Red only for true alerts.
+
+Cards 2–9 fold open and closed (tap the title). Open at first: How to give it, Coverage, Safety, and Flags when
+any flag is a safety alert. Coverage shows a three-step bar next to the words Yes / Limited / No (no score).
 7. **Why this antibiotic**: 3–4 short patient-specific reasons, then the reasoning with each guideline
    passage cited (guideline, page).
 8. **Flags**: e.g. "Exclude obstruction", "Source control needed", "Differs from guideline table".

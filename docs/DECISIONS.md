@@ -5,6 +5,10 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | Suspected source: one or more, one marked "main"; the AI must cover all; the guideline-table comparison uses the main source; extra sources add a "check coverage" flag | Owner choice; patients often have more than one possible source |
+| 2026-10-29 | Real AI built (Claude Opus 5.5, server only, `lib/ai/claude.ts`), switched on only when `ANTHROPIC_API_KEY` is set in Vercel; otherwise the DEMO stand-in. Server-side fallback to another Claude model if it declines; the model used is recorded | Owner: build now, add the paid key later |
+| 2026-10-29 | AI adds `why_this_choice` (one sentence, shown in the recommendation card) and `interactions` (AI-written, labelled "verify"); code rejects doses in them and notes for drugs not in the regimen | Owner chose AI-written interactions over table-only |
+| 2026-10-29 | Result cards fold open/closed; gentle motion (off for reduced-motion phones); "Working it out" screen while the AI runs | Owner: make it more appealing and less long |
 | 2026-10-29 | Patient entry: one scrolling page with five section cards and a sticky "Get recommendation" bar, instead of six step screens; look refreshed with the first prototype's palette (navy, brand blue, cream), Inter for screen text, white cards. Red still for safety alerts only | Owner: the old screens were "boring" with "too many next next slides" |
 | 2026-10-29 | Number boxes changed from type="number" to text boxes with the numeric keypad (inputmode) that keep digits only (and one decimal point for weight and CrCl) | Dr. Solanke still could not type the age on a phone; type="number" is known to misbehave on some phones and keyboards |
 | 2026-10-29 | Age "under 18" stop now waits until the clinician leaves the age box (Next stays blocked either way) | Bug reported by Dr. Solanke: on a phone the alert appeared after the first digit ("6" of "62") and interrupted typing |

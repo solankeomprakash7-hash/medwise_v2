@@ -36,3 +36,22 @@ body {
   font-family: var(--font-inter), system-ui, sans-serif;
   font-size: 17px;
 }
+
+/* Cards rise gently into place; the thinking screen pulses. Off for people who ask for reduced motion. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+.rise { animation: rise 0.45s ease-out both; }
+.rise:nth-child(2) { animation-delay: 0.06s; }
+.rise:nth-child(3) { animation-delay: 0.12s; }
+.rise:nth-child(4) { animation-delay: 0.18s; }
+.rise:nth-child(n + 5) { animation-delay: 0.24s; }
+.breathe { animation: breathe 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .rise, .breathe { animation: none; }
+}

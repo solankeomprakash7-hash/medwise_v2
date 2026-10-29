@@ -28,6 +28,8 @@ export interface Result {
   regimen?: { name: string; drugs: DoseLine[] };
   alternatives?: { name: string; drugs: DoseLine[] }[];
   mdrAssessment?: { organism: string; risk: "high" | "low"; reason: string }[];
+  whyThisChoice?: string;
+  interactions?: { drug: string; text: string }[]; // AI-written, not from the knowledge base
   keyReasons?: string[];
   reasoning?: string;
   coverage?: { key: CoverageKey; label: string; level: CoverageLevel }[];
@@ -37,8 +39,10 @@ export interface Result {
   citations?: { passage_id: string; guideline: string; location: string; quote: string }[];
   flags: string[];
   guidelineTable?: TableView;
+  tableMatch?: "matches" | "differs" | "no_table"; // the AI's regimen against the guideline table (rule 2)
   versions: { knowledgeBase: string; guidelines: { guideline: string; title: string; version: string }[] };
   disclaimers: string[];
+  demo: boolean; // answered by the DEMO stand-in, not the real AI
   // Kept for the audit trail (saved with the case), not shown to clinicians.
   audit: { aiModel?: string; aiRaw?: string };
 }
@@ -56,7 +60,7 @@ export async function recommend(
   const flags = kb.version.endsWith("-draft")
     ? [`Knowledge base ${kb.version} is a draft and not signed off: not for patient care.`]
     : [];
-  const base = { flags, versions, disclaimers: DISCLAIMERS, audit: {} };
+  const base = { flags, versions, disclaimers: DISCLAIMERS, demo: ai.demo === true, audit: {} };
 
   // 1. Inputs (no AI call if anything is missing or out of scope).
   const input = checkInput(rawInput, kb);
@@ -114,12 +118,20 @@ export async function recommend(
   for (const line of fit.filter((f) => f.status === "missing")) {
     resultFlags.push(`Coverage needed but not given: ${line.label}.`);
   }
+  const sourceLabel = (code: string) => kb.vocabularyLabels.get(`source:${code}`) ?? code;
+  if (patient.extra_sources.length > 0) {
+    resultFlags.push(
+      `More than one suspected source: the guideline table comparison uses the main source (${sourceLabel(patient.source)}). ` +
+        `Check that the regimen also covers: ${patient.extra_sources.map(sourceLabel).join(", ")}.`,
+    );
+  }
+  let tableMatch: Result["tableMatch"] = "no_table";
   if (table.note) resultFlags.push(table.note);
-  else if (
-    table.firstChoice &&
-    ![table.firstChoice, ...table.alternatives].some((option) => sameRegimen(option, answer.regimen))
-  ) {
-    resultFlags.push(`Differs from guideline table: the table suggests ${table.firstChoice}.`);
+  else if (table.firstChoice) {
+    tableMatch = [table.firstChoice, ...table.alternatives].some((option) => sameRegimen(option, answer.regimen))
+      ? "matches"
+      : "differs";
+    if (tableMatch === "differs") resultFlags.push(`Differs from guideline table: the table suggests ${table.firstChoice}.`);
   }
 
   return {
@@ -129,6 +141,8 @@ export async function recommend(
     regimen: { name: answer.regimen, drugs: doseLines(answer.regimen, patient, kb) },
     alternatives: answer.alternatives.map((name) => ({ name, drugs: doseLines(name, patient, kb) })),
     mdrAssessment: answer.mdr_assessment,
+    whyThisChoice: answer.why_this_choice,
+    interactions: answer.interactions,
     keyReasons: answer.key_reasons,
     reasoning: answer.reasoning,
     coverage: COVERAGE.map(({ key, label }) => ({ key, label, level: given[key] })),
@@ -143,6 +157,7 @@ export async function recommend(
     })),
     flags: resultFlags,
     guidelineTable: table,
+    tableMatch,
     audit,
   };
 }

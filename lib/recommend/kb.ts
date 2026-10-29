@@ -5,6 +5,7 @@ import type { Row } from "@/lib/knowledge/tables";
 export interface Knowledge {
   version: string;
   vocabulary: Map<string, Set<string>>;
+  vocabularyLabels: Map<string, string>; // "field:value" → label shown on screen
   multi: Set<string>;
   drugs: Map<string, Row>;
   drugClasses: Map<string, Row>;
@@ -23,13 +24,16 @@ export function loadKnowledge(dir = KNOWLEDGE_DIR): Knowledge {
   if (cached) return cached;
   const vocabulary = new Map<string, Set<string>>();
   const multi = new Set<string>();
+  const vocabularyLabels = new Map<string, string>();
   for (const row of readTable("vocabulary", dir).rows) {
     vocabulary.set(row.field, (vocabulary.get(row.field) ?? new Set()).add(row.value));
+    vocabularyLabels.set(`${row.field}:${row.value}`, row.label);
     if (row.multi === "yes") multi.add(row.field);
   }
   const knowledge: Knowledge = {
     version: readVersion(dir),
     vocabulary,
+    vocabularyLabels,
     multi,
     drugs: new Map(readTable("drugs", dir).rows.map((row) => [row.drug, row])),
     drugClasses: new Map(readTable("drug_classes", dir).rows.map((row) => [row.drug, row])),

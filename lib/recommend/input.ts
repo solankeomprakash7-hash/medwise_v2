@@ -6,7 +6,8 @@ export interface PatientInput {
   age: number;
   sex: string;
   weight_kg: number;
-  source: string;
+  source: string; // the main source: the guideline table comparison uses this one
+  extra_sources: string[]; // other suspected sources (may be empty); the regimen must cover them too
   setting: string;
   source_control: string;
   severity: string;
@@ -93,6 +94,18 @@ export function checkInput(raw: unknown, kb: Knowledge): InputCheck {
     }
   }
 
+  // Extra sources: optional; codes from the same list as the main source, no repeats.
+  if (p.extra_sources !== undefined) {
+    if (!Array.isArray(p.extra_sources)) invalid.push("extra_sources must be a list");
+    else {
+      for (const item of p.extra_sources) {
+        if (!kb.vocabulary.get("source")?.has(item)) invalid.push(`extra_sources: "${String(item)}" is not an allowed answer`);
+        if (item === p.source) invalid.push("extra_sources: the main source cannot also be an extra source");
+      }
+      if (new Set(p.extra_sources).size !== p.extra_sources.length) invalid.push("extra_sources: a source is listed twice");
+    }
+  }
+
   if (missing.length > 0) return { ok: false, kind: "missing", messages: missing.map((f) => `Please enter: ${f}`) };
   if (invalid.length > 0) return { ok: false, kind: "invalid", messages: invalid };
 
@@ -106,6 +119,7 @@ export function checkInput(raw: unknown, kb: Knowledge): InputCheck {
   if (outOfScope.length > 0) return { ok: false, kind: "out_of_scope", messages: outOfScope };
 
   const patient = { ...(p as unknown as PatientInput) };
+  patient.extra_sources = Array.isArray(p.extra_sources) ? (p.extra_sources as string[]) : [];
   if (patient.sex !== "female" && !patient.pregnancy) patient.pregnancy = "not_applicable";
   return { ok: true, patient };
 }

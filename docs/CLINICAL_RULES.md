@@ -19,8 +19,8 @@ Advisory group sign-off: ☐ ID physician ☐ Microbiologist ☐ Intensivist ☐
 MedWise is **not a lookup table** (one diagnosis → one drug for every patient). It reasons in layers:
 
 1. **Code** checks inputs: missing fields → ask; pregnancy, age < 18, neutropenic sepsis → out of scope.
-2. **Code** builds the evidence pack: patient summary; the guideline passages relevant to this source and
-   setting (SSC 2026, IDSA 2026, NCDC/ICMR 2025); the matching knowledge-base rows (base regimen, MDR risk
+2. **Code** builds the evidence pack: patient summary; the guideline passages relevant to every suspected source
+   and the setting (SSC 2026, IDSA 2026, NCDC/ICMR 2025); the matching knowledge-base rows (base regimen, MDR risk
    factors, coverage rules); the hospital's antibiogram; the allowed drug list; the drug classes excluded
    for allergy.
 3. **AI** assesses MDR risk per organism (SSC 2026 rec 25–26: cover a specific MDR pathogen only when its
@@ -39,7 +39,7 @@ from the guideline table for this patient, both are shown and the difference is 
 | Basics | Age | years, 18–110 | Yes |
 | | Sex | male / female / other | Yes |
 | | Weight | kg | Yes |
-| Source | Suspected source | lung, urinary, intra-abdominal, CNS, skin/soft tissue, bloodstream/unknown, catheter-related, bone/joint | Yes |
+| Source | Suspected source(s) | lung, urinary, intra-abdominal, CNS, skin/soft tissue, bloodstream/unknown, catheter-related, bone/joint — **one or more**; one is marked the **main source** | Yes |
 | | Setting | community-acquired / healthcare-associated / hospital-acquired / ventilator-associated | Yes |
 | | Source control | not needed / needed, done / needed, not yet done | Yes |
 | Severity | Category | sepsis / septic shock | Yes |
@@ -97,6 +97,14 @@ anti-pseudomonal cover. Broaden only if shock or Pseudomonas risk.
 → Expected: **meropenem 1 g q8h, 3-hour extended infusion** (high ESBL risk). Avoid aminoglycoside
 (CrCl 40). Flag: exclude obstruction / change catheter.
 
+### More than one suspected source (owner decision 2026-10-29)
+- The clinician ticks one or more sources and marks one as the **main source**.
+- The AI is given the passages for every source and must choose a regimen that covers all of them; if it may
+  not, it says so in `flags`.
+- The guideline-table comparison ("differs from guideline table") uses the **main source's** row only.
+- Every result with extra sources carries the flag: "More than one suspected source … Check that the regimen
+  also covers: …".
+
 ## The AI's instructions (system prompt outline)
 - You are advising a qualified clinician. Reason from the evidence pack only.
 - Name drugs only from the allowed list. Never write doses; the app adds them from `drugs.csv`.
@@ -105,7 +113,11 @@ anti-pseudomonal cover. Broaden only if shock or Pseudomonas risk.
   reason), `key_reasons` (1–4 short patient-specific reasons), `coverage_needed` (for each coverage category of
   `drug_spectrum.csv`: needed yes / no, with reason — never what the drugs cover), `reasoning` (≤ 150 words),
   `citations` (passage IDs with word-for-word quotes), `stewardship` (up to 4 actions from a fixed list, with
-  text), `flags`.
+  text), `flags`, `why_this_choice` (one sentence, ≤ 40 words: why this regimen for this patient — shown in the
+  recommendation card), `interactions` (per drug in the regimen: interactions and cautions for this patient).
+- **Interactions are AI-written** from general pharmacology, not from `drugs.csv` (owner decision 2026-10-29).
+  The screen labels them "AI-written — verify before acting" and shows the knowledge-base interaction facts
+  separately. Code still rejects a dose in them and a note for a drug that is not in the regimen.
 
 ## Golden tests with the AI
 Each golden test patient is run **3 times**; every run must give the expected regimen or an acceptable

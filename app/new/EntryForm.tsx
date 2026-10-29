@@ -19,7 +19,8 @@ interface Form {
   sex: string;
   weight_kg: string;
   pregnancy: string;
-  source: string;
+  source: string; // main source
+  extra_sources: string[];
   setting: string;
   source_control: string;
   severity: string;
@@ -40,7 +41,7 @@ interface Form {
 }
 
 const EMPTY: Form = {
-  age: "", sex: "", weight_kg: "", pregnancy: "", source: "", setting: "", source_control: "", severity: "",
+  age: "", sex: "", weight_kg: "", pregnancy: "", source: "", extra_sources: [], setting: "", source_control: "", severity: "",
   sofa: "", crcl_ml_min: "", dialysis: "", hepatic: "", antibioticsGiven: "", antibiotics_90d: [],
   admission_90d: "", prior_mdr: [], devices: [], comorbidities: [], immunocompromise: [], allergiesKnown: "",
   allergies: [], current_antibiotics: [],
@@ -60,7 +61,7 @@ const LABELS: Record<string, string> = {
   sex: "Sex",
   weight_kg: "Weight (kg)",
   pregnancy: "Pregnant?",
-  source: "Suspected source",
+  source: "Suspected source(s)",
   setting: "Where was it acquired?",
   source_control: "Source control",
   severity: "Severity",
@@ -148,6 +149,7 @@ function toPatient(f: Form) {
     weight_kg: num(f.weight_kg),
     pregnancy: f.sex === "female" ? f.pregnancy : "not_applicable",
     source: f.source,
+    extra_sources: f.extra_sources,
     setting: f.setting,
     source_control: f.source_control,
     severity: f.severity,
@@ -238,7 +240,15 @@ export default function EntryForm({ options }: { options: Options }) {
       {form.pregnancy === "yes" && <Stop message="Pregnancy is outside MedWise version 1." onStartAgain={startAgain} />}
     </>,
     <>
-      {choice("source")}
+      <SourcePicker
+        options={options.choices.source ?? []}
+        main={form.source}
+        extra={form.extra_sources}
+        onChange={(main, extra) => {
+          setForm((f) => ({ ...f, source: main, extra_sources: extra }));
+          setResult(null);
+        }}
+      />
       {choice("setting")}
       {choice("source_control", 3)}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-[1fr_auto]">
@@ -393,6 +403,7 @@ export default function EntryForm({ options }: { options: Options }) {
           </div>
         </nav>
       )}
+      {pending && <Thinking />}
       <nav className={`fixed inset-x-0 bottom-0 border-t border-rule bg-white/95 backdrop-blur ${result ? "hidden" : ""}`} aria-label="Progress">
         <div className="mx-auto flex max-w-2xl items-center gap-4 px-4 py-3">
           <div className="flex-1">
@@ -488,6 +499,109 @@ function MultiChoice(props: { legend: string; options: { value: string; label: s
         })}
       </div>
     </fieldset>
+  );
+}
+
+// Sources: tick one or more. The first ticked is the main source (the guideline table comparison uses it);
+// with two or more, the clinician can change which is main.
+function SourcePicker(props: {
+  options: { value: string; label: string }[];
+  main: string;
+  extra: string[];
+  onChange: (main: string, extra: string[]) => void;
+}) {
+  const picked = props.main ? [props.main, ...props.extra] : [];
+  const label = (v: string) => props.options.find((o) => o.value === v)?.label ?? v;
+  const toggle = (v: string) => {
+    const next = picked.includes(v) ? picked.filter((x) => x !== v) : [...picked, v];
+    props.onChange(next[0] ?? "", next.slice(1));
+  };
+  const makeMain = (v: string) => props.onChange(v, picked.filter((x) => x !== v));
+  return (
+    <div className="flex flex-col gap-3">
+      <fieldset>
+        <legend className={legendClass}>
+          {LABELS.source} <span className="font-normal normal-case tracking-normal">· one or more</span>
+        </legend>
+        <div className="grid grid-cols-2 gap-2">
+          {props.options.map((o) => {
+            const selected = picked.includes(o.value);
+            return (
+              <label key={o.value} className={`${optionClass} relative ${optionState(selected)}`}>
+                <input type="checkbox" checked={selected} onChange={() => toggle(o.value)} className="sr-only" />
+                {selected && <span aria-hidden className="mr-1.5">✓</span>}
+                {o.label}
+                {o.value === props.main && picked.length > 1 && (
+                  <span className="absolute -top-2 right-2 rounded-full bg-accent px-2 text-xs font-semibold text-white">Main</span>
+                )}
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+      {picked.length > 1 && (
+        <fieldset className="rounded-lg bg-accent/5 p-3">
+          <legend className="sr-only">Main source</legend>
+          <p className="text-sm text-ink">
+            <span className="font-semibold">Main source</span> — the guideline table comparison uses it; the AI must cover all of them.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {picked.map((v) => (
+              <label key={v} className={`${optionClass} rounded-full px-4 ${optionState(v === props.main)}`}>
+                <input type="radio" name="main-source" checked={v === props.main} onChange={() => makeMain(v)} className="sr-only" />
+                {label(v)}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
+    </div>
+  );
+}
+
+// Shown while the recommendation is worked out: the real steps the server takes, in order.
+const THINKING_STEPS = [
+  "Checking the patient details",
+  "Gathering guideline passages for this patient",
+  "AI weighing the evidence",
+  "Safety checks on the AI answer",
+  "Adding doses from the knowledge base",
+];
+
+function Thinking() {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setShown((n) => Math.min(n + 1, 2)), 1400); // waits on the AI step
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center bg-navy/85 p-6 backdrop-blur-sm">
+      <div className="rise w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+        <div className="breathe mx-auto flex size-16 items-center justify-center rounded-full bg-accent/10">
+          <svg viewBox="0 0 32 32" className="size-10" aria-hidden>
+            <path d="M16 2 4 7v8c0 7.5 5.1 13.4 12 15 6.9-1.6 12-7.5 12-15V7L16 2Z" fill="var(--accent)" />
+            <path d="M14 10h4v4h4v4h-4v4h-4v-4h-4v-4h4z" fill="white" />
+          </svg>
+        </div>
+        <p className="mt-4 text-center font-display text-2xl text-navy">Working it out</p>
+        <p className="text-center text-sm text-muted">This can take up to a minute.</p>
+        <ol className="mt-5 flex flex-col gap-2.5">
+          {THINKING_STEPS.map((step, i) => (
+            <li key={step} className={`flex items-center gap-3 text-sm ${i <= shown ? "text-ink" : "text-muted/60"}`}>
+              <span
+                aria-hidden
+                className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs ${
+                  i < shown ? "bg-green text-white" : i === shown ? "breathe bg-accent text-white" : "bg-rule text-white"
+                }`}
+              >
+                {i < shown ? "✓" : i + 1}
+              </span>
+              {step}
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
   );
 }
 

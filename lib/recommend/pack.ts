@@ -39,7 +39,11 @@ export function buildEvidencePack(
   return {
     patient,
     passages: kb.evidence
-      .filter((p) => applies(p.sources, patient.source) && applies(p.settings, patient.setting))
+      .filter(
+        (p) =>
+          [patient.source, ...patient.extra_sources].some((source) => applies(p.sources, source)) &&
+          applies(p.settings, patient.setting),
+      )
       .map((p) => ({
         passage_id: p.passage_id,
         guideline: p.guideline,

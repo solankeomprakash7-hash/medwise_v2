@@ -6,6 +6,7 @@ export class AiNoAnswer extends Error {}
 
 export interface AiClient {
   model: string;
+  demo?: boolean; // true for the DEMO stand-in: the result screen then shows the DEMO banner
   complete(system: string, user: string): Promise<string>;
 }
 

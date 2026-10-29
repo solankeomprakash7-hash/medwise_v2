@@ -16,6 +16,7 @@ interface Pack {
 }
 
 const split = (list: string) => list.split(";").map((s) => s.trim()).filter(Boolean);
+const words = (code: string) => code.replace(/_/g, " ");
 const drugsOf = (regimen: string) => regimen.split("+").map((d) => d.trim());
 
 // A quote copied from a passage: the words around the first mention of the drug. The national guideline's
@@ -70,6 +71,11 @@ export function demoAnswer(pack: Pack): AiAnswer | null {
       risk: high.includes(organism) ? "high" : "low",
       reason: high.includes(organism) ? "Previous MDR organism recorded (demo rule)." : "No previous organism recorded (demo rule).",
     })),
+    why_this_choice: `DEMO: the guideline table's choice for a ${words(pack.patient.source)} source, ${words(pack.patient.setting)}, ${words(pack.patient.severity)}.`,
+    interactions: drugsOf(regimen).map((drug) => ({
+      drug,
+      text: "DEMO: the real AI will list the interactions and cautions that matter for this patient.",
+    })),
     key_reasons: [
       "Guideline table choice for this source, setting and severity.",
       high.length > 0 ? `Previous ${high.join(", ").toUpperCase()} recorded.` : "No previous MDR organism recorded.",
@@ -96,6 +102,7 @@ export function demoAnswer(pack: Pack): AiAnswer | null {
 
 export class DemoAiClient implements AiClient {
   model = "demo-stand-in";
+  demo = true;
 
   async complete(_system: string, user: string): Promise<string> {
     const answer = demoAnswer(JSON.parse(user) as Pack);
