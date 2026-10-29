@@ -39,18 +39,14 @@ export function checkAnswer(raw: string, pack: EvidencePack): AnswerCheck {
   const answer = result.data;
   const problems: string[] = [];
   const allowed = new Set(pack.allowedDrugs);
+  const excluded = new Map(pack.allergyExcluded.map((e) => [e.drug, e.reason]));
 
-  // Drugs: every drug must be in drugs.csv.
+  // Drugs: every drug must be in drugs.csv and not excluded for allergy.
   for (const regimen of [answer.regimen, ...answer.alternatives]) {
     for (const drug of regimenDrugs(regimen)) {
-      if (!allowed.has(drug)) problems.push(`"${drug}" is not in the knowledge base drug list.`);
+      if (excluded.has(drug)) problems.push(`"${drug}" is excluded because of ${excluded.get(drug)}.`);
+      else if (!allowed.has(drug)) problems.push(`"${drug}" is not in the knowledge base drug list.`);
     }
-  }
-
-  // Allergies: drug classes are not yet in the signed-off knowledge base, so no allergy can be checked
-  // reliably. Any recorded allergy → no recommendation (fails safe).
-  if (pack.patient.allergies.length > 0) {
-    problems.push("Allergy recorded: drug classes are not yet in the knowledge base, so allergy safety cannot be checked.");
   }
 
   // No doses anywhere in the AI's text.

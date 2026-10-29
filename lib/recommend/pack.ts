@@ -1,4 +1,5 @@
 import type { Row } from "@/lib/knowledge/tables";
+import type { AllergyAssessment } from "./allergy";
 import type { PatientInput } from "./input";
 import type { Knowledge } from "./kb";
 import { mdrOrganisms } from "./kb";
@@ -20,14 +21,21 @@ export interface EvidencePack {
   baseRegimen: Row | null;
   mdrCoverage: Row[];
   mdrRiskFactors: Row[];
-  allowedDrugs: string[];
+  allowedDrugs: string[]; // drugs.csv minus drugs excluded for allergy
+  allergyExcluded: { drug: string; reason: string }[];
+  crossReactivity: { drug: string; reason: string }[];
   organisms: string[];
   antibiogram: AntibiogramRow[];
 }
 
 const applies = (tags: string, value: string) => tags.split(";").some((t) => t.trim() === "any" || t.trim() === value);
 
-export function buildEvidencePack(patient: PatientInput, kb: Knowledge, antibiogram: AntibiogramRow[] = []): EvidencePack {
+export function buildEvidencePack(
+  patient: PatientInput,
+  kb: Knowledge,
+  allergy: AllergyAssessment,
+  antibiogram: AntibiogramRow[] = [],
+): EvidencePack {
   return {
     patient,
     passages: kb.evidence
@@ -47,7 +55,9 @@ export function buildEvidencePack(patient: PatientInput, kb: Knowledge, antibiog
       (r) => (r.source === "any" || r.source === patient.source) && (r.severity === "any" || r.severity === patient.severity),
     ),
     mdrRiskFactors: kb.mdrRisk,
-    allowedDrugs: [...kb.drugs.keys()],
+    allowedDrugs: [...kb.drugs.keys()].filter((drug) => !allergy.excluded.has(drug)),
+    allergyExcluded: [...allergy.excluded].filter(([drug]) => kb.drugs.has(drug)).map(([drug, reason]) => ({ drug, reason })),
+    crossReactivity: [...allergy.crossReactive].filter(([drug]) => kb.drugs.has(drug)).map(([drug, reason]) => ({ drug, reason })),
     organisms: mdrOrganisms(kb),
     antibiogram,
   };

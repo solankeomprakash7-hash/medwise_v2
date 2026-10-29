@@ -1,6 +1,7 @@
 import type { AiClient } from "@/lib/ai/client";
+import { assessAllergies } from "./allergy";
 import { SYSTEM_PROMPT, buildUserMessage } from "@/lib/ai/prompt";
-import { checkAnswer } from "./checks";
+import { checkAnswer, regimenDrugs } from "./checks";
 import { doseLines } from "./doses";
 import type { DoseLine } from "./doses";
 import { checkInput } from "./input";
@@ -55,8 +56,21 @@ export async function recommend(
   }
   const patient = input.patient;
 
+  // Allergies that cannot be checked → stop before the AI is asked.
+  const allergy = assessAllergies(patient, kb);
+  if (allergy.unknown.length > 0) {
+    return {
+      ...base,
+      status: "no_recommendation",
+      messages: [
+        `Allergy to ${allergy.unknown.join(", ")} cannot be checked: not found in the knowledge base drug classes.`,
+        DISCUSS,
+      ],
+    };
+  }
+
   // 2. Evidence pack, 3. AI decides.
-  const pack = buildEvidencePack(patient, kb, antibiogram);
+  const pack = buildEvidencePack(patient, kb, allergy, antibiogram);
   let raw: string;
   try {
     raw = await ai.complete(SYSTEM_PROMPT, buildUserMessage(pack));
@@ -75,6 +89,10 @@ export async function recommend(
   const highRisk = answer.mdr_assessment.filter((m) => m.risk === "high").map((m) => m.organism);
   const table = guidelineTable(pack, highRisk);
   const resultFlags = [...flags, ...answer.flags];
+  for (const drug of new Set([answer.regimen, ...answer.alternatives].flatMap(regimenDrugs))) {
+    const reason = allergy.crossReactive.get(drug);
+    if (reason) resultFlags.push(`Possible cross-reactivity: ${drug} is a beta-lactam and the patient had ${reason}.`);
+  }
   if (table.note) resultFlags.push(table.note);
   else if (
     table.firstChoice &&

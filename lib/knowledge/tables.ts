@@ -27,6 +27,8 @@ export const TABLE_COLUMNS = {
     "drug", "standard_dose", "interval", "infusion", "max_dose", "renal_bands",
     "hepatic_adjustment", "interactions", "monitoring", "site_penetration_notes",
   ],
+  // Class of each drug, for allergy checks (CLAUDE.md rule 1: allergy classes only from the tables).
+  drug_classes: ["drug", "class", "beta_lactam", "source"],
   antibiogram_template: ["year", "unit", "organism", "antibiotic", "isolates_n", "percent_susceptible"],
   // Guidelines MedWise uses; every result shows their versions (CLAUDE.md rule 6).
   guidelines: ["guideline", "title", "version", "published", "citation"],

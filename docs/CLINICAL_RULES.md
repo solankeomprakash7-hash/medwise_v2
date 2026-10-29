@@ -63,6 +63,7 @@ from the guideline table for this patient, both are shown and the difference is 
 | `mdr_thresholds.csv` | organism, high_risk_threshold, basis |
 | `regimens.csv` | source, setting, severity, first_choice, alternative, beta_lactam_allergy_alt, guideline_ref — **base regimen, no high MDR risk** |
 | `mdr_coverage.csv` | organisms (the exact set of high-risk organisms, `;`-separated), source (or `any`), severity (or `any`), action (`add` / `replace`), regimen, beta_lactam_allergy_alt, guideline_ref, notes |
+| `drug_classes.csv` | drug, class, beta_lactam (yes/no), source — includes common drugs patients are allergic to that MedWise does not prescribe |
 | `drugs.csv` | drug, standard_dose, interval, infusion, max_dose, renal_bands, hepatic_adjustment, interactions, monitoring, site_penetration_notes |
 | `antibiogram_template.csv` | year, unit (ICU/ward), organism, antibiotic, isolates_n, percent_susceptible |
 | `settings.csv` (per hospital) | empiric_cutoff_percent (default set by stewardship committee), min_isolates |
@@ -77,7 +78,10 @@ from the guideline table for this patient, both are shown and the difference is 
   show "Discuss with ID / microbiology".
 - If the AI's regimen differs from the guideline table's regimen (base regimen + matching `mdr_coverage.csv`
   rows) → show both and flag "Differs from guideline table".
-- Anaphylaxis to a class → exclude the whole class and flag cross-reactivity.
+- Allergy to a drug or a class (any reaction) → exclude every drug in that class (`drug_classes.csv`).
+  *Draft: stricter than anaphylaxis-only; panel to confirm the rule for rash / other reactions.*
+- Anaphylaxis to a beta-lactam → also flag cross-reactivity for any other beta-lactam in the regimen.
+- Allergen not found in `drug_classes.csv` (as a drug or a class) → no recommendation; it cannot be checked.
 - Pregnancy, age < 18, neutropenic fever → out of scope message, no recommendation.
 - Always show: "Decision support only — verify with clinical judgement and local policy."
 - Always add: "Review at 48–72 h with culture results; de-escalate when possible."

@@ -97,6 +97,21 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     if (row.drug && !traced("drugs", row.drug)) problems.push(`drugs.csv line ${i + 2}: "${row.drug}" has no entry in provenance.csv`);
   }
 
+  // Drug classes: every drug MedWise can recommend must have a class, for allergy checks.
+  const classed = new Set<string>();
+  for (const [i, row] of tables.drug_classes.entries()) {
+    const where = `drug_classes.csv line ${i + 2}`;
+    if (!row.drug || row.drug !== row.drug.toLowerCase()) problems.push(`${where}: drug must be written in lower case`);
+    if (classed.has(row.drug)) problems.push(`${where}: "${row.drug}" appears twice`);
+    classed.add(row.drug);
+    if (!row.class) problems.push(`${where}: class is empty`);
+    if (row.beta_lactam !== "yes" && row.beta_lactam !== "no") problems.push(`${where}: beta_lactam must be yes or no`);
+    if (!row.source) problems.push(`${where}: source is empty`);
+  }
+  for (const drug of drugs) {
+    if (!classed.has(drug)) problems.push(`drug_classes.csv: "${drug}" (in drugs.csv) has no class, so allergies to it cannot be checked`);
+  }
+
   // Coverage checklist: every source × setting × severity exactly once
   const coverage = new Map<string, string>();
   for (const [i, row] of tables.coverage.entries()) {

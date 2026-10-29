@@ -5,6 +5,8 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | `drug_classes.csv` added to the knowledge base (CLINICAL_RULES.md updated with Dr. Solanke's approval). Allergy to a drug or class, any reaction → whole class excluded; anaphylaxis to a beta-lactam → other beta-lactams flagged; allergen not in the table → no recommendation. **Replaces** "any recorded allergy → no recommendation" (earlier today) | Allergies can now be checked from a table; "any reaction" is stricter than the original anaphylaxis-only rule, for the panel to confirm |
+| 2026-10-29 | Empty `lib/rules` folder deleted, with Dr. Solanke's approval | Superseded by `lib/recommend` |
 | 2026-10-29 | Recommendation pipeline built with a stand-in AI (no paid API yet): input checks and out-of-scope stops before any AI call, evidence pack, safety checks, doses from `drugs.csv`, guideline-table comparison | Safety core tested before any real AI answer can reach a clinician; real Claude client plugs into the same interface later |
 | 2026-10-29 | Any recorded allergy → no recommendation, until a signed-off drug-class table exists | Allergy classes must come from signed-off tables (rule 1); without them an allergy cannot be checked, so the app fails safe |
 | 2026-10-29 | AI citations must quote at least 3 words copied word for word from a passage in that patient's evidence pack; any number + dose unit in the AI's text is rejected | Enforces rules 1–2 in code |

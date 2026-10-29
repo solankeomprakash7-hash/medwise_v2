@@ -136,6 +136,14 @@ describe("knowledge base checks catch mistakes", () => {
     expect(problems).toContain("evidence.csv ncdc-x: number of cells in text does not match table_columns");
   });
 
+  it("a prescribable drug with no class (allergies could not be checked)", () => {
+    const problems = brokenCopy((dir) => {
+      const classes = join(dir, "drug_classes.csv");
+      writeFileSync(classes, readFileSync(classes, "utf8").replace(/^meropenem,.*\n/m, ""));
+    });
+    expect(problems).toContain('drug_classes.csv: "meropenem" (in drugs.csv) has no class, so allergies to it cannot be checked');
+  });
+
   it("wrong columns", () => {
     const problems = brokenCopy((dir) => writeFileSync(join(dir, "drugs.csv"), "drug,dose\n"));
     expect(problems.some((p) => p.startsWith("drugs.csv: columns should be"))).toBe(true);

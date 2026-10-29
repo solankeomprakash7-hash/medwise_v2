@@ -7,6 +7,7 @@ export interface Knowledge {
   vocabulary: Map<string, Set<string>>;
   multi: Set<string>;
   drugs: Map<string, Row>;
+  drugClasses: Map<string, Row>;
   regimens: Row[];
   mdrRisk: Row[];
   mdrCoverage: Row[];
@@ -30,6 +31,7 @@ export function loadKnowledge(dir = KNOWLEDGE_DIR): Knowledge {
     vocabulary,
     multi,
     drugs: new Map(readTable("drugs", dir).rows.map((row) => [row.drug, row])),
+    drugClasses: new Map(readTable("drug_classes", dir).rows.map((row) => [row.drug, row])),
     regimens: readTable("regimens", dir).rows,
     mdrRisk: readTable("mdr_risk", dir).rows,
     mdrCoverage: readTable("mdr_coverage", dir).rows,

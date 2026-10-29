@@ -31,8 +31,7 @@ Created 2026-10-28 (Phase 2, step 1). Folders marked *empty* hold only a README 
 /app                 screens (entry, result, admin, login) — placeholder home page only
 /app/api             server routes (recommend, decision, upload) — empty
 /lib/ai              AI answer format (answer.ts), instructions (prompt.ts), AI client interface + stand-in (client.ts); real Claude client not yet built
-/lib/rules           superseded (empty; see its README)
-/lib/recommend       the recommendation: input checks, evidence pack, safety checks, doses, guideline-table comparison (recommend.ts)
+/lib/recommend       the recommendation: input checks, allergy checks (allergy.ts), evidence pack, safety checks, doses, guideline-table comparison (recommend.ts)
 /lib/knowledge       reads the knowledge-base tables and checks them for mistakes
 /knowledge           CSV tables + VERSION + vocabulary + coverage checklist + provenance (see knowledge/README.md); draft rows only
 /tests               golden test set runner (placeholder) + banned-wording check

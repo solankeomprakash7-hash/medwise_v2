@@ -107,14 +107,58 @@ describe("safety checks stop unsafe AI answers", () => {
 
   it("an answer with extra or missing fields", () => stopped({ ...goodAnswer, dose: "2 g" }, "not in the required format"));
 
-  it("a recorded allergy (drug classes not yet in the knowledge base)", () =>
-    stopped(goodAnswer, "allergy safety cannot be checked", { ...pneumonia, allergies: [{ drug: "penicillin", reaction: "rash" }] }));
+  it("a drug from the class the patient is allergic to", () =>
+    stopped(
+      { ...goodAnswer, regimen: "piperacillin-tazobactam + azithromycin" },
+      '"piperacillin-tazobactam" is excluded because of allergy to amoxicillin (rash)',
+      { ...pneumonia, allergies: [{ drug: "amoxicillin", reaction: "rash" }] },
+    ));
+
+  it("any beta-lactam when the patient is allergic to beta-lactams", () =>
+    stopped(goodAnswer, '"ceftriaxone" is excluded because of allergy to beta-lactam (anaphylaxis)', {
+      ...pneumonia,
+      allergies: [{ drug: "beta-lactam", reaction: "anaphylaxis" }],
+    }));
 
   it("an AI that does not answer", async () => {
     const ai = { model: "stub", complete: () => Promise.reject(new Error("timeout")) };
     const r = await recommend(pneumonia, ai, kb);
     expect(r.status).toBe("no_recommendation");
     expect(r.messages).toEqual(["The AI did not answer.", DISCUSS]);
+  });
+});
+
+describe("allergies", () => {
+  const withAllergy = (drug: string, reaction: string) => ({ ...pneumonia, allergies: [{ drug, reaction }] });
+
+  it("removes the allergy class from the drugs the AI may use", async () => {
+    const { ai, result } = ask(goodAnswer, withAllergy("penicillins", "rash"));
+    await result;
+    const allowed = JSON.parse(ai.lastUserMessage).allowed_drugs as string[];
+    expect(allowed).not.toContain("piperacillin-tazobactam");
+    expect(allowed).toContain("ceftriaxone");
+  });
+
+  it("allows another class after a rash, without a cross-reactivity flag", async () => {
+    const r = await ask(goodAnswer, withAllergy("penicillin", "rash")).result;
+    expect(r.status).toBe("recommendation");
+    expect(r.flags.some((f) => f.startsWith("Possible cross-reactivity"))).toBe(false);
+  });
+
+  it("flags cross-reactivity for another beta-lactam after anaphylaxis to a penicillin", async () => {
+    const r = await ask(goodAnswer, withAllergy("amoxicillin", "anaphylaxis")).result;
+    expect(r.status).toBe("recommendation");
+    expect(r.flags).toContain(
+      "Possible cross-reactivity: ceftriaxone is a beta-lactam and the patient had anaphylaxis to amoxicillin.",
+    );
+  });
+
+  it("stops before the AI is asked when the allergen is not in the drug classes", async () => {
+    const { ai, result } = ask(goodAnswer, withAllergy("xyzocillin", "rash"));
+    const r = await result;
+    expect(r.status).toBe("no_recommendation");
+    expect(r.messages[0]).toBe("Allergy to xyzocillin cannot be checked: not found in the knowledge base drug classes.");
+    expect(ai.calls).toBe(0);
   });
 });
 

@@ -4,6 +4,8 @@ import type { EvidencePack } from "@/lib/recommend/pack";
 export const SYSTEM_PROMPT = `You are advising a qualified clinician on empiric antibiotic choice for an adult with sepsis.
 Reason from the evidence pack only. Do not use outside knowledge of drugs, doses or guidelines.
 Name drugs only from "allowed_drugs", written exactly as listed; join combinations with " + ".
+Drugs in "allergy.excluded" must not be used. Avoid drugs in "allergy.cross_reactivity" unless there is no
+suitable alternative, and say so in "flags".
 Never write doses, intervals or infusion times; the app adds them from its own tables.
 For each MDR organism in "organisms", judge the risk as high or low from the patient and the risk factors,
 and cover a specific MDR pathogen only when its risk is high.
@@ -29,6 +31,7 @@ export function buildUserMessage(pack: EvidencePack): string {
         })),
       },
       allowed_drugs: pack.allowedDrugs,
+      allergy: { excluded: pack.allergyExcluded, cross_reactivity: pack.crossReactivity },
       organisms: pack.organisms,
       hospital_antibiogram: pack.antibiogram,
     },
