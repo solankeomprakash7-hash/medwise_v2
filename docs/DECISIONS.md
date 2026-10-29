@@ -5,6 +5,11 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | MedWise covers any adult sepsis patient through rule tables (source × setting × severity × MDR risk), not stored cases; Case 1 and 2 are only the first golden tests | Clarified by Dr. Solanke: it is a general decision-support tool |
+| 2026-10-29 | Golden test set to grow to cover every source, severity, MDR tier, renal band, allergy and out-of-scope stop; the 50 MAHACRITICON study patients (de-identified) to be entered as test cases | Two cases are far too few to protect patients |
+| 2026-10-29 | Knowledge base built before login. Claude Code may draft rows from the guidelines, marked draft with citations; the advisory group corrects and signs off | Core of the app and needs the most panel time |
+| 2026-10-29 | Knowledge-base conventions: lower-case codes from `knowledge/vocabulary.csv`, `;` for lists, ` + ` for combinations; `coverage.csv` tracks every combination; automatic checks in `npm run test` | Catches spelling, missing-dose and missing-coverage mistakes before review |
+| 2026-10-29 | No regimen rows drafted from memory; drafting waits for full guideline texts (journal and ICMR sites blocked in the cloud session) | Clinical content must be traceable to the source text |
 | 2026-10-29 | Knowledge base stays as CSV files on GitHub; new versions go in by pull request and must pass the golden tests; no owner upload screen | Guarantees tests run before a version goes live; full history; replaces "owner uploads KB versions" in PRODUCT.md |
 | 2026-10-29 | Owner can see all hospitals' de-identified cases; everyone else only their own hospital | Owner's choice for quality review; hospital contracts must allow it |
 | 2026-10-29 | Login by emailed link (no passwords); only the owner creates users | Nothing to forget, reuse or share on wards |

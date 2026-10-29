@@ -1,0 +1,64 @@
+field,value,label,multi
+sex,male,Male,no
+sex,female,Female,no
+sex,other,Other,no
+source,lung,Lung,no
+source,urinary,Urinary,no
+source,intra_abdominal,Intra-abdominal,no
+source,cns,CNS,no
+source,skin_soft_tissue,Skin/soft tissue,no
+source,bloodstream_unknown,Bloodstream/unknown,no
+source,catheter_related,Catheter-related,no
+source,bone_joint,Bone/joint,no
+setting,community_acquired,Community-acquired,no
+setting,healthcare_associated,Healthcare-associated,no
+setting,hospital_acquired,Hospital-acquired,no
+setting,ventilator_associated,Ventilator-associated,no
+source_control,not_needed,Not needed,no
+source_control,needed_done,"Needed, done",no
+source_control,needed_not_done,"Needed, not yet done",no
+severity,sepsis,Sepsis,no
+severity,septic_shock,Septic shock,no
+dialysis,no,No,no
+dialysis,haemodialysis,Haemodialysis,no
+dialysis,peritoneal_dialysis,Peritoneal dialysis,no
+dialysis,crrt,Continuous renal replacement therapy,no
+hepatic,normal,Normal,no
+hepatic,mild,Mild,no
+hepatic,moderate,Moderate,no
+hepatic,severe,Severe,no
+admission_90d,yes,Yes,no
+admission_90d,no,No,no
+prior_mdr,none,None,yes
+prior_mdr,esbl,ESBL,yes
+prior_mdr,cre,CRE,yes
+prior_mdr,mrsa,MRSA,yes
+prior_mdr,pseudomonas,Pseudomonas,yes
+prior_mdr,vre,VRE,yes
+prior_mdr,other,Other,yes
+devices,none,None,yes
+devices,urinary_catheter,Urinary catheter,yes
+devices,central_line,Central line,yes
+devices,ventilator,Ventilator,yes
+devices,drains,Drains,yes
+devices,other,Other,yes
+comorbidities,none,None,yes
+comorbidities,diabetes,Diabetes,yes
+comorbidities,copd,COPD,yes
+comorbidities,ckd,CKD,yes
+comorbidities,cirrhosis,Cirrhosis,yes
+comorbidities,malignancy,Malignancy,yes
+comorbidities,other,Other,yes
+immunocompromise,none,None,yes
+immunocompromise,neutropenia,Neutropenia,yes
+immunocompromise,transplant,Transplant,yes
+immunocompromise,steroids,Steroids,yes
+immunocompromise,chemo,Chemotherapy,yes
+immunocompromise,hiv,HIV,yes
+immunocompromise,other,Other,yes
+allergy_reaction,rash,Rash,no
+allergy_reaction,anaphylaxis,Anaphylaxis,no
+allergy_reaction,other,Other,no
+pregnancy,not_applicable,Not applicable,no
+pregnancy,no,No,no
+pregnancy,yes,Yes (out of scope),no

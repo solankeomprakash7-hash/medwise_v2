@@ -32,7 +32,8 @@ Created 2026-10-28 (Phase 2, step 1). Folders marked *empty* hold only a README 
 /app/api             server routes (recommend, decision, upload) — empty
 /lib/rules           rules engine: mdr-risk, regimen-filter, dosing, safety — empty
 /lib/ai              Claude call, prompt, JSON checking — empty
-/knowledge           signed-off CSV tables + VERSION file — empty
+/lib/knowledge       reads the knowledge-base tables and checks them for mistakes
+/knowledge           CSV tables + VERSION + vocabulary + coverage checklist (see knowledge/README.md); no clinical rows yet
 /tests               golden test set runner (placeholder) + banned-wording check
 /docs                PRODUCT, CLINICAL_RULES, DESIGN, ARCHITECTURE, DECISIONS, EVIDENCE_REVIEW (draft)
 /supabase/migrations database structure, as SQL files applied in date order
@@ -48,7 +49,7 @@ medwise-project-docs.zip   original docs bundle, kept for reference
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Runs the site on your computer |
-| `npm run check` | Style check + type check + tests (incl. golden set and banned-wording check) |
+| `npm run check` | Style check + type check + tests (incl. golden set, knowledge-base checks and banned-wording check) |
 | `npm run build` | Builds the site as Vercel would |
 | `npm run test:db` | Checks the database privacy and audit rules on an empty test database (needs `DATABASE_URL`) |
 
