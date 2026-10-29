@@ -87,6 +87,11 @@ Privacy and audit rules, enforced by the database itself (row-level security):
 - Modify / Override are refused without a reason and the regimen actually chosen.
 - Logged-out visitors can read nothing.
 
+### Where each migration has been applied
+| Migration | Staging Supabase | Production Supabase |
+| --- | --- | --- |
+| `20261029000000_initial_schema.sql` | applied 2026-10-29; owner profile created | not yet (after login is tested on staging) |
+
 ### Changing the database
 1. Write a new dated SQL file in `supabase/migrations/`; never edit one that is already applied.
 2. Add checks to `tests/db/rls.test.sql`; `npm run test:db` must pass.
