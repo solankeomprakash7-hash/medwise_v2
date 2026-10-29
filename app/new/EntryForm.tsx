@@ -2,8 +2,9 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import type { ReactNode } from "react";
-import type { Precheck } from "@/lib/recommend/precheck";
-import { checkPatientDetails } from "./actions";
+import type { Result } from "@/lib/recommend/recommend";
+import { getRecommendation } from "./actions";
+import ResultView from "./ResultView";
 
 // Patient entry (docs/DESIGN.md, screen 1). Details live only in this page's memory: nothing is stored
 // in the browser, and there are no free-text fields where a name or ID could be typed.
@@ -162,13 +163,13 @@ export default function EntryForm({ options }: { options: Options }) {
   const [form, setForm] = useState<Form>(EMPTY);
   const [step, setStep] = useState(0);
   const [showProblems, setShowProblems] = useState(false);
-  const [check, setCheck] = useState<Precheck | null>(null);
+  const [result, setResult] = useState<Omit<Result, "audit"> | null>(null);
   const [pending, startTransition] = useTransition();
   const listId = useId();
 
   const set = <K extends keyof Form>(field: K, value: Form[K]) => {
     setForm((f) => ({ ...f, [field]: value }));
-    setCheck(null);
+    setResult(null);
   };
   const problems = stepProblems(step, form);
   const blocked = problems.missing.length + problems.invalid.length + problems.stop.length > 0;
@@ -186,11 +187,12 @@ export default function EntryForm({ options }: { options: Options }) {
   };
   const submit = () =>
     startTransition(async () => {
-      setCheck(await checkPatientDetails(toPatient(form)));
+      setResult(await getRecommendation(toPatient(form)));
+      window.scrollTo({ top: 0 });
     });
   const startAgain = () => {
     setForm(EMPTY);
-    setCheck(null);
+    setResult(null);
     goTo(0);
   };
 
@@ -217,7 +219,13 @@ export default function EntryForm({ options }: { options: Options }) {
         <Progress step={step} />
       </header>
 
-      <main className="flex-1 px-4 pb-32 pt-4">
+      {result && (
+        <main className="flex-1 px-4 pb-40 pt-4">
+          <h1 className="mb-4 font-display text-3xl">Recommendation</h1>
+          <ResultView result={result} onEdit={() => setResult(null)} onStartAgain={startAgain} />
+        </main>
+      )}
+      <main className={`flex-1 px-4 pb-32 pt-4 ${result ? "hidden" : ""}`}>
         <h1 className="font-display text-3xl">{STEPS[step]}</h1>
         <p className="mt-1 text-base">No names, hospital numbers or dates of birth: none are needed.</p>
         {showProblems && problems.stop.length === 0 && (problems.missing.length > 0 || problems.invalid.length > 0) && (
@@ -322,10 +330,28 @@ export default function EntryForm({ options }: { options: Options }) {
           ))}
         </datalist>
 
-        {step === 5 && check && <CheckResult check={check} onStartAgain={startAgain} />}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 border-t border-rule bg-cream" aria-label="Steps">
+      {result?.status === "recommendation" && (
+        <nav className="fixed inset-x-0 bottom-0 border-t border-rule bg-cream" aria-label="Decision">
+          <div className="mx-auto max-w-xl px-4 py-3">
+            {/* All three equally easy to reach (DESIGN.md). Disabled until decisions can be saved (rule 7). */}
+            <div className="flex gap-3">
+              <button type="button" disabled className="min-h-12 flex-1 rounded bg-green text-lg text-cream disabled:opacity-50">
+                Accept
+              </button>
+              <button type="button" disabled className="min-h-12 flex-1 rounded border border-ink text-lg disabled:opacity-50">
+                Modify
+              </button>
+              <button type="button" disabled className="min-h-12 flex-1 rounded border border-ink text-lg disabled:opacity-50">
+                Override
+              </button>
+            </div>
+            <p className="mt-1 text-center text-base">Decisions are saved once login is added.</p>
+          </div>
+        </nav>
+      )}
+      <nav className={`fixed inset-x-0 bottom-0 border-t border-rule bg-cream ${result ? "hidden" : ""}`} aria-label="Steps">
         <div className="mx-auto flex max-w-xl gap-3 px-4 py-3">
           <button
             type="button"
@@ -346,7 +372,7 @@ export default function EntryForm({ options }: { options: Options }) {
               disabled={pending}
               className="min-h-12 flex-1 rounded bg-ink text-lg text-cream disabled:opacity-60"
             >
-              {pending ? "Checking…" : "Get recommendation"}
+              {pending ? "Working…" : "Get recommendation"}
             </button>
           )}
         </div>
@@ -629,29 +655,5 @@ function Alert({ tone, title, children }: { tone: "danger" | "info" | "success";
       <p className="font-semibold">{title}</p>
       <div className="mt-1 text-ink">{children}</div>
     </div>
-  );
-}
-
-function CheckResult({ check, onStartAgain }: { check: Precheck; onStartAgain: () => void }) {
-  if (check.status === "complete") {
-    return (
-      <Alert tone="success" title="Details complete">
-        <p>
-          The details passed all checks. The recommendation screen is the next part of MedWise to be built, so no
-          recommendation is shown yet.
-        </p>
-        <button type="button" onClick={onStartAgain} className="mt-3 min-h-11 underline">
-          Start a new patient
-        </button>
-      </Alert>
-    );
-  }
-  const danger = check.status === "out_of_scope" || check.status === "allergy_unknown";
-  return (
-    <Alert tone={danger ? "danger" : "info"} title={danger ? "No recommendation — discuss with ID / microbiology" : "Please check the details"}>
-      {check.messages.map((m) => (
-        <p key={m}>{m}</p>
-      ))}
-    </Alert>
   );
 }

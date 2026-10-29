@@ -1,4 +1,6 @@
 import type { EvidencePack } from "@/lib/recommend/pack";
+import { COVERAGE_KEYS } from "@/lib/recommend/spectrum";
+import { STEWARDSHIP_ACTIONS } from "./answer";
 
 // System prompt, following CLINICAL_RULES.md "The AI's instructions".
 export const SYSTEM_PROMPT = `You are advising a qualified clinician on empiric antibiotic choice for an adult with sepsis.
@@ -11,9 +13,13 @@ For each MDR organism in "organisms", judge the risk as high or low from the pat
 and cover a specific MDR pathogen only when its risk is high.
 Cite every claim: each citation gives a passage_id from "passages" and a quote copied word for word from that passage.
 When guidelines conflict, say so in "flags" and explain your choice.
+For every coverage category in "coverage_categories", say whether THIS patient needs it and why. Do not say what
+the drugs cover: the app takes that from its own table.
 Return JSON only, with exactly these keys:
 {"regimen": string, "alternatives": [up to two strings], "mdr_assessment": [{"organism", "risk": "high"|"low", "reason"}],
- "reasoning": string of at most 150 words, "citations": [{"passage_id", "quote"}], "flags": [strings]}`;
+ "key_reasons": [1 to 4 short patient-specific reasons], "coverage_needed": [{"category", "needed": true|false, "reason"}],
+ "reasoning": string of at most 150 words, "citations": [{"passage_id", "quote"}],
+ "stewardship": [up to 4 {"action": one of "stewardship_actions", "text"}], "flags": [strings]}`;
 
 // The user message: the evidence pack as JSON. It holds no identifiers (the input has no free-text fields).
 export function buildUserMessage(pack: EvidencePack): string {
@@ -33,6 +39,8 @@ export function buildUserMessage(pack: EvidencePack): string {
       allowed_drugs: pack.allowedDrugs,
       allergy: { excluded: pack.allergyExcluded, cross_reactivity: pack.crossReactivity },
       organisms: pack.organisms,
+      coverage_categories: COVERAGE_KEYS,
+      stewardship_actions: STEWARDSHIP_ACTIONS,
       hospital_antibiogram: pack.antibiogram,
     },
     null,

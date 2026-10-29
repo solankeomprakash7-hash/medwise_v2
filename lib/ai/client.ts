@@ -1,5 +1,9 @@
 // How the app talks to an AI model. The real Claude client will implement this once the paid API key is
 // set up (server-side only, CLAUDE.md rule 3); until then tests use StubAiClient.
+
+// Thrown when the AI cannot answer for a known reason that the clinician should see.
+export class AiNoAnswer extends Error {}
+
 export interface AiClient {
   model: string;
   complete(system: string, user: string): Promise<string>;

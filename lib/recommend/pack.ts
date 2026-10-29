@@ -17,7 +17,7 @@ export interface AntibiogramRow {
 // Everything the AI is given for one patient. It may reason only from this (CLINICAL_RULES.md).
 export interface EvidencePack {
   patient: PatientInput;
-  passages: { passage_id: string; guideline: string; location: string; table_columns: string; text: string }[];
+  passages: { passage_id: string; guideline: string; location: string; organisms: string; table_columns: string; text: string }[];
   baseRegimen: Row | null;
   mdrCoverage: Row[];
   mdrRiskFactors: Row[];
@@ -44,6 +44,7 @@ export function buildEvidencePack(
         passage_id: p.passage_id,
         guideline: p.guideline,
         location: p.location,
+        organisms: p.organisms,
         table_columns: p.table_columns,
         text: p.text,
       })),

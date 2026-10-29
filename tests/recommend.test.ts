@@ -21,6 +21,18 @@ const goodAnswer = {
   regimen: "ceftriaxone + azithromycin",
   alternatives: ["ceftriaxone + doxycycline"],
   mdr_assessment: lowRisk,
+  key_reasons: ["Community-acquired pneumonia with sepsis", "No MDR risk factors", "Atypical cover needed"],
+  coverage_needed: [
+    { category: "gram_positive", needed: true, reason: "Pneumococcus" },
+    { category: "gram_negative", needed: true, reason: "Haemophilus and enteric organisms" },
+    { category: "pseudomonas", needed: false, reason: "No Pseudomonas risk factors" },
+    { category: "mrsa", needed: false, reason: "No MRSA risk factors" },
+    { category: "esbl", needed: false, reason: "No ESBL risk factors" },
+    { category: "cre", needed: false, reason: "No CRE risk factors" },
+    { category: "anaerobes", needed: false, reason: "Lung source without anaerobic risk" },
+    { category: "atypicals", needed: true, reason: "Community-acquired pneumonia" },
+  ],
+  stewardship: [{ action: "review_at_48_72h", text: "Review cultures and narrow if possible." }],
   reasoning: "Community-acquired pneumonia with sepsis and no MDR risk factors. The national guideline's ICU row gives ceftriaxone with azithromycin. COPD alone is not a Pseudomonas risk factor here.",
   citations: [
     { passage_id: "ncdc-12.5-icu", quote: "Ceftriaxone 2g OD IV + Azithromycin 500 mg daily" },

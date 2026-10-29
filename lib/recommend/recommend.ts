@@ -1,3 +1,4 @@
+import { AiNoAnswer } from "@/lib/ai/client";
 import type { AiClient } from "@/lib/ai/client";
 import { assessAllergies } from "./allergy";
 import { SYSTEM_PROMPT, buildUserMessage } from "@/lib/ai/prompt";
@@ -8,7 +9,11 @@ import { checkInput } from "./input";
 import type { Knowledge } from "./kb";
 import { buildEvidencePack } from "./pack";
 import type { AntibiogramRow } from "./pack";
+import { COVERAGE, coverageGiven, spectrumFit } from "./spectrum";
+import type { CoverageKey, CoverageLevel, FitLine } from "./spectrum";
 import { guidelineTable, sameRegimen } from "./table";
+import { reviewTimeline } from "./timeline";
+import type { TimelineStep } from "./timeline";
 import type { TableView } from "./table";
 
 export const DISCLAIMERS = [
@@ -23,7 +28,12 @@ export interface Result {
   regimen?: { name: string; drugs: DoseLine[] };
   alternatives?: { name: string; drugs: DoseLine[] }[];
   mdrAssessment?: { organism: string; risk: "high" | "low"; reason: string }[];
+  keyReasons?: string[];
   reasoning?: string;
+  coverage?: { key: CoverageKey; label: string; level: CoverageLevel }[];
+  spectrumFit?: FitLine[];
+  stewardship?: { action: string; text: string }[];
+  timeline?: TimelineStep[];
   citations?: { passage_id: string; guideline: string; location: string; quote: string }[];
   flags: string[];
   guidelineTable?: TableView;
@@ -74,8 +84,9 @@ export async function recommend(
   let raw: string;
   try {
     raw = await ai.complete(SYSTEM_PROMPT, buildUserMessage(pack));
-  } catch {
-    return { ...base, status: "no_recommendation", messages: ["The AI did not answer.", DISCUSS], audit: { aiModel: ai.model } };
+  } catch (error) {
+    const why = error instanceof AiNoAnswer ? error.message : "The AI did not answer.";
+    return { ...base, status: "no_recommendation", messages: [why, DISCUSS], audit: { aiModel: ai.model } };
   }
   const audit = { aiModel: ai.model, aiRaw: raw };
 
@@ -93,6 +104,16 @@ export async function recommend(
     const reason = allergy.crossReactive.get(drug);
     if (reason) resultFlags.push(`Possible cross-reactivity: ${drug} is a beta-lactam and the patient had ${reason}.`);
   }
+  for (const line of doseLines(answer.regimen, patient, kb)) {
+    if (line.aware === "Not recommended") {
+      resultFlags.push(`${line.drug} is on the WHO AWaRe "Not recommended" list of fixed-dose combinations.`);
+    }
+  }
+  const given = coverageGiven(answer.regimen, kb);
+  const fit = spectrumFit(answer.coverage_needed, given);
+  for (const line of fit.filter((f) => f.status === "missing")) {
+    resultFlags.push(`Coverage needed but not given: ${line.label}.`);
+  }
   if (table.note) resultFlags.push(table.note);
   else if (
     table.firstChoice &&
@@ -108,7 +129,12 @@ export async function recommend(
     regimen: { name: answer.regimen, drugs: doseLines(answer.regimen, patient, kb) },
     alternatives: answer.alternatives.map((name) => ({ name, drugs: doseLines(name, patient, kb) })),
     mdrAssessment: answer.mdr_assessment,
+    keyReasons: answer.key_reasons,
     reasoning: answer.reasoning,
+    coverage: COVERAGE.map(({ key, label }) => ({ key, label, level: given[key] })),
+    spectrumFit: fit,
+    stewardship: answer.stewardship,
+    timeline: reviewTimeline(patient, kb),
     citations: answer.citations.map((c) => ({
       passage_id: c.passage_id,
       guideline: evidence.get(c.passage_id)?.guideline ?? "",

@@ -5,6 +5,11 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | Result screen built (10 cards, DESIGN.md order) with a DEMO stand-in that takes the guideline table's choice and passes through all real safety checks; "DEMO — not for patient care" banner | Shows the full screen and every check working before the paid AI is connected |
+| 2026-10-29 | Coverage given and spectrum fit computed by code from `drug_spectrum.csv`; "needed but not given" is a red flag; excess coverage shown in words | Rules 1 and 5; makes over-treatment visible |
+| 2026-10-29 | Review timeline (now / 1 h / 6 h if source control pending / 48–72 h / duration) has fixed wording from code, each step citing a verified passage (NCDC front matter, SSC rec 16/17, 24, 36, 39) | Timing comes from the guidelines, not the AI |
+| 2026-10-29 | Accept / Modify / Override shown (equal size) but disabled until login can save decisions | Rule 7: every decision must be saved |
+| 2026-10-29 | The spectrum bar (DESIGN.md) is not built yet: its drug list (six drugs on a five-segment ruler) needs a decision | Open design question |
 | 2026-10-29 | AWaRe groups filled from the WHO AWaRe 2023 spreadsheet (sheet and row cited per drug; `scripts/verify-aware.py` checks them); IV rows used where WHO splits IV and oral (colistin, fosfomycin, minocycline, vancomycin); "Not recommended" accepted as a value; WHO file stored on `sources`; AWaRe 2023 added to `guidelines.csv` so results show its version | Traceable stewardship labels; IV and oral differ (e.g. fosfomycin IV = Reserve, oral = Watch) |
 | 2026-10-29 | Cefoperazone-sulbactam: WHO "Not recommended" vs NCDC 2025 option → flagged for the panel; result screen will warn when it appears | Guideline conflict to be decided by the panel |
 | 2026-10-29 | Aztreonam-avibactam, cefepime-enmetazobactam, sulbactam-durlobactam not in WHO AWaRe 2023 → AWaRe left empty for the panel (blocks sign-off) | Newer agents; no WHO source yet |

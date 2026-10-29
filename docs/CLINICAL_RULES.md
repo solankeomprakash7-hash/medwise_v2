@@ -102,7 +102,10 @@ anti-pseudomonal cover. Broaden only if shock or Pseudomonas risk.
 - Name drugs only from the allowed list. Never write doses; the app adds them from `drugs.csv`.
 - Cite every claim with a passage ID from the pack. When guidelines conflict, say so and explain your choice.
 - Return JSON only: `regimen`, `alternatives` (up to two), `mdr_assessment` (per organism: high / low, with
-  reason), `reasoning` (≤ 150 words), `citations` (passage IDs), `flags`.
+  reason), `key_reasons` (1–4 short patient-specific reasons), `coverage_needed` (for each coverage category of
+  `drug_spectrum.csv`: needed yes / no, with reason — never what the drugs cover), `reasoning` (≤ 150 words),
+  `citations` (passage IDs with word-for-word quotes), `stewardship` (up to 4 actions from a fixed list, with
+  text), `flags`.
 
 ## Golden tests with the AI
 Each golden test patient is run **3 times**; every run must give the expected regimen or an acceptable

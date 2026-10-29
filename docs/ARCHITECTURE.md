@@ -28,10 +28,10 @@ Stewardship admin ──► uploads antibiogram, views reports
 ## Folder layout
 Created 2026-10-28 (Phase 2, step 1). Folders marked *empty* hold only a README for now.
 ```
-/app                 screens: home page (link to New patient); /new = patient entry (6 steps, checks on the server via app/new/actions.ts); result, admin, login still to come
+/app                 screens: home page; /new = patient entry (6 steps) and result screen (app/new/ResultView.tsx, 10 cards per DESIGN.md), via the server action app/new/actions.ts; admin and login still to come
 /app/api             server routes (recommend, decision, upload) — empty
-/lib/ai              AI answer format (answer.ts), instructions (prompt.ts), AI client interface + stand-in (client.ts); real Claude client not yet built
-/lib/recommend       the recommendation: input checks, allergy checks (allergy.ts), evidence pack, safety checks, doses, guideline-table comparison (recommend.ts)
+/lib/ai              AI answer format (answer.ts), instructions (prompt.ts), AI client interface + test stand-in (client.ts), DEMO stand-in used by the screen (demo.ts); real Claude client not yet built
+/lib/recommend       the recommendation: input checks, allergy checks (allergy.ts), coverage and spectrum fit (spectrum.ts), review timeline (timeline.ts), evidence pack, safety checks, doses, guideline-table comparison (recommend.ts)
 /lib/knowledge       reads the knowledge-base tables and checks them for mistakes
 /knowledge           CSV tables + VERSION + vocabulary + coverage checklist + provenance (see knowledge/README.md); draft rows only
 /tests               golden test set runner (placeholder) + banned-wording check
