@@ -163,6 +163,7 @@ export default function EntryForm({ options }: { options: Options }) {
   const [form, setForm] = useState<Form>(EMPTY);
   const [step, setStep] = useState(0);
   const [showProblems, setShowProblems] = useState(false);
+  const [typingAge, setTypingAge] = useState(false);
   const [result, setResult] = useState<Omit<Result, "audit"> | null>(null);
   const [pending, startTransition] = useTransition();
   const listId = useId();
@@ -249,8 +250,15 @@ export default function EntryForm({ options }: { options: Options }) {
         <div className="mt-6 flex flex-col gap-8">
           {step === 0 && (
             <>
-              <NumberField label={LABELS.age} value={form.age} onChange={(v) => set("age", v)} />
-              {inRange(form.age, 0, 17.99) && <Stop message="Age under 18 is outside MedWise version 1." onStartAgain={startAgain} />}
+              <NumberField
+                label={LABELS.age}
+                value={form.age}
+                onChange={(v) => set("age", v)}
+                onFocus={() => setTypingAge(true)}
+                onBlur={() => setTypingAge(false)}
+              />
+              {/* Wait until typing is finished: "6" on the way to "62" must not stop the form. */}
+              {!typingAge && inRange(form.age, 0, 17.99) && <Stop message="Age under 18 is outside MedWise version 1." onStartAgain={startAgain} />}
               {choice("sex")}
               <NumberField label={LABELS.weight_kg} value={form.weight_kg} onChange={(v) => set("weight_kg", v)} />
               {form.sex === "female" && choice("pregnancy")}
@@ -450,7 +458,13 @@ function MultiChoice(props: { legend: string; options: { value: string; label: s
   );
 }
 
-function NumberField(props: { label: string; value: string; onChange: (v: string) => void }) {
+function NumberField(props: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+}) {
   const id = useId();
   return (
     <div>
@@ -463,6 +477,8 @@ function NumberField(props: { label: string; value: string; onChange: (v: string
         inputMode="decimal"
         value={props.value}
         onChange={(e) => props.onChange(e.target.value)}
+        onFocus={props.onFocus}
+        onBlur={props.onBlur}
         className="min-h-12 w-40 rounded border border-ink bg-white px-3 font-mono text-xl"
       />
     </div>
