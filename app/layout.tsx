@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { DM_Mono, Instrument_Sans } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 
-// Fonts from docs/DESIGN.md: Instrument Sans throughout; DM Mono only for doses and numbers.
-const sans = Instrument_Sans({
-  variable: "--font-instrument",
+// Fonts from docs/DESIGN.md: IBM Plex Sans for text, IBM Plex Mono for doses, numbers and labels.
+const sans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
-const mono = DM_Mono({
-  variable: "--font-dm-mono",
+const mono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
 });

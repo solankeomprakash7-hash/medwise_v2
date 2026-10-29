@@ -36,18 +36,18 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
   return (
     <div className="flex flex-col gap-6">
       {r.demo ? (
-        <Banner title="DEMO — not for patient care">
+        <Banner title="DEMO: not for patient care">
           Stand-in answer from the guideline table and a draft knowledge base. The real AI is not connected yet.
         </Banner>
       ) : (
-        draft && <Banner title="Draft knowledge base — not for patient care">Answered by the AI; the tables it draws on are not signed off yet.</Banner>
+        draft && <Banner title="Draft knowledge base: not for patient care">Answered by the AI; the tables it draws on are not signed off yet.</Banner>
       )}
 
       {r.status !== "recommendation" && (
-        <section className="clay-cushion border-2 border-red bg-surface p-6">
-          <div className="flex items-center gap-2 text-red">
+        <section className="fin-panel border-alert border-l-4 p-6">
+          <div className="flex items-center gap-2 text-alert">
             <Icon name="alert" />
-            <h2 className="text-xl font-bold">No recommendation</h2>
+            <h2 className="text-xl font-medium">No recommendation</h2>
           </div>
           <div className="mt-2 flex flex-col gap-1">
             {r.messages.map((m) => (
@@ -60,67 +60,75 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
       {r.status === "recommendation" && r.regimen && (
         <>
           {/* 1. Recommendation: the hero, with the AI's one-line reason */}
-          <section className="clay-cushion bg-pink p-6 sm:p-9">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-[13px] font-bold uppercase tracking-[0.14em] text-ink-2">Recommended empiric regimen</h2>
-              <TableChip match={r.tableMatch} />
-            </div>
-            <p className="mt-3 text-[clamp(34px,6vw,56px)] font-bold leading-[1] tracking-[-0.035em]">{regimenTitle(r.regimen.name)}</p>
-            <ul className="mt-6 grid gap-4 sm:grid-cols-2">
-              {drugs.map((d) => (
-                <li key={d.drug} className="clay-small bg-surface p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-lg font-bold">{title(d.drug)}</span>
-                    <Aware group={d.aware} />
-                  </div>
-                  <span className="mt-1 block font-mono text-base">{[d.dose, d.interval].filter(Boolean).join(" · ") || NOT_YET}</span>
-                </li>
-              ))}
-            </ul>
+          <div className="fin-glow rounded-[5px] p-3 pb-7 pr-7 sm:p-5 sm:pb-12 sm:pr-12">
+            <section className="fin-frame">
+              <div className="fin-panel p-5 sm:p-7">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="font-mono text-[13px] uppercase tracking-[0.14em] text-muted">Recommended empiric regimen</h2>
+                  <TableChip match={r.tableMatch} />
+                </div>
+                <p className="mt-3 text-[clamp(26px,4vw,34px)] font-medium leading-[1.15] tracking-[-0.02em]">{regimenTitle(r.regimen.name)}</p>
+                <ul className="mt-5 grid border-t border-line sm:grid-cols-2">
+                  {drugs.map((d, i) => (
+                    <li key={d.drug} className={`py-4 sm:pr-5 ${i % 2 === 1 ? "border-t border-line sm:border-l sm:border-t-0 sm:pl-5" : ""}`}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{title(d.drug)}</span>
+                        <Aware group={d.aware} />
+                      </div>
+                      {/* The dose is the main value: from the knowledge-base tables, never the AI. */}
+                      <p className="mt-2 font-mono text-[clamp(24px,3.4vw,30px)] leading-none text-value [font-variant-numeric:tabular-nums]">
+                        {d.dose || NOT_YET}
+                      </p>
+                      {d.interval && <p className="mt-1.5 font-mono text-[14px] text-muted">{d.interval}</p>}
+                    </li>
+                  ))}
+                </ul>
 
-            {r.whyThisChoice && (
-              <div className="clay-tray mt-6 p-6 sm:p-8">
-                <p className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] text-ink-2">
-                  <Icon name="spark" small /> Why this antibiotic
-                </p>
-                <p className="mt-2 text-xl font-bold leading-snug tracking-[-0.01em]">{r.whyThisChoice}</p>
-                {r.keyReasons && r.keyReasons.length > 0 && (
-                  <ul className="mt-4 flex flex-wrap gap-3">
-                    {r.keyReasons.map((k) => (
-                      <li key={k} className="clay-small flex items-start gap-2 !rounded-full bg-mint px-4 py-1.5 text-[15px]">
-                        <span aria-hidden className="font-bold">✓</span>
-                        {k}
-                      </li>
-                    ))}
-                  </ul>
+                {r.whyThisChoice && (
+                  <div className="mt-2 border-t border-line pt-5">
+                    <p className="flex items-center gap-2 font-mono text-[13px] uppercase tracking-[0.14em] text-accent">
+                      <Icon name="spark" small /> Why this antibiotic
+                    </p>
+                    <p className="mt-2 text-lg leading-[1.55]">{r.whyThisChoice}</p>
+                    {r.keyReasons && r.keyReasons.length > 0 && (
+                      <ul className="mt-3 flex flex-col gap-1.5">
+                        {r.keyReasons.map((k) => (
+                          <li key={k} className="flex items-start gap-2 text-[15px] text-muted">
+                            <span aria-hidden className="text-done">✓</span>
+                            {k}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
+                {r.alternatives && r.alternatives.length > 0 && (
+                  <p className="mt-5 border-t border-line pt-4 text-[15px] text-muted">
+                    <span className="font-medium text-ink">Alternatives: </span>
+                    {r.alternatives.map((a) => regimenTitle(a.name)).join(" · ")}
+                  </p>
                 )}
               </div>
-            )}
-
-            {r.alternatives && r.alternatives.length > 0 && (
-              <p className="mt-5 text-base">
-                <span className="font-bold">Alternatives: </span>
-                {r.alternatives.map((a) => regimenTitle(a.name)).join(" · ")}
-              </p>
-            )}
-          </section>
+            </section>
+          </div>
 
           {/* 2. How to give it */}
           <Card icon="clock" title="How to give it" open>
             <div className="flex flex-col gap-3">
               {drugs.map((d) => (
-                <div key={d.drug} className="clay-small bg-ground/70 p-4">
-                  <p className="font-bold">{title(d.drug)}</p>
+                <div key={d.drug} className="rounded-[5px] border border-line bg-tint p-4">
+                  <p className="font-medium">{title(d.drug)}</p>
                   <dl className="mt-1 grid grid-cols-[5.5rem_1fr] gap-x-2 gap-y-0.5 text-[15px]">
-                    <dt className="text-ink-2">Dose</dt>
-                    <dd className="font-mono">{d.dose || NOT_YET}</dd>
-                    <dt className="text-ink-2">Interval</dt>
+                    <dt className="text-muted">Dose</dt>
+                    <dd className="font-mono text-value">{d.dose || NOT_YET}</dd>
+                    <dt className="text-muted">Interval</dt>
                     <dd className="font-mono">{d.interval || NOT_YET}</dd>
-                    <dt className="text-ink-2">Infusion</dt>
+                    <dt className="text-muted">Infusion</dt>
                     <dd className="font-mono">{d.infusion || NOT_YET}</dd>
                   </dl>
                   {d.notes.map((n) => (
-                    <p key={n} className="mt-3 rounded-[18px] bg-butter px-3 py-2 text-[15px]">
+                    <p key={n} className="mt-3 border-l-2 border-value pl-3 text-[15px] text-muted">
                       {n}
                     </p>
                   ))}
@@ -131,13 +139,13 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
 
           {/* 3. Coverage */}
           <Card icon="grid" title="Coverage" open>
-            <p className="text-[15px] text-ink-2">What this regimen covers, from the knowledge base.</p>
-            <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <p className="text-[15px] text-muted">What this regimen covers, from the knowledge base.</p>
+            <ul className="mt-4 grid grid-cols-2 overflow-hidden rounded-[5px] border border-line sm:grid-cols-4">
               {r.coverage?.map((c) => (
-                <li key={c.key} className={`clay-small p-3 ${c.level === "yes" ? "bg-sky" : c.level === "limited" ? "bg-butter" : "bg-ground"}`}>
-                  <span className="block text-[15px] font-bold">{c.label}</span>
+                <li key={c.key} className="-mb-px -mr-px border-b border-r border-line p-3">
+                  <span className="block text-[15px] font-medium">{c.label}</span>
                   <Meter level={c.level} />
-                  <span className="mt-1 block text-[13px] font-bold uppercase tracking-[0.1em]">
+                  <span className={`mt-1 block font-mono text-[13px] uppercase tracking-[0.1em] ${c.level === "yes" ? "text-value" : "text-muted"}`}>
                     {c.level === "yes" ? "Yes" : c.level === "limited" ? "Limited" : "No"}
                   </span>
                 </li>
@@ -159,7 +167,7 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
           <Card icon="pin" title="Will it reach the site?">
             {drugs.map((d) => (
               <p key={d.drug} className="mt-2 first:mt-0">
-                <span className="font-bold">{title(d.drug)}: </span>
+                <span className="font-medium">{title(d.drug)}: </span>
                 {d.sitePenetration || NOT_YET}
               </p>
             ))}
@@ -168,17 +176,17 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
           {/* 6. Safety: table facts, then the AI-written interaction notes, clearly labelled */}
           <Card icon="shield" title="Safety and interactions" open>
             {r.flags.filter((f) => f.startsWith("Possible cross-reactivity")).map((f) => (
-              <p key={f} className="mb-3 font-bold text-red">
+              <p key={f} className="mb-3 font-medium text-alert">
                 {f}
               </p>
             ))}
             {r.interactions && r.interactions.length > 0 && (
-              <div className="clay-small bg-lavender p-5">
-                <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-ink-2">AI-written — verify before acting</p>
+              <div className="rounded-[5px] border border-dashed border-muted/60 bg-tint p-5">
+                <p className="font-mono text-[13px] uppercase tracking-[0.12em] text-accent">AI-written: verify before acting</p>
                 <ul className="mt-2 flex flex-col gap-2">
                   {r.interactions.map((i) => (
                     <li key={i.drug + i.text}>
-                      <span className="font-bold">{title(i.drug)}: </span>
+                      <span className="font-medium">{title(i.drug)}: </span>
                       {i.text}
                     </li>
                   ))}
@@ -188,7 +196,7 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
             <div className="mt-5 flex flex-col gap-3">
               {drugs.map((d) => (
                 <div key={d.drug} className="text-[15px]">
-                  <p className="font-bold">{title(d.drug)} · from the knowledge base</p>
+                  <p className="font-medium">{title(d.drug)} · from the knowledge base</p>
                   <p>Interactions: {d.interactions || NOT_YET}</p>
                   <p>Monitoring: {d.monitoring || NOT_YET}</p>
                 </div>
@@ -198,13 +206,13 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
 
           {/* 7. Why this antibiotic: the full reasoning, with the guideline passages */}
           <Card icon="book" title="Reasoning and guideline evidence">
-            <p className="text-lg">{r.reasoning}</p>
-            <h3 className="mt-6 text-[13px] font-bold uppercase tracking-[0.12em] text-ink-2">Guideline passages cited</h3>
+            <p className="text-[17px] leading-[1.65]">{r.reasoning}</p>
+            <h3 className="mt-6 font-mono text-[13px] uppercase tracking-[0.12em] text-muted">Guideline passages cited</h3>
             <ul className="mt-3 flex flex-col gap-3">
               {r.citations?.map((c) => (
-                <li key={c.passage_id + c.quote} className="clay-small bg-ground/70 px-5 py-4">
-                  <span className="text-lg">“{c.quote}”</span>
-                  <span className="mt-1 block text-[15px] font-bold text-ink-2">
+                <li key={c.passage_id + c.quote} className="border-l-2 border-accent pl-4">
+                  <span className="text-[17px] leading-[1.6]">“{c.quote}”</span>
+                  <span className="mt-1 block font-mono text-[13px] text-muted">
                     {guideline(c.guideline)}, {c.location}
                   </span>
                 </li>
@@ -219,7 +227,7 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
         <Card icon="flag" title={`Flags (${r.flags.length})`} open={r.flags.some(isAlert)}>
           <ul className="flex flex-col gap-2">
             {r.flags.map((f) => (
-              <li key={f} className={`flex gap-2 ${isAlert(f) ? "font-bold text-red" : ""}`}>
+              <li key={f} className={`flex gap-2 ${isAlert(f) ? "font-medium text-alert" : ""}`}>
                 <span aria-hidden>{isAlert(f) ? "!" : "•"}</span>
                 {f}
               </li>
@@ -234,21 +242,22 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
           <div className="flex flex-col gap-2">
             {r.stewardship?.map((s) => (
               <p key={s.action + s.text}>
-                <span className="font-bold">{ACTION_LABELS[s.action] ?? s.action}: </span>
+                <span className="font-medium">{ACTION_LABELS[s.action] ?? s.action}: </span>
                 {s.text}
               </p>
             ))}
           </div>
-          <ol className="mt-5 flex flex-col gap-3">
+          <ol className="relative mt-5 flex flex-col gap-4">
+            <span aria-hidden className="absolute bottom-4 left-[17px] top-4 w-px bg-line" />
             {r.timeline?.map((t, i) => (
-              <li key={t.when} className="flex gap-3">
-                <span aria-hidden className="clay-small flex size-9 shrink-0 items-center justify-center !rounded-full bg-sky text-[13px] font-bold">
-                  {i + 1}
+              <li key={t.when} className="relative flex gap-3">
+                <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full border border-line bg-panel font-mono text-[13px] text-value">
+                  {String(i + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <span className="font-mono text-[15px] font-bold">{t.when}</span>
+                  <span className="font-mono text-[14px] text-value">{t.when}</span>
                   <p>{t.action}</p>
-                  <p className="text-[15px] text-ink-2">{t.sources.map((s) => `${guideline(s.guideline)}, ${s.location}`).join("; ")}</p>
+                  <p className="font-mono text-[13px] text-muted">{t.sources.map((s) => `${guideline(s.guideline)}, ${s.location}`).join("; ")}</p>
                 </div>
               </li>
             ))}
@@ -257,21 +266,21 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
       )}
 
       {/* 10. Footer */}
-      <footer className="clay-tray px-6 py-6 text-[15px] text-ink-2 sm:px-9">
+      <footer className="border-t border-line pt-6 text-[14px] text-muted">
         <p>
           Knowledge base <span className="font-mono">{r.versions.knowledgeBase}</span>
         </p>
         <p>Sources: {r.versions.guidelines.map((g) => `${guideline(g.guideline)} (${g.version})`).join(" · ")}</p>
         {r.disclaimers.map((d) => (
-          <p key={d} className="mt-1 font-bold text-ink">
+          <p key={d} className="mt-1 font-medium text-ink">
             {d}
           </p>
         ))}
         <div className="mt-4 flex flex-wrap items-center gap-4">
-          <button type="button" onClick={onEdit} className="clay-button min-h-12 bg-pink px-6 text-base text-ink">
+          <button type="button" onClick={onEdit} className="fin-button min-h-12 px-6 text-base">
             Edit details
           </button>
-          <button type="button" onClick={onStartAgain} className="min-h-12 px-2 text-base font-bold text-ink underline underline-offset-4">
+          <button type="button" onClick={onStartAgain} className="fin-button-quiet min-h-12 px-6 text-base">
             Start a new patient
           </button>
         </div>
@@ -282,53 +291,53 @@ export default function ResultView({ result, onEdit, onStartAgain }: { result: S
 
 function Banner({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div role="note" className="clay-small bg-butter px-5 py-4 text-[15px]">
-      <p className="font-bold uppercase tracking-[0.1em]">{title}</p>
-      <p>{children}</p>
+    <div role="note" className="rounded-[5px] border border-value/50 bg-tint px-5 py-4 text-[15px]">
+      <p className="font-mono text-[13px] uppercase tracking-[0.12em] text-value">{title}</p>
+      <p className="mt-1 text-muted">{children}</p>
     </div>
   );
 }
 
 function Card({ icon, title, open, children }: { icon: IconName; title: string; open?: boolean; children: ReactNode }) {
   return (
-    <details open={open} className="group clay-tray">
-      <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 rounded-[inherit] px-5 py-4 sm:px-8 [&::-webkit-details-marker]:hidden">
-        <span className="clay-small flex size-10 shrink-0 items-center justify-center !rounded-full bg-lavender">
+    <details open={open} className="group fin-panel">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 rounded-[inherit] px-5 py-4 sm:px-6 [&::-webkit-details-marker]:hidden">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-[4px] border border-line text-accent">
           <Icon name={icon} small />
         </span>
-        <h2 className="flex-1 text-lg font-bold tracking-[-0.01em]">{title}</h2>
+        <h2 className="flex-1 text-[17px] font-medium">{title}</h2>
         {/* Recessed plus / minus */}
-        <span aria-hidden className="clay-well flex size-9 shrink-0 items-center justify-center rounded-full bg-ground text-xl font-bold">
+        <span aria-hidden className="font-mono text-xl text-accent">
           <span className="group-open:hidden">+</span>
           <span className="hidden group-open:inline">−</span>
         </span>
       </summary>
-      <div className="px-5 pb-7 pt-1 sm:px-8">{children}</div>
+      <div className="border-t border-line px-5 pb-6 pt-4 sm:px-6">{children}</div>
     </details>
   );
 }
 
 function TableChip({ match }: { match?: Result["tableMatch"] }) {
-  const chip = "clay-small !rounded-full px-3 py-1 text-[13px] font-bold";
-  if (match === "matches") return <span className={`${chip} bg-mint`}>✓ Matches guideline table</span>;
-  if (match === "differs") return <span className={`${chip} bg-butter`}>≠ Differs from guideline table — see flags</span>;
-  return <span className={`${chip} bg-surface`}>No guideline table row</span>;
+  const chip = "rounded-[4px] border px-2 py-0.5 font-mono text-[12px] uppercase tracking-[0.06em]";
+  if (match === "matches") return <span className={`${chip} border-done/60 text-done`}>✓ Matches guideline table</span>;
+  if (match === "differs") return <span className={`${chip} border-value/60 text-value`}>≠ Differs from guideline table: see flags</span>;
+  return <span className={`${chip} border-line text-muted`}>No guideline table row</span>;
 }
 
 function Aware({ group }: { group: string }) {
-  const tag = "rounded-full px-2.5 py-0.5 text-[13px] font-bold";
-  if (!group) return <span className={`${tag} bg-ground`}>AWaRe: not classified</span>;
-  if (group === "Not recommended") return <span className={`${tag} border-2 border-red text-red`}>WHO: Not recommended</span>;
-  return <span className={`${tag} bg-lavender`}>AWaRe: {group}</span>;
+  const tag = "rounded-[4px] border px-2 py-0.5 font-mono text-[12px]";
+  if (!group) return <span className={`${tag} border-line text-muted`}>AWaRe: not classified</span>;
+  if (group === "Not recommended") return <span className={`${tag} border-alert text-alert`}>WHO: Not recommended</span>;
+  return <span className={`${tag} border-line text-muted`}>AWaRe: {group}</span>;
 }
 
 // Three-step bar: words carry the meaning, the bar only helps the eye (no score).
 function Meter({ level }: { level: "yes" | "limited" | "no" }) {
   const filled = { yes: 3, limited: 1, no: 0 }[level];
   return (
-    <span aria-hidden className="clay-well mt-2 flex gap-1 rounded-full bg-surface p-1">
+    <span aria-hidden className="mt-2 flex gap-1">
       {[0, 1, 2].map((i) => (
-        <span key={i} className={`h-2 flex-1 rounded-full ${i < filled ? "bg-ink" : ""}`} />
+        <span key={i} className={`h-1 flex-1 rounded-full ${i < filled ? "bg-value" : "bg-line"}`} />
       ))}
     </span>
   );
@@ -345,19 +354,19 @@ function FitGroup({
 }) {
   if (!lines || lines.length === 0) return null;
   const chip = {
-    good: "bg-mint",
-    part: "bg-butter",
-    danger: "border-2 border-red bg-surface text-red",
-    excess: "bg-lavender",
+    good: "border-done/60 text-done",
+    part: "border-value/60 text-value",
+    danger: "border-alert text-alert",
+    excess: "border-line text-muted",
   }[tone];
   return (
     <div>
-      <h3 className={`text-[13px] font-bold uppercase tracking-[0.12em] ${tone === "danger" ? "text-red" : "text-ink-2"}`}>{title}</h3>
+      <h3 className={`font-mono text-[13px] uppercase tracking-[0.12em] ${tone === "danger" ? "text-alert" : "text-muted"}`}>{title}</h3>
       <ul className="mt-2 flex flex-col gap-2">
         {lines.map((l) => (
           <li key={l.key} className="flex flex-wrap items-baseline gap-2">
-            <span className={`rounded-full px-3 py-0.5 text-[15px] font-bold ${chip}`}>{l.label}</span>
-            {l.reason && <span className="text-[15px] text-ink-2">{l.reason}</span>}
+            <span className={`rounded-[4px] border px-2 py-0.5 text-[15px] font-medium ${chip}`}>{l.label}</span>
+            {l.reason && <span className="text-[15px] text-muted">{l.reason}</span>}
           </li>
         ))}
       </ul>

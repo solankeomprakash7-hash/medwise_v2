@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { Fragment, useEffect, useId, useRef, useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import type { Result } from "@/lib/recommend/recommend";
 import { getRecommendation } from "./actions";
 import ResultView from "./ResultView";
-import Sculpture, { Logo } from "../Sculpture";
+import { Logo } from "../Sculpture";
 
 // Patient entry (docs/DESIGN.md, screen 1). Details live only in this page's memory: nothing is stored
 // in the browser, and there are no free-text fields where a name or ID could be typed.
@@ -251,7 +252,7 @@ export default function EntryForm({ options }: { options: Options }) {
         }}
       />
       {choice("setting")}
-      {choice("source_control", 3)}
+      {choice("source_control")}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-[1fr_auto]">
         {choice("severity")}
         <NumberField label={LABELS.sofa} value={form.sofa} onChange={(v) => set("sofa", v)} />
@@ -308,35 +309,34 @@ export default function EntryForm({ options }: { options: Options }) {
 
   return (
     <div className="flex w-full flex-1 flex-col">
-      <header className="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-6 sm:pt-6">
-        <div className={`clay-cushion bg-pink ${result ? "px-6 py-4" : "grid items-center gap-4 p-6 sm:p-9 md:grid-cols-[1.4fr_1fr]"}`}>
+      <header className="border-b border-line bg-tint">
+        <div className="mx-auto w-full max-w-3xl px-5 py-5 sm:px-6">
           <div>
-            <div className="flex items-center gap-3">
+            <Link href="/" className="flex w-fit items-center gap-3 rounded-[5px]">
               <Logo className="size-9" />
               <div>
-                <p className="text-xl font-bold leading-none tracking-[-0.02em]">MedWise</p>
-                <p className="mt-1 text-[13px] font-bold uppercase tracking-[0.14em] text-ink-2">Empiric antibiotics · adult sepsis</p>
+                <p className="text-lg font-semibold leading-none">MedWise</p>
+                <p className="mt-1 font-mono text-[13px] uppercase tracking-[0.12em] text-muted">Empiric antibiotics · adult sepsis</p>
               </div>
-            </div>
+            </Link>
             {!result && (
               <>
-                <h1 className="mt-6 text-[clamp(44px,8vw,80px)] font-bold leading-[0.95] tracking-[-0.04em]">New patient</h1>
-                <p className="mt-4 max-w-md text-lg">
+                <h1 className="mt-7 text-[clamp(28px,4vw,36px)] font-medium leading-tight tracking-[-0.02em]">New patient</h1>
+                <p className="mt-2 max-w-lg text-base leading-[1.65] text-muted">
                   Fill in the five sections on this page. No names, hospital numbers or dates of birth: none are needed.
                 </p>
               </>
             )}
           </div>
-          {!result && <Sculpture className="mx-auto w-full max-w-[170px] md:max-w-[260px]" />}
         </div>
       </header>
 
       {result && (
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-44 pt-6 sm:px-6">
+        <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-16 pt-6 sm:px-6">
           <ResultView result={result} onEdit={() => setResult(null)} onStartAgain={startAgain} />
         </main>
       )}
-      <main className={`mx-auto w-full max-w-3xl flex-1 px-4 pb-40 pt-6 sm:px-6 ${result ? "hidden" : ""}`}>
+      <main className={`mx-auto w-full max-w-3xl flex-1 px-5 pb-36 pt-6 sm:px-6 ${result ? "hidden" : ""}`}>
         <div className="flex flex-col gap-6">
           {SECTIONS.map((section, i) => (
             <section
@@ -345,24 +345,24 @@ export default function EntryForm({ options }: { options: Options }) {
                 sectionRefs.current[i] = el;
               }}
               aria-labelledby={`${listId}-s${i}`}
-              className="clay-tray scroll-mt-4 px-5 py-6 sm:px-9 sm:py-8"
+              className="fin-panel scroll-mt-4 px-5 py-6 sm:px-7"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 border-b border-line pb-4">
                 <span
                   aria-hidden
-                  className={`clay-small flex size-11 shrink-0 items-center justify-center !rounded-full font-mono text-base font-bold ${
-                    isDone(i) ? "bg-mint" : "bg-lavender"
+                  className={`flex size-10 shrink-0 items-center justify-center rounded-full border font-mono text-[15px] ${
+                    isDone(i) ? "border-done text-done" : "border-line text-value"
                   }`}
                 >
-                  {isDone(i) ? "✓" : i + 1}
+                  {isDone(i) ? "✓" : String(i + 1).padStart(2, "0")}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 id={`${listId}-s${i}`} className="text-xl font-bold leading-tight tracking-[-0.02em]">
+                  <h2 id={`${listId}-s${i}`} className="text-lg font-medium leading-tight">
                     {section.title}
                   </h2>
-                  <p className="text-[15px] text-ink-2">{section.hint}</p>
+                  <p className="text-[14px] text-muted">{section.hint}</p>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-[13px] font-bold ${isDone(i) ? "bg-mint" : "bg-ground"}`}>
+                <span className={`font-mono text-[13px] ${isDone(i) ? "text-done" : "text-muted"}`}>
                   {isDone(i) ? "Complete" : problems[i].missing.length ? `${problems[i].missing.length} to answer` : "Check"}
                 </span>
               </div>
@@ -389,35 +389,25 @@ export default function EntryForm({ options }: { options: Options }) {
       </main>
 
       {result?.status === "recommendation" && (
-        <nav className="fixed inset-x-0 bottom-0 z-40 px-3 pb-3" aria-label="Decision">
-          <div className="clay-cushion mx-auto max-w-3xl bg-surface px-4 py-3">
-            {/* All three equally easy to reach (DESIGN.md). Disabled until decisions can be saved (rule 7). */}
-            <div className="flex gap-3">
-              <button type="button" disabled className="clay-button min-h-12 flex-1 bg-green text-lg text-white disabled:opacity-60">
-                Accept
-              </button>
-              <button type="button" disabled className="clay-button min-h-12 flex-1 bg-surface text-lg disabled:opacity-60">
-                Modify
-              </button>
-              <button type="button" disabled className="clay-button min-h-12 flex-1 bg-surface text-lg disabled:opacity-60">
-                Override
-              </button>
-            </div>
-            <p className="mt-1.5 text-center text-[15px] text-ink-2">Decisions are saved once login is added.</p>
-          </div>
-        </nav>
+        <aside aria-label="Decision" className="mx-auto mb-8 w-full max-w-3xl px-5 sm:px-6">
+          {/* Accept / Modify / Override (rule 7) arrive with login, when each decision and its reason can be saved.
+              Until then no placeholder buttons are shown. */}
+          <p className="fin-panel px-5 py-4 text-[15px] text-muted">
+            Accept, Modify and Override will appear here once login is added, so that every decision is saved with its reason.
+          </p>
+        </aside>
       )}
       {pending && <Thinking />}
-      <nav className={`fixed inset-x-0 bottom-0 z-40 px-3 pb-3 ${result ? "hidden" : ""}`} aria-label="Progress">
-        <div className="clay-cushion mx-auto flex max-w-3xl items-center gap-3 bg-surface py-3 pl-5 pr-3">
+      <nav className={`fixed inset-x-0 bottom-0 z-40 border-t border-line bg-tint ${result ? "hidden" : ""}`} aria-label="Progress">
+        <div className="mx-auto flex max-w-3xl items-center gap-4 px-5 py-3 sm:px-6">
           <div className="min-w-0 flex-1">
-            <p className="text-[15px] leading-tight text-ink-2">
-              <span className="font-mono text-ink">{doneCount}</span> of <span className="font-mono text-ink">{SECTIONS.length}</span> sections
+            <p className="text-[14px] leading-tight text-muted">
+              <span className="font-mono text-value">{doneCount}</span> of <span className="font-mono text-value">{SECTIONS.length}</span> sections
               complete
             </p>
-            <ol className="mt-1.5 flex gap-1" aria-hidden>
+            <ol className="mt-2 flex gap-1" aria-hidden>
               {SECTIONS.map((s, i) => (
-                <li key={s.title} className={`clay-well h-2.5 flex-1 rounded-full ${isDone(i) ? "bg-green" : "bg-ground"}`} />
+                <li key={s.title} className={`h-1 flex-1 rounded-full ${isDone(i) ? "bg-done" : "bg-line"}`} />
               ))}
             </ol>
           </div>
@@ -425,7 +415,7 @@ export default function EntryForm({ options }: { options: Options }) {
             type="button"
             onClick={submit}
             disabled={pending}
-            className="clay-button min-h-13 shrink-0 bg-pink px-5 text-base disabled:opacity-70 sm:px-7 sm:text-lg"
+            className="fin-button min-h-12 shrink-0 px-5 text-base disabled:opacity-70 sm:px-6"
           >
             {pending ? "Working…" : "Get recommendation"}
           </button>
@@ -435,11 +425,11 @@ export default function EntryForm({ options }: { options: Options }) {
   );
 }
 
-// Answers are clay pills: raised when free, pressed in (lavender) when chosen; see .clay-option in globals.css.
+// Answers are outlined pills; chosen = orange edge and dot (see .fin-option in globals.css).
 const optionClass =
-  "clay-option flex min-h-12 min-w-0 cursor-pointer items-center justify-center gap-2 px-4 py-2 text-center text-base leading-snug";
-const optionState = (selected: boolean) => (selected ? "font-bold" : "");
-const legendClass = "mb-3 text-[13px] font-bold uppercase tracking-[0.12em] text-ink-2";
+  "fin-option flex min-h-12 min-w-0 cursor-pointer items-center justify-center gap-2 px-4 py-2 text-center text-base leading-snug";
+const optionState = (selected: boolean) => (selected ? "font-medium" : "");
+const legendClass = "mb-3 font-mono text-[13px] uppercase tracking-[0.12em] text-muted";
 
 // Long answers such as "Bloodstream/unknown" may wrap after the slash, never mid-word.
 const breakable = (label: string) => (
@@ -459,8 +449,8 @@ const breakable = (label: string) => (
 
 // The recessed dot of a single-choice answer.
 const Dot = ({ on }: { on: boolean }) => (
-  <span aria-hidden className="clay-well flex size-4 shrink-0 items-center justify-center rounded-full bg-ground">
-    {on && <span className="size-2 rounded-full bg-ink" />}
+  <span aria-hidden className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${on ? "border-accent" : "border-muted"}`}>
+    {on && <span className="size-2 rounded-full bg-accent" />}
   </span>
 );
 
@@ -510,7 +500,7 @@ function MultiChoice(props: { legend: string; options: { value: string; label: s
           return (
             <label key={o.value} className={`${optionClass} ${optionState(selected)}`}>
               <input type="checkbox" checked={selected} onChange={() => toggle(o.value)} className="sr-only" />
-              {selected && <span aria-hidden className="mr-1.5">✓</span>}
+              {selected && <span aria-hidden className="text-accent">✓</span>}
               {breakable(o.label)}
             </label>
           );
@@ -547,10 +537,10 @@ function SourcePicker(props: {
             return (
               <label key={o.value} className={`${optionClass} relative ${optionState(selected)}`}>
                 <input type="checkbox" checked={selected} onChange={() => toggle(o.value)} className="sr-only" />
-                {selected && <span aria-hidden className="mr-1.5">✓</span>}
+                {selected && <span aria-hidden className="text-accent">✓</span>}
                 {breakable(o.label)}
                 {o.value === props.main && picked.length > 1 && (
-                  <span className="clay-small absolute -top-2.5 right-3 !rounded-full bg-pink px-2.5 text-[13px] font-bold">Main</span>
+                  <span className="absolute -top-2.5 right-3 rounded-[4px] border border-accent bg-ground px-2 font-mono text-[12px] uppercase tracking-[0.08em] text-accent">Main</span>
                 )}
               </label>
             );
@@ -558,10 +548,10 @@ function SourcePicker(props: {
         </div>
       </fieldset>
       {picked.length > 1 && (
-        <fieldset className="clay-small bg-lavender/60 p-4">
+        <fieldset className="rounded-[5px] border border-line bg-tint p-4">
           <legend className="sr-only">Main source</legend>
           <p className="text-[15px]">
-            <span className="font-bold">Main source</span> — the guideline table comparison uses it; the AI must cover all of them.
+            <span className="font-medium">Main source.</span> <span className="text-muted">The guideline table comparison uses it; the AI must cover all of them.</span>
           </p>
           <div className="mt-3 flex flex-wrap gap-3">
             {picked.map((v) => (
@@ -594,20 +584,18 @@ function Thinking() {
     return () => clearInterval(timer);
   }, []);
   return (
-    <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center bg-ink/55 p-6">
-      <div className="clay-cushion w-full max-w-sm bg-surface p-7">
-        <div className="clay-cushion mx-auto flex size-20 items-center justify-center !rounded-full bg-pink">
-          <Logo className="size-11" />
-        </div>
-        <p className="mt-5 text-center text-2xl font-bold tracking-[-0.02em]">Working it out</p>
-        <p className="text-center text-[15px] text-ink-2">This can take up to a minute.</p>
+    <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center bg-ground/85 p-6">
+      <div className="fin-panel w-full max-w-sm p-7">
+        <Logo className="mx-auto size-11" />
+        <p className="mt-4 text-center text-xl font-medium">Working it out</p>
+        <p className="text-center text-[14px] text-muted">This can take up to a minute.</p>
         <ol className="mt-5 flex flex-col gap-2.5">
           {THINKING_STEPS.map((step, i) => (
-            <li key={step} className={`flex items-center gap-3 text-[15px] ${i <= shown ? "font-bold" : "text-ink-2"}`}>
+            <li key={step} className={`flex items-center gap-3 text-[15px] ${i <= shown ? "" : "text-muted"}`}>
               <span
                 aria-hidden
-                className={`flex size-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold ${
-                  i < shown ? "clay-small !rounded-full bg-mint" : i === shown ? "clay-small !rounded-full bg-pink" : "clay-well bg-ground"
+                className={`flex size-7 shrink-0 items-center justify-center rounded-full border font-mono text-[13px] ${
+                  i < shown ? "border-done text-done" : i === shown ? "border-accent text-accent" : "border-line text-muted"
                 }`}
               >
                 {i < shown ? "✓" : i + 1}
@@ -654,7 +642,7 @@ function NumberField(props: {
         onChange={(e) => props.onChange(digitsOnly(e.target.value, props.decimal ?? false))}
         onFocus={props.onFocus}
         onBlur={props.onBlur}
-        className="clay-well min-h-13 w-full max-w-40 rounded-full bg-ground px-5 font-mono text-xl"
+        className="fin-input min-h-12 w-full max-w-40 px-4 font-mono text-xl text-value"
       />
     </div>
   );
@@ -678,19 +666,19 @@ function DrugRows(props: {
       {props.legend && <legend className={legendClass}>{props.legend}</legend>}
       <div className="flex flex-col gap-3">
         {props.rows.map((row, i) => (
-          <div key={i} className="clay-small flex flex-wrap items-end gap-3 bg-ground/70 p-4">
-            <label className="flex flex-1 flex-col text-[15px] font-bold">
+          <div key={i} className="flex flex-wrap items-end gap-3 rounded-[5px] border border-line bg-tint p-4">
+            <label className="flex flex-1 flex-col text-[14px] font-medium text-muted">
               {props.what[0].toUpperCase() + props.what.slice(1)}
               <input
                 list={props.listId}
                 value={row.drug}
                 onChange={(e) => update(i, { drug: e.target.value })}
                 autoComplete="off"
-                className="clay-well mt-1.5 min-h-12 rounded-full bg-surface px-3 text-lg"
+                className="fin-input mt-1.5 min-h-12 px-3 text-lg"
               />
             </label>
             {props.extra?.kind === "days" && (
-              <label className="flex w-24 flex-col text-[15px] font-bold">
+              <label className="flex w-24 flex-col text-[14px] font-medium text-muted">
                 Days
                 <input
                   type="text"
@@ -700,17 +688,17 @@ function DrugRows(props: {
                   maxLength={2}
                   value={row.extra}
                   onChange={(e) => update(i, { extra: digitsOnly(e.target.value, false) })}
-                  className="clay-well mt-1.5 min-h-12 rounded-full bg-surface px-3 font-mono text-lg"
+                  className="fin-input mt-1.5 min-h-12 px-3 font-mono text-lg"
                 />
               </label>
             )}
             {props.extra?.kind === "reaction" && (
-              <label className="flex w-40 flex-col text-[15px] font-bold">
+              <label className="flex w-40 flex-col text-[14px] font-medium text-muted">
                 Reaction
                 <select
                   value={row.extra}
                   onChange={(e) => update(i, { extra: e.target.value })}
-                  className="clay-well mt-1.5 min-h-12 rounded-full bg-surface px-2 text-lg"
+                  className="fin-input mt-1.5 min-h-12 px-2 text-lg"
                 >
                   <option value="">Choose…</option>
                   {props.extra.options.map((o) => (
@@ -724,7 +712,7 @@ function DrugRows(props: {
             <button
               type="button"
               onClick={() => props.onChange(props.rows.filter((_, j) => j !== i))}
-              className="min-h-12 px-3 text-base font-bold underline underline-offset-4"
+              className="min-h-12 px-3 text-base font-medium underline decoration-line underline-offset-4 hover:decoration-muted"
               aria-label={`Remove ${row.drug || props.what}`}
             >
               Remove
@@ -734,7 +722,7 @@ function DrugRows(props: {
         <button
           type="button"
           onClick={() => props.onChange([...props.rows, { drug: "", extra: "" }])}
-          className="clay-button min-h-12 self-start bg-sky px-5 text-base"
+          className="fin-button-quiet min-h-12 self-start px-5 text-base"
         >
           + Add {props.what}
         </button>
@@ -752,9 +740,9 @@ function Stop({ message, onStartAgain }: { message: string; onStartAgain: () => 
   }, []);
   return (
     <div ref={ref} className="scroll-mb-28 -mt-2">
-      <Alert tone="danger" title="Outside MedWise version 1 — no recommendation">
+      <Alert tone="danger" title="Outside MedWise version 1: no recommendation">
         <p>{message}</p>
-        <button type="button" onClick={onStartAgain} className="clay-button mt-3 min-h-12 bg-surface px-5 text-base">
+        <button type="button" onClick={onStartAgain} className="fin-button-quiet mt-3 min-h-12 px-5 text-base">
           Start a new patient
         </button>
       </Alert>
@@ -764,15 +752,15 @@ function Stop({ message, onStartAgain }: { message: string; onStartAgain: () => 
 
 
 function Alert({ tone, title, children }: { tone: "danger" | "info" | "success"; title: string; children: ReactNode }) {
-  // Red stays for safety alerts only (DESIGN.md): a red-edged cream cushion. Notices use butter yellow.
+  // Red stays for safety alerts only (DESIGN.md). Notices use the gold edge.
   const style = {
-    danger: "border-2 border-red bg-surface text-red",
-    info: "bg-butter",
-    success: "bg-mint",
+    danger: "border-alert text-alert",
+    info: "border-value text-value",
+    success: "border-done text-done",
   }[tone];
   return (
-    <div role={tone === "danger" ? "alert" : "status"} className={`clay-small mt-5 p-5 text-base ${style}`}>
-      <p className="font-bold">{title}</p>
+    <div role={tone === "danger" ? "alert" : "status"} className={`mt-5 rounded-[5px] border border-l-4 bg-tint p-5 text-base ${style}`}>
+      <p className="font-medium">{title}</p>
       <div className="mt-1 text-ink">{children}</div>
     </div>
   );

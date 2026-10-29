@@ -120,3 +120,13 @@ Vercel also makes a one-off address for every build; those are not needed day to
 
 ## Release rule
 `staging` first → run golden tests → I check on my phone → then `production`.
+
+### Before the public launch (owner rule, 2026-10-29)
+MedWise does not launch until every box is ticked:
+- [ ] Custom domain connected (Vercel → Settings → Domains), not a `vercel.app` address
+- [x] Favicon: the MedWise shield (`app/icon.svg`, `app/favicon.ico`), replacing the Next.js default
+- [ ] No "made with AI" tag or builder badge anywhere (checked 2026-10-29: none in the app's code; check the live
+      site again at launch)
+- [ ] Privacy policy page (needs the owner's details: who is responsible for the data, contact, hosting regions)
+- [ ] Terms and conditions page (needs the owner's wording and legal review)
+- [ ] Golden test set passes (CLAUDE.md rule 8) and the knowledge base is signed off

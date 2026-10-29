@@ -1,144 +1,180 @@
 @import "tailwindcss";
 
 /*
- * Design tokens from docs/DESIGN.md (claymorphism, DECISIONS 2026-10-29).
- * Red is for safety alerts only. Light falls from the upper left on every molded form.
+ * Design tokens from docs/DESIGN.md (dark "Financial" style, DECISIONS 2026-10-29).
+ * Orange is for actions and selection, pale gold for doses and key numbers, red only for safety alerts.
+ * Buttons are solid fills: no gradients on controls.
  */
 :root {
-  --dp-color-ground: #f1f2fa;
-  --dp-color-ink: #383139;
-  --dp-color-ink-secondary: #48404b;
-  --dp-color-accent: #f6a3ca;
-  --dp-color-surface-support: #c0efdc;
-  --dp-color-surface-compare: #ded0f9;
-  --dp-color-surface-warm: #f9e7a8;
-  --dp-color-surface-cool: #c5e5fb;
-  --dp-color-surface: #fffdf7;
-  --dp-typography-face: "Claymorphism Instrument", var(--font-instrument), sans-serif;
+  --dp-color-ground: #07090e;
+  --dp-color-ground-tint: #101522;
+  --dp-color-panel: #10141c;
+  --dp-color-accent: #ff951f;
+  --dp-color-value: #edcd8c;
+  --dp-color-ink: #f4f5f7;
+  --dp-color-ink-muted: #c9ced8;
+  --dp-color-line: #303139;
+  --dp-typography-body-face: "Financial Plex Sans", var(--font-plex-sans), sans-serif;
+  --dp-typography-data-face: "Financial Plex Mono", var(--font-plex-mono), monospace;
   --dp-typography-body: 16px;
-  --dp-typography-small: 15px;
+  --dp-typography-supporting: 14px;
   --dp-typography-metadata: 13px;
-  --dp-typography-caption: 12px;
-  --dp-typography-reading-leading: 1.55;
-  --dp-typography-emphasis: 700;
-  --dp-spacing-gap: 24px;
-  --dp-spacing-gap-compact: 20px;
-  --dp-spacing-paragraph-gap: 18px;
-  --dp-radius-surface: 38px;
-  --dp-radius-tray: 70px;
-  --dp-radius-control: 999px;
-  --dp-radius-disclosure: 25px;
-  --dp-border-focus-width: 3px;
-  --dp-motion-interaction: 180ms;
+  --dp-typography-body-leading: 1.6;
+  --dp-typography-reading-leading: 1.65;
+  --dp-spacing-cluster-gap: 24px;
+  --dp-spacing-compact-gap: 12px;
+  --dp-radius-panel: 5px;
+  --dp-radius-editorial: 4px;
+  --dp-radius-control: 40px;
+  --dp-border-hairline: 1px;
+  --dp-motion-interaction: 160ms;
+  --dp-motion-easing: ease;
 
-  /* Safety and decision colours (DESIGN.md): red only for alerts, green for Accept and completed. */
-  --red: #b3123a;
-  --green: #2f6b3a;
-  --rule: #e2dce6;
-
-  /* Clay shading: broad grounding shadow, light inset upper-left, darker inset lower-right. */
-  --clay-raised: 14px 16px 34px rgb(56 49 57 / 0.13), inset 5px 5px 10px rgb(255 255 255 / 0.75),
-    inset -6px -7px 12px rgb(56 49 57 / 0.09);
-  --clay-small: 6px 8px 16px rgb(56 49 57 / 0.12), inset 3px 3px 6px rgb(255 255 255 / 0.8),
-    inset -3px -4px 7px rgb(56 49 57 / 0.08);
-  --clay-pressed: inset 4px 5px 9px rgb(56 49 57 / 0.16), inset -3px -3px 7px rgb(255 255 255 / 0.85);
+  /* Safety and status colours, tuned to read on the dark ground (DESIGN.md: red only for alerts). */
+  --alert: #ff6b78;
+  --done: #7fd6a2;
 }
 
 @theme inline {
   --color-ground: var(--dp-color-ground);
+  --color-tint: var(--dp-color-ground-tint);
+  --color-panel: var(--dp-color-panel);
+  --color-accent: var(--dp-color-accent);
+  --color-value: var(--dp-color-value);
   --color-ink: var(--dp-color-ink);
-  --color-ink-2: var(--dp-color-ink-secondary);
-  --color-pink: var(--dp-color-accent);
-  --color-mint: var(--dp-color-surface-support);
-  --color-lavender: var(--dp-color-surface-compare);
-  --color-butter: var(--dp-color-surface-warm);
-  --color-sky: var(--dp-color-surface-cool);
-  --color-surface: var(--dp-color-surface);
-  --color-red: var(--red);
-  --color-green: var(--green);
-  --color-rule: var(--rule);
-  --font-sans: var(--dp-typography-face);
-  --font-mono: var(--font-dm-mono);
-  --radius-tray: var(--dp-radius-tray);
-  --radius-surface: var(--dp-radius-surface);
-  --radius-disclosure: var(--dp-radius-disclosure);
+  --color-muted: var(--dp-color-ink-muted);
+  --color-line: var(--dp-color-line);
+  --color-alert: var(--alert);
+  --color-done: var(--done);
+  --font-sans: var(--dp-typography-body-face);
+  --font-mono: var(--dp-typography-data-face);
 }
 
 body {
   background: var(--dp-color-ground);
   color: var(--dp-color-ink);
-  font-family: var(--dp-typography-face);
+  font-family: var(--dp-typography-body-face);
   font-size: var(--dp-typography-body);
-  line-height: var(--dp-typography-reading-leading);
+  line-height: var(--dp-typography-body-leading);
 }
 
-/* Visible focus, kept separate from the shading. */
 :focus-visible {
-  outline: var(--dp-border-focus-width) solid var(--dp-color-ink);
+  outline: 2px solid var(--dp-color-accent);
   outline-offset: 3px;
 }
-/* Card titles sit flush with their tray, so their focus ring is drawn just inside the edge. */
 summary:focus-visible {
-  outline-offset: -4px;
+  outline-offset: -3px;
 }
 
 @layer components {
-  /* Shared container: cream tray with the large radius (smaller on phones so content keeps its room). */
-  .clay-tray {
-    background: var(--dp-color-surface);
-    border-radius: clamp(34px, 8vw, var(--dp-radius-tray));
-    box-shadow: var(--clay-raised);
+  /* Opaque content panel with a hairline edge. */
+  .fin-panel {
+    background: var(--dp-color-panel);
+    border: var(--dp-border-hairline) solid var(--dp-color-line);
+    border-radius: var(--dp-radius-panel);
   }
-  /* Cushion: a molded object inside or beside a tray. Set the colour with a bg-* utility. */
-  .clay-cushion {
-    border-radius: var(--dp-radius-surface);
-    box-shadow: var(--clay-raised);
-  }
-  .clay-small {
-    border-radius: var(--dp-radius-disclosure);
-    box-shadow: var(--clay-small);
-  }
-  /* Recessed well: inputs, selected answers, the disclosure circle. */
-  .clay-well {
-    box-shadow: var(--clay-pressed);
-  }
-  /* Thick pill button: rises slightly on hover, presses down when tapped. */
-  .clay-button {
+  /* Primary action: solid orange, dark text. */
+  .fin-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     border-radius: var(--dp-radius-control);
-    box-shadow: var(--clay-small);
-    font-weight: var(--dp-typography-emphasis);
+    background: var(--dp-color-accent);
+    color: var(--dp-color-ground);
+    font-weight: 600;
+    border: 1px solid var(--dp-color-accent);
     transition:
-      transform var(--dp-motion-interaction) ease,
-      box-shadow var(--dp-motion-interaction) ease;
+      background-color var(--dp-motion-interaction) var(--dp-motion-easing),
+      border-color var(--dp-motion-interaction) var(--dp-motion-easing);
   }
-  .clay-button:hover:not(:disabled) {
-    transform: translateY(-2px);
+  .fin-button:hover:not(:disabled) {
+    background: #ffab52;
+    border-color: #ffab52;
   }
-  .clay-button:active:not(:disabled) {
-    transform: translateY(1px) scale(0.98);
-    box-shadow: var(--clay-pressed);
-  }
-  /* A tappable answer: raised when free, pressed in when chosen. */
-  .clay-option {
+  /* Secondary action: dark fill, hairline outline, pale text. */
+  .fin-button-quiet {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     border-radius: var(--dp-radius-control);
-    background: var(--dp-color-surface);
-    box-shadow: var(--clay-small);
+    background: var(--dp-color-ground-tint);
+    color: var(--dp-color-ink);
+    font-weight: 600;
+    border: 1px solid var(--dp-color-line);
+    transition: border-color var(--dp-motion-interaction) var(--dp-motion-easing);
+  }
+  .fin-button-quiet:hover:not(:disabled) {
+    border-color: var(--dp-color-ink-muted);
+  }
+  /* A tappable answer: outlined pill; chosen = orange edge and dot. */
+  .fin-option {
+    border-radius: var(--dp-radius-control);
+    background: var(--dp-color-ground-tint);
+    border: 1px solid var(--dp-color-line);
+    color: var(--dp-color-ink);
     transition:
-      transform var(--dp-motion-interaction) ease,
-      box-shadow var(--dp-motion-interaction) ease,
-      background-color var(--dp-motion-interaction) ease;
+      border-color var(--dp-motion-interaction) var(--dp-motion-easing),
+      background-color var(--dp-motion-interaction) var(--dp-motion-easing);
   }
-  .clay-option:hover {
-    transform: translateY(-1px);
+  .fin-option:hover {
+    border-color: var(--dp-color-ink-muted);
   }
-  .clay-option:has(:checked) {
-    background: var(--dp-color-surface-compare);
-    box-shadow: var(--clay-pressed);
-    transform: none;
+  .fin-option:has(:checked) {
+    border-color: var(--dp-color-accent);
+    background: rgb(255 149 31 / 0.12);
   }
-  .clay-option:has(:focus-visible) {
-    outline: var(--dp-border-focus-width) solid var(--dp-color-ink);
+  .fin-option:has(:focus-visible) {
+    outline: 2px solid var(--dp-color-accent);
     outline-offset: 3px;
+  }
+  /* Text box. */
+  .fin-input {
+    background: var(--dp-color-ground);
+    border: 1px solid var(--dp-color-line);
+    border-radius: var(--dp-radius-panel);
+    color: var(--dp-color-ink);
+    transition: border-color var(--dp-motion-interaction) var(--dp-motion-easing);
+  }
+  .fin-input:focus {
+    border-color: var(--dp-color-accent);
+  }
+  /* The framed object: thin offset outlines behind the main panel. Static. */
+  .fin-frame {
+    position: relative;
+    isolation: isolate;
+  }
+  .fin-frame::before,
+  .fin-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border: 1px solid var(--dp-color-line);
+    border-radius: var(--dp-radius-panel);
+    pointer-events: none;
+  }
+  .fin-frame::before {
+    transform: translate(10px, 10px);
+  }
+  .fin-frame::after {
+    transform: translate(20px, 20px);
+    opacity: 0.6;
+  }
+  @media (min-width: 800px) {
+    .fin-frame::before {
+      transform: translate(16px, 16px);
+    }
+    .fin-frame::after {
+      transform: translate(32px, 32px);
+    }
+  }
+  /* Warm light kept local: behind the framed object and under the closing actions only. */
+  .fin-glow {
+    background:
+      radial-gradient(60% 55% at 50% 100%, rgb(255 149 31 / 0.16), transparent 70%),
+      var(--dp-color-ground-tint);
   }
 }
 
@@ -148,10 +184,6 @@ summary:focus-visible {
   *::after {
     transition: none !important;
     animation: none !important;
-  }
-  .clay-button:hover:not(:disabled),
-  .clay-button:active:not(:disabled),
-  .clay-option:hover {
-    transform: none;
+    scroll-behavior: auto !important;
   }
 }

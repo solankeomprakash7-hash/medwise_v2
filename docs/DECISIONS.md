@@ -5,6 +5,9 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | New look: dark "Financial" style (navy-black, opaque panels with hairlines, orange actions, pale gold doses, IBM Plex Sans and Mono). Replaces the clay style | Owner request |
+| 2026-10-29 | Owner website rules: no gradient buttons, reviews, fake buttons or fake contacts, big hero text, emoji icons, em dashes, AI stock photos or copy, cursor or heavy scroll animation (DESIGN.md "Website rules"; a test blocks em dashes on screen). The disabled Accept / Modify / Override buttons were removed until login makes them work | Owner |
+| 2026-10-29 | No public launch until: custom domain, favicon (done), no "made with AI" tag, privacy policy page, terms and conditions page (ARCHITECTURE.md checklist) | Owner |
 | 2026-10-29 | Home page introduces MedWise: what it is, the problem (synthesis, too narrow vs too broad), how it works, what you get, who it is for and what it does not do, with two "start" buttons. No study figures or invented numbers; says plainly that it is a demo, not for patient care | Owner: visitors should understand the app and the need at a glance |
 | 2026-10-29 | New look: claymorphism (soft molded forms, pink / cream / mint / lavender / butter / blue pastels, Instrument Sans, DM Mono kept for doses). Red still only for safety alerts; motion only on hover and tap, none for reduced motion | Owner request for this visual style; replaces the navy/blue look and the entrance animations |
 | 2026-10-29 | Suspected source: one or more, one marked "main"; the AI must cover all; the guideline-table comparison uses the main source; extra sources add a "check coverage" flag | Owner choice; patients often have more than one possible source |
