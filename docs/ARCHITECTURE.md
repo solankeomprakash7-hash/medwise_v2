@@ -38,7 +38,7 @@ Created 2026-10-28 (Phase 2, step 1). Folders marked *empty* hold only a README 
 /docs                PRODUCT, CLINICAL_RULES, DESIGN, ARCHITECTURE, DECISIONS, EVIDENCE_REVIEW (draft)
 /supabase/migrations database structure, as SQL files applied in date order
 /tests/db            database privacy and audit checks
-/scripts             helper scripts (test-db.sh, verify-evidence.mjs)
+/scripts             helper scripts (test-db.sh, verify-evidence.mjs, verify-aware.py)
 /.github/workflows   automatic checks on every push
 .env.example         names of the secret settings, no values
 CLAUDE.md
@@ -52,6 +52,7 @@ medwise-project-docs.zip   original docs bundle, kept for reference
 | `npm run check` | Style check + type check + tests (incl. golden set, knowledge-base checks and banned-wording check) |
 | `npm run build` | Builds the site as Vercel would |
 | `npm run verify:evidence -- ssc2026=<pdf> idsa2026=<pdf> ncdc2025=<pdf>` | Checks every evidence-library passage word for word against the guideline PDFs (needs `pdftotext`) |
+| `python3 scripts/verify-aware.py <who-aware2023.xlsx>` | Checks every AWaRe group in `drug_spectrum.csv` against the cited row of the WHO spreadsheet (needs Python with openpyxl) |
 | `npm run test:db` | Checks the database privacy and audit rules on an empty test database (needs `DATABASE_URL`) |
 
 GitHub runs `npm run check`, `npm run build` and the database checks automatically on every push (`.github/workflows/checks.yml`).

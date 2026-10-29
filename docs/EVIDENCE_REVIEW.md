@@ -195,10 +195,14 @@ therapy (⚠ web search).
 8. **Carbapenem-resistant organisms (CRO):** NCDC triggers are carbapenem use or a CRO culture in the
    **last 3 months**, and recent BL-BLI exposure (VAP, severe CAUTI). Drafted in `mdr_risk.csv` for `cre` and
    `other`. NCDC prefers polymyxin B over colistin unless the urine is the source.
-9. **Beta-lactam allergy alternatives:** NCDC gives none; that column is empty everywhere.
-10. **`mdr_coverage.csv` has no "alternative" column:** NCDC's alternatives are kept in its notes. Adding the
+9. **Cefoperazone-sulbactam: NCDC vs WHO.** NCDC 2025 lists it as an option (§3.4 p29, §5.2 p39, §18.3 p107), but
+   WHO AWaRe 2023 puts cefoperazone/sulbactam on its **"Not recommended"** list of fixed-dose combinations
+   ("not evidence-based, nor recommended in high-quality international guidelines"). MedWise will show a
+   warning whenever it appears. Panel to decide whether to keep it as an alternative.
+10. **Beta-lactam allergy alternatives:** NCDC gives none; that column is empty everywhere.
+11. **`mdr_coverage.csv` has no "alternative" column:** NCDC's alternatives are kept in its notes. Adding the
     column would be a small change to `CLINICAL_RULES.md`.
-11. **Febrile neutropenia:** NCDC §17.1 (p97) gives regimens (stable: piperacillin-tazobactam; unstable:
+12. **Febrile neutropenia:** NCDC §17.1 (p97) gives regimens (stable: piperacillin-tazobactam; unstable:
     meropenem + vancomycin + polymyxin B) but **no ANC definition** (it mentions continuing until ANC > 500).
     Bringing neutropenic sepsis into scope later is possible from this national source; for now it stays out.
 

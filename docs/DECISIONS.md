@@ -5,6 +5,9 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-29 | AWaRe groups filled from the WHO AWaRe 2023 spreadsheet (sheet and row cited per drug; `scripts/verify-aware.py` checks them); IV rows used where WHO splits IV and oral (colistin, fosfomycin, minocycline, vancomycin); "Not recommended" accepted as a value; WHO file stored on `sources`; AWaRe 2023 added to `guidelines.csv` so results show its version | Traceable stewardship labels; IV and oral differ (e.g. fosfomycin IV = Reserve, oral = Watch) |
+| 2026-10-29 | Cefoperazone-sulbactam: WHO "Not recommended" vs NCDC 2025 option → flagged for the panel; result screen will warn when it appears | Guideline conflict to be decided by the panel |
+| 2026-10-29 | Aztreonam-avibactam, cefepime-enmetazobactam, sulbactam-durlobactam not in WHO AWaRe 2023 → AWaRe left empty for the panel (blocks sign-off) | Newer agents; no WHO source yet |
 | 2026-10-29 | Result screen redesigned with ideas from the first prototype (Medwiseee): AWaRe tag, coverage grid, spectrum fit (needed / given / excess, no score), short "why" reasons, stewardship actions and 0–1 h / 24 h / 48–72 h timeline; "DEMO" banner until signed off. DESIGN.md and PRODUCT.md updated with Dr. Solanke's approval | Clinicians found these useful in the prototype; rewritten to keep rules 1, 2 and 5 |
 | 2026-10-29 | Not taken from the prototype: AI-written doses, confidence % / fit scores, "Verified Provider", unchecked AI citations, free-text clinical fields, an AI endpoint open without login, organism-directed therapy | Break CLAUDE.md rules 1, 2, 4, 5 or PRODUCT.md scope |
 | 2026-10-29 | `drug_spectrum.csv` added (CLINICAL_RULES.md updated with approval): coverage given comes only from this table; the AI judges only coverage needed. AWaRe left empty rather than copied from the prototype's unsourced list | Coverage is clinical content (rule 1); WHO AWaRe list needed as the source |

@@ -29,7 +29,8 @@ export const TABLE_COLUMNS = {
   ],
   // Class of each drug, for allergy checks (CLAUDE.md rule 1: allergy classes only from the tables).
   drug_classes: ["drug", "class", "beta_lactam", "source"],
-  // Coverage given by each drug (yes / limited / no) and its WHO AWaRe group, for the result screen.
+  // Coverage given by each drug (yes / limited / no) and its WHO AWaRe group (Access / Watch / Reserve,
+  // or "Not recommended" for WHO's list of fixed-dose combinations it advises against).
   drug_spectrum: [
     "drug", "gram_positive", "gram_negative", "pseudomonas", "mrsa", "esbl", "cre", "anaerobes", "atypicals",
     "aware", "source", "aware_source",

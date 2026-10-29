@@ -147,10 +147,10 @@ describe("knowledge base checks catch mistakes", () => {
   it("a coverage value other than yes, limited or no, and a wrong AWaRe group", () => {
     const problems = brokenCopy((dir) => {
       const spectrum = join(dir, "drug_spectrum.csv");
-      writeFileSync(spectrum, readFileSync(spectrum, "utf8").replace(/^ceftriaxone,yes,yes,no,/m, "ceftriaxone,yes,yes,maybe,").replace(/^(vancomycin(?:,[a-z]+){8}),,/m, "$1,Green,"));
+      writeFileSync(spectrum, readFileSync(spectrum, "utf8").replace(/^ceftriaxone,yes,yes,no,/m, "ceftriaxone,yes,yes,maybe,").replace(/^(vancomycin(?:,[a-z]+){8}),Watch,/m, "$1,Green,"));
     });
     expect(problems.some((p) => p.endsWith("pseudomonas must be yes, limited or no"))).toBe(true);
-    expect(problems.some((p) => p.endsWith("aware must be Access, Watch or Reserve"))).toBe(true);
+    expect(problems.some((p) => p.endsWith("aware must be Access, Watch, Reserve or Not recommended"))).toBe(true);
   });
 
   it("AWaRe group left empty after sign-off", () => {

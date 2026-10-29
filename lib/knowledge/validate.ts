@@ -129,8 +129,8 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     }
     if (row.aware === "") {
       if (!isDraft) problems.push(`${where}: aware is empty; it must be set before sign-off`);
-    } else if (!["Access", "Watch", "Reserve"].includes(row.aware)) {
-      problems.push(`${where}: aware must be Access, Watch or Reserve`);
+    } else if (!["Access", "Watch", "Reserve", "Not recommended"].includes(row.aware)) {
+      problems.push(`${where}: aware must be Access, Watch, Reserve or Not recommended`);
     }
     if (!row.source) problems.push(`${where}: source is empty`);
   }

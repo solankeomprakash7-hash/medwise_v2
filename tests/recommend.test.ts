@@ -44,7 +44,7 @@ describe("recommendation with a correct AI answer", () => {
       ["azithromycin", kb.drugs.get("azithromycin")?.standard_dose, kb.drugs.get("azithromycin")?.interval],
     ]);
     expect(r.versions.knowledgeBase).toBe(kb.version);
-    expect(r.versions.guidelines.map((g) => g.guideline)).toEqual(["ssc2026", "idsa2026", "ncdc2025"]);
+    expect(r.versions.guidelines.map((g) => g.guideline)).toEqual(["ssc2026", "idsa2026", "ncdc2025", "aware2023"]);
     expect(r.disclaimers).toContain("Decision support only — verify with clinical judgement and local policy.");
     expect(r.citations?.[0].location).toBe("§12.5 Community acquired pneumonia, p83");
     expect(r.flags.some((f) => f.startsWith("Differs from guideline table"))).toBe(false);
