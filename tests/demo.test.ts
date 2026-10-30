@@ -7,7 +7,7 @@ import { DISCUSS, recommend } from "@/lib/recommend/recommend";
 const kb = loadKnowledge();
 const base = {
   age: 62, sex: "male", weight_kg: 70, pregnancy: "not_applicable", source: "lung", setting: "community_acquired",
-  source_control: "not_needed", severity: "sepsis", sofa: 3, crcl_ml_min: 80, dialysis: "no", hepatic: "normal",
+  source_control: "not_needed", severity: "sepsis", crcl_ml_min: 80, dialysis: "no", hepatic: "normal",
   antibiotics_90d: [], admission_90d: "no", prior_mdr: ["none"], devices: ["none"], comorbidities: ["diabetes", "copd"],
   immunocompromise: ["none"], allergies: [], current_antibiotics: [],
 };

@@ -48,7 +48,7 @@ describe("knowledge base checks catch mistakes", () => {
 
   it("misspelled source", () => {
     const problems = brokenCopy((dir) => append(dir, "coverage.csv", "pneumonia,community_acquired,sepsis,empty,"));
-    expect(problems).toContain('coverage.csv line 66: unknown source "pneumonia"');
+    expect(problems).toContain('coverage.csv line 50: unknown source "pneumonia"');
   });
 
   it("gap in the coverage checklist", () => {

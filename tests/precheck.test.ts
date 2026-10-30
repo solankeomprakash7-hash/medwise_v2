@@ -6,7 +6,7 @@ import { precheck } from "@/lib/recommend/precheck";
 const kb = loadKnowledge();
 const patient = {
   age: 62, sex: "male", weight_kg: 70, pregnancy: "not_applicable", source: "lung", setting: "community_acquired",
-  source_control: "not_needed", severity: "sepsis", sofa: 3, crcl_ml_min: 80, dialysis: "no", hepatic: "normal",
+  source_control: "not_needed", severity: "sepsis", crcl_ml_min: 80, dialysis: "no", hepatic: "normal",
   antibiotics_90d: [], admission_90d: "no", prior_mdr: ["none"], devices: ["none"], comorbidities: ["diabetes", "copd"],
   immunocompromise: ["none"], allergies: [], current_antibiotics: [],
 };
@@ -26,6 +26,6 @@ describe("entry screen check", () => {
     expect(precheck({ ...patient, age: 17 }, kb).status).toBe("out_of_scope");
   });
   it("reports missing details", () => {
-    expect(precheck({ ...patient, sofa: undefined }, kb)).toEqual({ status: "missing_input", messages: ["Please enter: sofa"] });
+    expect(precheck({ ...patient, weight_kg: undefined }, kb)).toEqual({ status: "missing_input", messages: ["Please enter: weight_kg"] });
   });
 });

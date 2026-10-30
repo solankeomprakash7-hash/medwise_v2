@@ -11,7 +11,6 @@ export interface PatientInput {
   setting: string;
   source_control: string;
   severity: string;
-  sofa: number;
   crcl_ml_min: number;
   dialysis: string;
   hepatic: string;
@@ -33,7 +32,6 @@ export type InputCheck =
 const NUMBERS: [keyof PatientInput, number, number][] = [
   ["age", 0, 110], // below 18 is stopped as out of scope, not as an error
   ["weight_kg", 20, 300],
-  ["sofa", 0, 24],
   ["crcl_ml_min", 0, 250],
 ];
 const CODES: (keyof PatientInput)[] = [

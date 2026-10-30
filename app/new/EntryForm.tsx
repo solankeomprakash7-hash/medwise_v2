@@ -55,6 +55,23 @@ function clearDraft() {
   }
 }
 
+// The creatinine unit is a device preference, not patient data: kept in localStorage.
+const UNIT_KEY = "medwise:creatinine-unit";
+function readUnitPref(): Form["creatinineUnit"] {
+  try {
+    return window.localStorage.getItem(UNIT_KEY) === "umol_l" ? "umol_l" : "mg_dl";
+  } catch {
+    return "mg_dl";
+  }
+}
+function writeUnitPref(unit: Form["creatinineUnit"]) {
+  try {
+    window.localStorage.setItem(UNIT_KEY, unit);
+  } catch {
+    // storage blocked: the default stays mg/dL
+  }
+}
+
 const scrollToId = (id: string) => {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.getElementById(id)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
@@ -67,6 +84,7 @@ export default function EntryForm({ options, showTestCases }: { options: Options
   const [loadedCase, setLoadedCase] = useState<(typeof TEST_CASES)[number] | null>(null);
   const [showProblems, setShowProblems] = useState(false);
   const [focused, setFocused] = useState("");
+  const [active, setActive] = useState(""); // the section being worked in: finished sections fold, except this one
   const [result, setResult] = useState<Omit<Result, "audit"> | null>(null);
   const [pending, startTransition] = useTransition();
   const uid = useId();
@@ -85,6 +103,7 @@ export default function EntryForm({ options, showTestCases }: { options: Options
         setRestored(true);
       }
     }
+    if (!readDraft()) setForm((f) => ({ ...f, creatinineUnit: readUnitPref() }));
     setReady(true);
   }, []);
   useEffect(() => {
@@ -104,6 +123,7 @@ export default function EntryForm({ options, showTestCases }: { options: Options
     const first = SECTIONS.findIndex((_, i) => !done[i]);
     if (first >= 0) {
       setShowProblems(true);
+      setActive(SECTIONS[first].id);
       scrollToId(`${uid}-${SECTIONS[first].id}`);
       return;
     }
@@ -116,15 +136,17 @@ export default function EntryForm({ options, showTestCases }: { options: Options
   };
   const startAgain = () => {
     clearDraft();
-    setForm(EMPTY);
+    setForm({ ...EMPTY, creatinineUnit: readUnitPref() });
     setResult(null);
     setShowProblems(false);
+    setActive("");
     setRestored(false);
     setLoadedCase(null);
     window.scrollTo({ top: 0 });
   };
   const loadCase = (c: (typeof TEST_CASES)[number]) => {
     setForm(c.form);
+    setActive("");
     setResult(null);
     setShowProblems(false);
     setRestored(false);
@@ -152,13 +174,13 @@ export default function EntryForm({ options, showTestCases }: { options: Options
     />
   );
   const multi = (field: "prior_mdr" | "devices" | "comorbidities" | "immunocompromise") => (
-    <MultiChoice legend={LABELS[field]} options={options.choices[field] ?? []} value={form[field]} onChange={(v) => set(field, v)} />
+    <SwitchList legend={LABELS[field]} options={options.choices[field] ?? []} value={form[field]} onChange={(v) => set(field, v)} />
   );
-  const noneOrYes = (none: string, yes: string) => [
-    { value: "no", label: none },
-    { value: "yes", label: yes },
-  ];
-  const numberField = (field: "age" | "weight_kg" | "height_cm" | "sofa" | "crcl_ml_min" | "creatinine", decimal = false, unit?: string) => (
+  const goTo = (id: string) => {
+    setActive(id);
+    scrollToId(`${uid}-${id}`);
+  };
+  const numberField = (field: "age" | "weight_kg" | "height_cm" | "crcl_ml_min" | "creatinine", unit: string, decimal = false) => (
     <NumberField
       label={LABELS[field]}
       unit={unit}
@@ -178,11 +200,11 @@ export default function EntryForm({ options, showTestCases }: { options: Options
       <>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            {numberField("age")}
+            {numberField("age", "years")}
             {note("age")}
           </div>
           <div>
-            {numberField("weight_kg", true)}
+            {numberField("weight_kg", "kg", true)}
             {note("weight_kg")}
           </div>
         </div>
@@ -192,12 +214,12 @@ export default function EntryForm({ options, showTestCases }: { options: Options
         </div>
         {pregnancyAsked(form) && (
           <div>
-            {choice("pregnancy", { exclude: ["not_applicable"], legend: "Pregnant? (asked for every woman aged 18 or over)" })}
+            <YesNo legend="Pregnant? (asked for every woman aged 18 or over)" value={form.pregnancy} onChange={(v) => set("pregnancy", v)} />
             {note("pregnancy")}
           </div>
         )}
         <div>
-          {numberField("height_cm")}
+          {numberField("height_cm", "cm")}
           <p className="mt-1.5 text-[14px] text-muted">Only used to adjust the creatinine clearance calculation for obesity.</p>
           {note("height_cm")}
         </div>
@@ -240,10 +262,6 @@ export default function EntryForm({ options, showTestCases }: { options: Options
             </Notice>
           )}
         </div>
-        <div>
-          {numberField("sofa")}
-          {note("sofa")}
-        </div>
       </>
     ),
     organs: (
@@ -261,7 +279,7 @@ export default function EntryForm({ options, showTestCases }: { options: Options
           {form.renalMode === "creatinine" && (
             <div className="mt-4 flex flex-col gap-4">
               <div className="flex flex-wrap items-end gap-4">
-                {numberField("creatinine", true)}
+                {numberField("creatinine", form.creatinineUnit === "mg_dl" ? "mg/dL" : "µmol/L", true)}
                 <Choice
                   legend="Unit"
                   compact
@@ -270,7 +288,10 @@ export default function EntryForm({ options, showTestCases }: { options: Options
                     { value: "umol_l", label: "µmol/L" },
                   ]}
                   value={form.creatinineUnit}
-                  onChange={(v) => set("creatinineUnit", v as Form["creatinineUnit"])}
+                  onChange={(v) => {
+                    set("creatinineUnit", v as Form["creatinineUnit"]);
+                    writeUnitPref(v as Form["creatinineUnit"]);
+                  }}
                 />
               </div>
               {form.sex !== "other" && !form.crclOverride && (
@@ -295,7 +316,7 @@ export default function EntryForm({ options, showTestCases }: { options: Options
               {form.sex !== "other" &&
                 (form.crclOverride ? (
                   <div>
-                    {numberField("crcl_ml_min", true)}
+                    {numberField("crcl_ml_min", "mL/min", true)}
                     <button type="button" onClick={() => set("crclOverride", false)} className="mt-2 min-h-11 text-[15px] font-medium underline decoration-line underline-offset-4">
                       Use the calculated value instead
                     </button>
@@ -307,13 +328,12 @@ export default function EntryForm({ options, showTestCases }: { options: Options
                 ))}
             </div>
           )}
-          {form.renalMode === "crcl" && <div className="mt-4">{numberField("crcl_ml_min", true)}</div>}
+          {form.renalMode === "crcl" && <div className="mt-4">{numberField("crcl_ml_min", "mL/min", true)}</div>}
           {note("renal")}
         </div>
         <div>
-          <Choice
+          <YesNo
             legend={LABELS.dialysis}
-            options={noneOrYes("No", "Yes")}
             value={form.onDialysis}
             onChange={(v) => {
               setForm((f) => ({ ...f, onDialysis: v as Form["onDialysis"], dialysisType: v === "no" ? "" : f.dialysisType }));
@@ -341,7 +361,7 @@ export default function EntryForm({ options, showTestCases }: { options: Options
     exposures: (
       <>
         <div>
-          <Choice legend={LABELS.antibiotics_90d} options={noneOrYes("None", "Yes")} value={form.antibioticsGiven} onChange={(v) => set("antibioticsGiven", v as Form["antibioticsGiven"])} />
+          <YesNo legend={LABELS.antibiotics_90d} noLabel="None" value={form.antibioticsGiven} onChange={(v) => set("antibioticsGiven", v as Form["antibioticsGiven"])} />
           {form.antibioticsGiven === "yes" && (
             <DrugRows
               rows={form.antibiotics_90d.map((a) => ({ drug: a.drug, extra: a.days }))}
@@ -354,7 +374,7 @@ export default function EntryForm({ options, showTestCases }: { options: Options
           {note("antibiotics_90d")}
         </div>
         <div>
-          {choice("admission_90d")}
+          <YesNo legend={LABELS.admission_90d} value={form.admission_90d} onChange={(v) => set("admission_90d", v)} />
           {note("admission_90d")}
         </div>
         <div>
@@ -388,7 +408,7 @@ export default function EntryForm({ options, showTestCases }: { options: Options
           {note("immunocompromise")}
         </div>
         <div>
-          <Choice legend={LABELS.allergies} options={noneOrYes("None", "Yes")} value={form.allergiesKnown} onChange={(v) => set("allergiesKnown", v as Form["allergiesKnown"])} />
+          <YesNo legend={LABELS.allergies} noLabel="None" value={form.allergiesKnown} onChange={(v) => set("allergiesKnown", v as Form["allergiesKnown"])} />
           {form.allergiesKnown === "yes" && (
             <DrugRows
               rows={form.allergies.map((a) => ({ drug: a.drug, extra: a.reaction }))}
@@ -474,7 +494,7 @@ export default function EntryForm({ options, showTestCases }: { options: Options
               <li key={s.id}>
                 <button
                   type="button"
-                  onClick={() => scrollToId(`${uid}-${s.id}`)}
+                  onClick={() => goTo(s.id)}
                   className="-ml-px flex min-h-11 w-full items-center gap-3 border-l border-transparent py-1.5 pl-4 text-left text-[15px] hover:border-muted"
                 >
                   <span className={`font-mono text-[13px] ${s.done ? "text-done" : "text-value"}`}>{s.done ? "✓" : String(i + 1).padStart(2, "0")}</span>
@@ -486,12 +506,30 @@ export default function EntryForm({ options, showTestCases }: { options: Options
         </nav>
 
         <main className="flex min-w-0 flex-col gap-6">
-          {SECTIONS.map((section, i) => (
-            <section key={section.id} id={`${uid}-${section.id}`} aria-labelledby={`${uid}-${section.id}-h`} className="fin-panel scroll-mt-4 px-5 py-6 sm:px-7">
-              <SectionHeading id={`${uid}-${section.id}-h`} index={i} title={section.title} hint={section.hint} done={done[i]} problems={p} fields={section.fields} />
-              <div className="mt-6 flex flex-col gap-7">{content[section.id]}</div>
-            </section>
-          ))}
+          {SECTIONS.map((section, i) => {
+            // A finished section folds to a one-line summary once the clinician has moved on; tap to reopen.
+            const folded = done[i] && active !== section.id;
+            return (
+              <section
+                key={section.id}
+                id={`${uid}-${section.id}`}
+                aria-labelledby={`${uid}-${section.id}-h`}
+                onFocusCapture={() => setActive(section.id)}
+                onClickCapture={() => setActive(section.id)}
+                className={`fin-panel scroll-mt-4 px-5 sm:px-7 ${folded ? "py-4" : "py-6"}`}
+              >
+                <SectionHeading id={`${uid}-${section.id}-h`} index={i} title={section.title} hint={section.hint} done={done[i]} problems={p} fields={section.fields} folded={folded} />
+                {folded ? (
+                  <button type="button" onClick={() => goTo(section.id)} className="mt-2 flex min-h-11 w-full items-center gap-3 text-left" aria-label={`Edit ${section.title}`}>
+                    <span className="min-w-0 flex-1 truncate text-[15px] text-muted">{summaryLine(section.id, form, label)}</span>
+                    <span className="shrink-0 text-[15px] font-medium text-accent">Edit</span>
+                  </button>
+                ) : (
+                  <div className="mt-6 flex flex-col gap-7">{content[section.id]}</div>
+                )}
+              </section>
+            );
+          })}
 
           <section id={`${uid}-review`} aria-labelledby={`${uid}-review-h`} className="fin-panel scroll-mt-4 px-5 py-6 sm:px-7">
             <div className="flex items-center gap-3 border-b border-line pb-4">
@@ -503,7 +541,7 @@ export default function EntryForm({ options, showTestCases }: { options: Options
                 <p className="text-[14px] text-muted">Check everything, then get the recommendation</p>
               </div>
             </div>
-            <Review form={form} problems={p} label={label} onEdit={(id) => scrollToId(`${uid}-${id}`)} />
+            <Review form={form} problems={p} label={label} onEdit={goTo} />
           </section>
         </main>
       </div>
@@ -540,11 +578,20 @@ export default function EntryForm({ options, showTestCases }: { options: Options
   );
 }
 
-function SectionHeading(props: { id: string; index: number; title: string; hint: string; done: boolean; problems: Problems; fields: readonly string[] }) {
+function SectionHeading(props: {
+  id: string;
+  index: number;
+  title: string;
+  hint: string;
+  done: boolean;
+  problems: Problems;
+  fields: readonly string[];
+  folded?: boolean;
+}) {
   const missing = props.fields.filter((f) => props.problems.missing.has(f)).length;
   const attention = props.fields.some((f) => props.problems.invalid.has(f) || props.problems.unusual.has(f) || props.problems.stop.has(f));
   return (
-    <div className="flex items-center gap-3 border-b border-line pb-4">
+    <div className={`flex items-center gap-3 ${props.folded ? "" : "border-b border-line pb-4"}`}>
       <span
         aria-hidden
         className={`flex size-10 shrink-0 items-center justify-center rounded-full border font-mono text-[15px] ${props.done ? "border-done text-done" : "border-line text-value"}`}
@@ -555,7 +602,7 @@ function SectionHeading(props: { id: string; index: number; title: string; hint:
         <h2 id={props.id} className="text-lg font-medium leading-tight">
           {props.title}
         </h2>
-        <p className="text-[14px] text-muted">{props.hint}</p>
+        {!props.folded && <p className="text-[14px] text-muted">{props.hint}</p>}
       </div>
       <span className={`font-mono text-[13px] ${props.done ? "text-done" : "text-muted"}`}>
         {props.done ? "Complete" : missing ? `${missing} to answer` : attention ? "Check" : ""}
@@ -668,8 +715,39 @@ function Choice(props: {
   );
 }
 
-// "None" cannot be combined with other answers, so the clinician actively confirms none.
-function MultiChoice(props: { legend: string; options: { value: string; label: string }[]; value: string[]; onChange: (v: string[]) => void }) {
+// Yes / no as a two-position switch. It starts with neither side on, so the clinician always answers it.
+function YesNo(props: { legend: string; value: string; onChange: (v: string) => void; noLabel?: string; yesLabel?: string }) {
+  const name = useId();
+  const sides = [
+    { value: "no", label: props.noLabel ?? "No" },
+    { value: "yes", label: props.yesLabel ?? "Yes" },
+  ];
+  return (
+    <fieldset>
+      <legend className={legendClass}>{props.legend}</legend>
+      <div className="inline-flex rounded-[40px] border border-line bg-ground p-1">
+        {sides.map((side) => {
+          const on = props.value === side.value;
+          return (
+            <label
+              key={side.value}
+              className={`flex min-h-11 min-w-24 cursor-pointer items-center justify-center rounded-[40px] px-6 text-base transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent ${
+                on ? "bg-accent font-medium text-ground" : "text-muted hover:text-ink"
+              }`}
+            >
+              <input type="radio" name={name} value={side.value} checked={on} onChange={() => props.onChange(side.value)} className="sr-only" />
+              {side.label}
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
+// A tick-list as switches, one per item. "None" cannot be combined with other answers, so the clinician
+// actively confirms none.
+function SwitchList(props: { legend: string; options: { value: string; label: string }[]; value: string[]; onChange: (v: string[]) => void }) {
   const toggle = (v: string) => {
     if (props.value.includes(v)) props.onChange(props.value.filter((x) => x !== v));
     else if (v === "none") props.onChange(["none"]);
@@ -678,16 +756,21 @@ function MultiChoice(props: { legend: string; options: { value: string; label: s
   return (
     <fieldset>
       <legend className={legendClass}>
-        {props.legend} <span className="font-normal normal-case tracking-normal">· all that apply, or None</span>
+        {props.legend} <span className="font-normal normal-case tracking-normal">· switch on all that apply, or None</span>
       </legend>
-      <div className="flex flex-wrap gap-3">
+      <div className="grid overflow-hidden rounded-[5px] border border-line sm:grid-cols-2">
         {props.options.map((o) => {
-          const selected = props.value.includes(o.value);
+          const on = props.value.includes(o.value);
           return (
-            <label key={o.value} className={`${optionClass} ${optionState(selected)}`}>
-              <input type="checkbox" checked={selected} onChange={() => toggle(o.value)} className="sr-only" />
-              {selected && <span aria-hidden className="text-accent">✓</span>}
-              {breakable(o.label)}
+            <label
+              key={o.value}
+              className={`group -mb-px -mr-px flex min-h-12 cursor-pointer items-center justify-between gap-3 border-b border-r border-line px-4 py-2 ${
+                on ? "bg-accent/10" : "bg-ground hover:bg-tint"
+              } ${o.value === "none" ? "sm:col-span-2" : ""}`}
+            >
+              <span className={on ? "font-medium" : ""}>{o.label}</span>
+              <input type="checkbox" role="switch" checked={on} onChange={() => toggle(o.value)} className="peer sr-only" />
+              <Switch on={on} />
             </label>
           );
         })}
@@ -695,6 +778,18 @@ function MultiChoice(props: { legend: string; options: { value: string; label: s
     </fieldset>
   );
 }
+
+// The visual switch (the real control is the checkbox beside it, announced as a switch).
+const Switch = ({ on }: { on: boolean }) => (
+  <span
+    aria-hidden
+    className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-colors peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${
+      on ? "border-accent bg-accent" : "border-line bg-tint"
+    }`}
+  >
+    <span className={`absolute size-5 rounded-full transition-transform ${on ? "translate-x-6 bg-ground" : "translate-x-1 bg-muted"}`} />
+  </span>
+);
 
 // Sources: tick one or more. The first ticked is the main source (the guideline table comparison uses it);
 // with two or more, the clinician can change which is main.
@@ -804,6 +899,16 @@ const digitsOnly = (text: string, decimal: boolean) => {
   return rest.length ? `${whole}.${rest.join("")}` : whole;
 };
 
+// The keypad's Next key moves to the next number box on the page; Done on the last one closes the keypad.
+function nextBox(e: React.KeyboardEvent<HTMLInputElement>) {
+  if (e.key !== "Enter") return;
+  e.preventDefault();
+  const boxes = [...document.querySelectorAll<HTMLInputElement>("input[data-nav]")];
+  const next = boxes[boxes.indexOf(e.currentTarget) + 1];
+  if (next) next.focus();
+  else e.currentTarget.blur();
+}
+
 function NumberField(props: {
   label: string;
   value: string;
@@ -819,19 +924,30 @@ function NumberField(props: {
       <label htmlFor={id} className={`block ${legendClass}`}>
         {props.label}
       </label>
-      <input
-        id={id}
-        type="text"
-        inputMode={props.decimal ? "decimal" : "numeric"}
-        pattern={props.decimal ? "[0-9.]*" : "[0-9]*"}
-        autoComplete="off"
-        maxLength={6}
-        value={props.value}
-        onChange={(e) => props.onChange(digitsOnly(e.target.value, props.decimal ?? false))}
-        onFocus={props.onFocus}
-        onBlur={props.onBlur}
-        className="fin-input min-h-12 w-full max-w-40 px-4 font-mono text-xl text-value"
-      />
+      <div className="relative w-full max-w-44">
+        <input
+          id={id}
+          type="text"
+          inputMode={props.decimal ? "decimal" : "numeric"}
+          pattern={props.decimal ? "[0-9.]*" : "[0-9]*"}
+          enterKeyHint="next"
+          data-nav
+          autoComplete="off"
+          maxLength={6}
+          value={props.value}
+          onChange={(e) => props.onChange(digitsOnly(e.target.value, props.decimal ?? false))}
+          onKeyDown={nextBox}
+          onFocus={props.onFocus}
+          onBlur={props.onBlur}
+          aria-describedby={props.unit ? `${id}-unit` : undefined}
+          className={`fin-input min-h-12 w-full pl-4 font-mono text-xl text-value ${props.unit ? "pr-20" : "pr-4"}`}
+        />
+        {props.unit && (
+          <span id={`${id}-unit`} className="pointer-events-none absolute inset-y-0 right-4 flex items-center font-mono text-[14px] text-muted">
+            {props.unit}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -926,6 +1042,9 @@ function DrugRows(props: {
                   pattern="[0-9]*"
                   autoComplete="off"
                   maxLength={2}
+                  enterKeyHint="next"
+                  data-nav
+                  onKeyDown={nextBox}
                   value={row.extra}
                   onChange={(e) => update(i, { extra: digitsOnly(e.target.value, false) })}
                   className="fin-input mt-1.5 min-h-12 px-3 font-mono text-lg text-value"
@@ -960,9 +1079,10 @@ function DrugRows(props: {
   );
 }
 
-// Everything on one panel, each section with an Edit link back to it.
-function Review(props: { form: Form; problems: Problems; label: (field: string, value: string) => string; onEdit: (sectionId: string) => void }) {
-  const { form: f, label } = props;
+type Label = (field: string, value: string) => string;
+
+// What each section holds, as label and value pairs: used by the Review and by folded sections.
+function sectionRows(f: Form, label: Label): Record<string, [string, string][]> {
   const list = (field: string, values: string[]) => values.map((v) => label(field, v)).join(", ");
   const cg = f.renalMode === "creatinine" && !f.crclOverride ? cockcroftGault(f) : null;
   const unit = f.creatinineUnit === "mg_dl" ? "mg/dL" : "µmol/L";
@@ -971,7 +1091,7 @@ function Review(props: { form: Form; problems: Problems; label: (field: string, 
     : f.renalMode === "creatinine" && f.crclOverride ? `${f.crcl_ml_min} mL/min (entered; creatinine ${f.creatinine} ${unit})`
     : cg ? `${cg.crcl} mL/min (Cockcroft-Gault, creatinine ${f.creatinine} ${unit})`
     : "";
-  const rows: Record<string, [string, string][]> = {
+  return {
     basics: [
       [LABELS.age, f.age && `${f.age} years`],
       [LABELS.sex, label("sex", f.sex)],
@@ -985,10 +1105,7 @@ function Review(props: { form: Form; problems: Problems; label: (field: string, 
       [LABELS.setting, label("setting", f.setting)],
       [LABELS.source_control, label("source_control", f.source_control)],
     ],
-    severity: [
-      [LABELS.severity, label("severity", f.severity)],
-      ["SOFA", f.sofa],
-    ],
+    severity: [[LABELS.severity, label("severity", f.severity)]],
     organs: [
       ["CrCl", renal],
       [LABELS.dialysis, f.onDialysis === "yes" ? label("dialysis", f.dialysisType) : f.onDialysis === "no" ? "No" : ""],
@@ -1007,6 +1124,19 @@ function Review(props: { form: Form; problems: Problems; label: (field: string, 
       [LABELS.allergies, f.allergiesKnown === "yes" ? f.allergies.map((a) => `${a.drug} (${label("allergy_reaction", a.reaction) || "reaction?"})`).join(", ") : f.allergiesKnown === "no" ? "None" : ""],
     ],
   };
+}
+
+// Short answers ("Yes", "None", "Normal") get their question, so "None · None" never stands alone.
+const summaryLine = (sectionId: string, f: Form, label: Label) =>
+  sectionRows(f, label)[sectionId]
+    .filter(([, v]) => v && v !== "Not given" && v !== "None given")
+    .map(([k, v]) => (/^(yes|no|none|normal|mild|moderate|severe)$/i.test(v) ? `${k.replace(/ \(.*\)$/, "").replace(/\?$/, "")}: ${v.toLowerCase()}` : v))
+    .join(" · ");
+
+// Everything on one panel, each section with an Edit link back to it.
+function Review(props: { form: Form; problems: Problems; label: Label; onEdit: (sectionId: string) => void }) {
+  const { form: f, label } = props;
+  const rows = sectionRows(f, label);
   return (
     <div className="mt-2 divide-y divide-line">
       {SECTIONS.map((s, i) => (

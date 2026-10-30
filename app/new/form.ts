@@ -13,7 +13,6 @@ export interface Form {
   setting: string;
   source_control: string;
   severity: string;
-  sofa: string;
   renalMode: "" | "creatinine" | "crcl";
   creatinine: string;
   creatinineUnit: "mg_dl" | "umol_l";
@@ -37,7 +36,7 @@ export interface Form {
 
 export const EMPTY: Form = {
   age: "", sex: "", weight_kg: "", height_cm: "", pregnancy: "", source: "", extra_sources: [], setting: "",
-  source_control: "", severity: "", sofa: "", renalMode: "", creatinine: "", creatinineUnit: "mg_dl",
+  source_control: "", severity: "", renalMode: "", creatinine: "", creatinineUnit: "mg_dl",
   crclOverride: false, crcl_ml_min: "", onDialysis: "", dialysisType: "", hepatic: "", antibioticsGiven: "",
   antibiotics_90d: [], admission_90d: "", prior_mdr: [], devices: [], current_antibiotics: [], comorbidities: [],
   immunocompromise: [], allergiesKnown: "", allergies: [], confirmed: {},
@@ -47,26 +46,25 @@ export const EMPTY: Form = {
 export const SECTIONS = [
   { id: "basics", title: "Basics", hint: "Age, sex, weight", fields: ["age", "sex", "weight_kg", "height_cm", "pregnancy"] },
   { id: "source", title: "Source & setting", hint: "Where the infection is and where it was acquired", fields: ["source", "setting", "source_control"] },
-  { id: "severity", title: "Severity", hint: "Sepsis or septic shock, SOFA", fields: ["severity", "sofa"] },
+  { id: "severity", title: "Severity", hint: "Sepsis or septic shock", fields: ["severity"] },
   { id: "organs", title: "Organs", hint: "Kidneys and liver, for dosing", fields: ["renal", "dialysis", "hepatic"] },
   { id: "exposures", title: "Exposures", hint: "Last 90 days", fields: ["antibiotics_90d", "admission_90d", "prior_mdr", "devices", "current_antibiotics"] },
   { id: "host", title: "Host", hint: "Comorbidities, immunity, allergies", fields: ["comorbidities", "immunocompromise", "allergies"] },
 ] as const;
 
 export const LABELS: Record<string, string> = {
-  age: "Age (years)",
+  age: "Age",
   sex: "Sex",
-  weight_kg: "Weight (kg)",
-  height_cm: "Height (cm, optional)",
+  weight_kg: "Weight",
+  height_cm: "Height (optional)",
   pregnancy: "Pregnant?",
   source: "Suspected source(s)",
   setting: "Where was it acquired?",
   source_control: "Source control",
   severity: "Severity",
-  sofa: "SOFA score (0 to 24)",
   renal: "Kidney function",
-  creatinine: "Creatinine value",
-  crcl_ml_min: "CrCl or eGFR (mL/min)",
+  creatinine: "Creatinine",
+  crcl_ml_min: "CrCl or eGFR",
   dialysis: "On dialysis?",
   dialysisType: "Type of dialysis",
   hepatic: "Liver function",
@@ -193,8 +191,6 @@ export function checkForm(f: Form): Problems {
 
   // Severity
   need("severity", f.severity !== "");
-  need("sofa", f.sofa !== "");
-  if (f.sofa !== "" && !between(f.sofa, 0, 24)) p.invalid.set("sofa", "SOFA score is 0 to 24.");
 
   // Organs
   need("renal", f.renalMode !== "");
@@ -268,7 +264,6 @@ export function toPatient(f: Form) {
     setting: f.setting,
     source_control: f.source_control,
     severity: f.severity,
-    sofa: num(f.sofa),
     crcl_ml_min: effectiveCrcl(f),
     dialysis: f.onDialysis === "yes" ? f.dialysisType : "no",
     hepatic: f.hepatic,
@@ -291,12 +286,12 @@ export const TEST_CASES: { id: string; title: string; placeholders: string; form
   {
     id: "case-1",
     title: "Case 1: community pneumonia",
-    placeholders: "weight 70 kg, SOFA 3, source control not needed, liver normal, no devices, no immunocompromise, no allergies",
+    placeholders: "weight 70 kg, source control not applicable, liver normal, no devices, no immunocompromise, no allergies",
     form: {
       ...EMPTY,
       age: "62", sex: "male", weight_kg: "70",
       source: "lung", setting: "community_acquired", source_control: "not_needed",
-      severity: "sepsis", sofa: "3",
+      severity: "sepsis",
       renalMode: "crcl", crcl_ml_min: "80", onDialysis: "no", hepatic: "normal",
       antibioticsGiven: "no", admission_90d: "no", prior_mdr: ["none"], devices: ["none"],
       comorbidities: ["diabetes", "copd"], immunocompromise: ["none"], allergiesKnown: "no",
@@ -305,12 +300,12 @@ export const TEST_CASES: { id: string; title: string; placeholders: string; form
   {
     id: "case-2",
     title: "Case 2: urosepsis with a catheter",
-    placeholders: "weight 70 kg, healthcare-associated, sepsis without shock, source control needed and not yet done, liver normal, no comorbidities, no immunocompromise, no allergies",
+    placeholders: "weight 70 kg, community-acquired (healthcare contact is captured by the exposures), sepsis without shock, source control not achieved, liver normal, no comorbidities, no immunocompromise, no allergies",
     form: {
       ...EMPTY,
       age: "65", sex: "male", weight_kg: "70",
-      source: "urinary", setting: "healthcare_associated", source_control: "needed_not_done",
-      severity: "sepsis", sofa: "4",
+      source: "urinary", setting: "community_acquired", source_control: "needed_not_done",
+      severity: "sepsis",
       renalMode: "crcl", crcl_ml_min: "40", onDialysis: "no", hepatic: "normal",
       antibioticsGiven: "yes", antibiotics_90d: [{ drug: "cefixime", days: "5" }], admission_90d: "yes",
       prior_mdr: ["none"], devices: ["urinary_catheter"], comorbidities: ["none"], immunocompromise: ["none"],

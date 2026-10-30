@@ -41,10 +41,9 @@ from the guideline table for this patient, both are shown and the difference is 
 | | Weight | kg | Yes |
 | | Height | cm, 120–230 (only used to adjust Cockcroft-Gault in obesity) | No |
 | Source | Suspected source(s) | lung, urinary, intra-abdominal, CNS, skin/soft tissue, bloodstream/unknown, catheter-related, bone/joint — **one or more**; one is marked the **main source** | Yes |
-| | Setting | community-acquired / healthcare-associated / hospital-acquired / ventilator-associated | Yes |
-| | Source control | not needed / needed, done / needed, not yet done | Yes |
-| Severity | Category | sepsis / septic shock | Yes |
-| | SOFA score | 0–24 | Yes |
+| | Setting | community-acquired / hospital-acquired (began 48 h or more after admission) / ventilator-associated. *Healthcare-associated removed 2026-10-30 (IDSA/ATS 2019 dropped it): community-onset patients with healthcare contact are community-acquired, and their exposures drive MDR risk* | Yes |
+| | Source control | not applicable / achieved / not achieved *(labels changed 2026-10-30; meaning unchanged)* | Yes |
+| Severity | Category | sepsis / septic shock *(SOFA score removed 2026-10-30, owner decision)* | Yes |
 | Organs | Kidney function | serum creatinine (mg/dL or µmol/L) → CrCl by Cockcroft-Gault, **or** CrCl / eGFR entered directly; the clinician can override the calculated value | Yes |
 | | Dialysis | no / yes → type (haemodialysis, peritoneal, CRRT) | Yes |
 | | Hepatic function | normal / mild / moderate / severe (Child-Pugh if cirrhotic) | Yes |
@@ -74,7 +73,6 @@ from the guideline table for this patient, both are shown and the difference is 
 | --- | --- | --- |
 | Age | over 110 (under 18 → out of scope) | 100–110 |
 | Weight | under 20 or over 300 kg | 20–25 kg, or over 200 kg |
-| SOFA | over 24 | |
 | CrCl / eGFR | over 250 mL/min | 200–250 mL/min |
 | Creatinine | outside 0.1–20 mg/dL (9–1768 µmol/L) | |
 | Height (optional) | outside 120–230 cm | |

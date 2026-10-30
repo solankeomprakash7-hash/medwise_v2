@@ -11,12 +11,11 @@ source,bloodstream_unknown,Bloodstream/unknown,no
 source,catheter_related,Catheter-related,no
 source,bone_joint,Bone/joint,no
 setting,community_acquired,Community-acquired,no
-setting,healthcare_associated,Healthcare-associated,no
 setting,hospital_acquired,Hospital-acquired,no
 setting,ventilator_associated,Ventilator-associated,no
-source_control,not_needed,Not needed,no
-source_control,needed_done,"Needed, done",no
-source_control,needed_not_done,"Needed, not yet done",no
+source_control,not_needed,Not applicable,no
+source_control,needed_done,Achieved,no
+source_control,needed_not_done,Not achieved,no
 severity,sepsis,Sepsis,no
 severity,septic_shock,Septic shock,no
 dialysis,no,No,no

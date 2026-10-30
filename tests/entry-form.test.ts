@@ -43,7 +43,7 @@ describe("Cockcroft-Gault", () => {
 describe("checks next to each field", () => {
   it("an empty form has every required field missing and nothing out of scope", () => {
     const p = checkForm(EMPTY);
-    for (const field of ["age", "sex", "weight_kg", "source", "setting", "sofa", "renal", "dialysis", "allergies"]) {
+    for (const field of ["age", "sex", "weight_kg", "source", "setting", "severity", "renal", "dialysis", "allergies"]) {
       expect(p.missing.has(field)).toBe(true);
     }
     expect(p.missing.has("height_cm")).toBe(false); // optional
@@ -52,7 +52,6 @@ describe("checks next to each field", () => {
 
   it("blocks impossible values", () => {
     expect(checkForm(withCase({ age: "111" })).invalid.has("age")).toBe(true);
-    expect(checkForm(withCase({ sofa: "25" })).invalid.has("sofa")).toBe(true);
     expect(checkForm(withCase({ weight_kg: "19" })).invalid.has("weight_kg")).toBe(true);
     expect(checkForm(withCase({ crcl_ml_min: "260" })).invalid.has("renal")).toBe(true);
   });
@@ -118,5 +117,23 @@ describe("test cases", () => {
     const f = withCase({ onDialysis: "yes", dialysisType: "crrt", renalMode: "creatinine", creatinine: "1" });
     expect(toPatient(f).dialysis).toBe("crrt");
     expect(toPatient(f).crcl_ml_min).toBe(76);
+  });
+});
+
+describe("owner decisions 2026-10-30", () => {
+  it("healthcare-associated is no longer a setting, and the server refuses it", () => {
+    expect([...(kb.vocabulary.get("setting") ?? [])]).toEqual(["community_acquired", "hospital_acquired", "ventilator_associated"]);
+    expect(checkInput({ ...toPatient(case1), setting: "healthcare_associated" }, kb).ok).toBe(false);
+  });
+
+  it("source control reads Not applicable / Achieved / Not achieved", () => {
+    expect(["not_needed", "needed_done", "needed_not_done"].map((v) => kb.vocabularyLabels.get(`source_control:${v}`))).toEqual([
+      "Not applicable", "Achieved", "Not achieved",
+    ]);
+  });
+
+  it("SOFA is not asked and not needed", () => {
+    expect("sofa" in toPatient(case1)).toBe(false);
+    expect(checkInput(toPatient(case1), kb).ok).toBe(true);
   });
 });

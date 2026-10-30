@@ -47,7 +47,7 @@ export const TABLE_COLUMNS = {
   provenance: ["table", "row_key", "fields", "source", "location", "note"],
   golden_tests: [
     "case_id", "origin", "review_status", "age", "sex", "weight_kg", "source", "setting",
-    "source_control", "severity", "sofa", "crcl_ml_min", "dialysis", "hepatic", "antibiotics_90d",
+    "source_control", "severity", "crcl_ml_min", "dialysis", "hepatic", "antibiotics_90d",
     "admission_90d", "prior_mdr", "devices", "comorbidities", "immunocompromise", "allergies",
     "current_antibiotics", "pregnancy", "expected_regimen", "acceptable_alternatives",
     "expected_flags", "notes",

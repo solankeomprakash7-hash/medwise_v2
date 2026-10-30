@@ -8,7 +8,7 @@ const kb = loadKnowledge();
 // Like reference case 1: community pneumonia, sepsis without shock, no MDR risk.
 const pneumonia = {
   age: 62, sex: "male", weight_kg: 70, source: "lung", setting: "community_acquired",
-  source_control: "not_needed", severity: "sepsis", sofa: 3, crcl_ml_min: 80, dialysis: "no",
+  source_control: "not_needed", severity: "sepsis", crcl_ml_min: 80, dialysis: "no",
   hepatic: "normal", antibiotics_90d: [], admission_90d: "no", prior_mdr: ["none"], devices: ["none"],
   comorbidities: ["diabetes", "copd"], immunocompromise: ["none"], allergies: [], current_antibiotics: [],
 };
@@ -220,7 +220,7 @@ describe("inputs are checked before the AI is asked", () => {
     expect(ai.calls).toBe(0);
   };
 
-  it("missing field", () => notAsked({ ...pneumonia, sofa: undefined }, "missing_input", /Please enter: sofa/));
+  it("missing field", () => notAsked({ ...pneumonia, weight_kg: undefined }, "missing_input", /Please enter: weight_kg/));
   it("under 18", () => notAsked({ ...pneumonia, age: 16 }, "out_of_scope", /Age under 18/));
   it("pregnancy", () => notAsked({ ...pneumonia, sex: "female", pregnancy: "yes" }, "out_of_scope", /Pregnancy/));
   it("pregnancy not answered for a female patient", () => notAsked({ ...pneumonia, sex: "female" }, "missing_input", /pregnancy/));

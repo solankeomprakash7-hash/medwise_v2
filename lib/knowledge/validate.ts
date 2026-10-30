@@ -27,7 +27,7 @@ const CODED_COLUMNS: Record<string, string> = {
 
 // Required inputs from the CLINICAL_RULES.md input table ("none" counts as filled).
 const REQUIRED_INPUTS = [
-  "age", "sex", "weight_kg", "source", "setting", "source_control", "severity", "sofa",
+  "age", "sex", "weight_kg", "source", "setting", "source_control", "severity",
   "crcl_ml_min", "dialysis", "hepatic", "antibiotics_90d", "admission_90d", "prior_mdr",
   "devices", "comorbidities", "immunocompromise", "allergies",
 ];
@@ -308,7 +308,7 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
       const reaction = allergy.split(":")[1];
       if (!allowed("allergy_reaction", reaction)) problems.push(`${where}: allergy "${allergy}" should be drug:rash, drug:anaphylaxis or drug:other`);
     }
-    const numbers: [string, number, number][] = [["age", 18, 110], ["sofa", 0, 24], ["weight_kg", 20, 300], ["crcl_ml_min", 0, 250]];
+    const numbers: [string, number, number][] = [["age", 18, 110], ["weight_kg", 20, 300], ["crcl_ml_min", 0, 250]];
     for (const [column, min, max] of numbers) {
       if (row[column] && !(Number(row[column]) >= min && Number(row[column]) <= max)) {
         problems.push(`${where}: ${column} "${row[column]}" should be a number from ${min} to ${max}`);

@@ -62,7 +62,7 @@ broad / MedWise) → how it works (4 connected steps; vertical on phones) → wh
 Wording comes from `PRODUCT.md`. No study figures, numbers or testimonials on this page.
 
 ### 1. Patient entry
-*Redesigned 2026-10-30 (DECISIONS.md): one page, for a phone or Android tablet at night, under 2 minutes.*
+*Redesigned 2026-10-30 (DECISIONS.md): one page, for a phone or Android tablet at night, under 2 minutes. No SOFA score.*
 - **One scrolling page, no Back/Next**, in six sections plus a review: Basics → Source & setting → Severity →
   Organs → Exposures → Host → Review. Each section shows its number, then a green tick and "Complete".
   On wide screens (tablet sideways, desktop) a section list stays on the left; tapping a name jumps to it.
@@ -70,8 +70,16 @@ Wording comes from `PRODUCT.md`. No study figures, numbers or testimonials on th
 - Fixed bottom bar: "n of 6 sections complete" with a small progress bar, and **Get recommendation**. If
   anything is missing, the page jumps to the first unfinished section and every unanswered field says
   "Required: please answer" right under it (no popups).
-- Chips and pick-lists instead of typing; numbers open the number keypad; chosen answers get an orange edge
-  and dot. "None" chips for exposures, devices, comorbidities, immunocompromise and allergies, so "none" is a
+- **Switches** (owner decision 2026-10-30): every yes / no question is a two-position switch (No | Yes, or
+  None | Yes) that starts with neither side on, so it is always actively answered. Every tick-list (previous
+  MDR, devices, comorbidities, immunocompromise) is a list of on/off switches, "None" first. Questions with
+  three or more answers (sex, source, setting, source control, severity, liver, dialysis type) stay as tap
+  buttons with an orange edge and dot.
+- Numbers open the number keypad, show their unit inside the box (years, kg, cm, mg/dL or µmol/L, mL/min),
+  and the keypad's Next key moves to the next box.
+- **Finished sections fold** to a one-line summary once the clinician moves on (tap to reopen), so the page
+  gets shorter as it is filled in. Folding happens after a tap, never under the finger.
+- The creatinine unit (mg/dL or µmol/L) is remembered on the device (a preference, not patient data). "None" answers for exposures, devices, comorbidities, immunocompromise and allergies, so "none" is a
   confirmed answer, never a blank.
 - Shown only when relevant: dialysis type only when on dialysis; reaction only for an added allergy; pregnancy
   for every woman aged 18 or over.
