@@ -1,64 +1,48 @@
 source,setting,severity,status,panel_note
 lung,community_acquired,sepsis,draft,
 lung,community_acquired,septic_shock,draft,
-lung,healthcare_associated,sepsis,empty,
-lung,healthcare_associated,septic_shock,empty,
 lung,hospital_acquired,sepsis,draft,
 lung,hospital_acquired,septic_shock,draft,
 lung,ventilator_associated,sepsis,draft,
 lung,ventilator_associated,septic_shock,draft,
 urinary,community_acquired,sepsis,draft,
 urinary,community_acquired,septic_shock,draft,
-urinary,healthcare_associated,sepsis,empty,
-urinary,healthcare_associated,septic_shock,empty,
 urinary,hospital_acquired,sepsis,draft,
 urinary,hospital_acquired,septic_shock,draft,
 urinary,ventilator_associated,sepsis,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 urinary,ventilator_associated,septic_shock,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 intra_abdominal,community_acquired,sepsis,empty,
 intra_abdominal,community_acquired,septic_shock,empty,
-intra_abdominal,healthcare_associated,sepsis,empty,
-intra_abdominal,healthcare_associated,septic_shock,empty,
 intra_abdominal,hospital_acquired,sepsis,empty,
 intra_abdominal,hospital_acquired,septic_shock,empty,
 intra_abdominal,ventilator_associated,sepsis,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 intra_abdominal,ventilator_associated,septic_shock,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 cns,community_acquired,sepsis,empty,
 cns,community_acquired,septic_shock,empty,
-cns,healthcare_associated,sepsis,empty,
-cns,healthcare_associated,septic_shock,empty,
 cns,hospital_acquired,sepsis,empty,
 cns,hospital_acquired,septic_shock,empty,
 cns,ventilator_associated,sepsis,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 cns,ventilator_associated,septic_shock,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 skin_soft_tissue,community_acquired,sepsis,empty,
 skin_soft_tissue,community_acquired,septic_shock,empty,
-skin_soft_tissue,healthcare_associated,sepsis,empty,
-skin_soft_tissue,healthcare_associated,septic_shock,empty,
 skin_soft_tissue,hospital_acquired,sepsis,empty,
 skin_soft_tissue,hospital_acquired,septic_shock,empty,
 skin_soft_tissue,ventilator_associated,sepsis,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 skin_soft_tissue,ventilator_associated,septic_shock,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 bloodstream_unknown,community_acquired,sepsis,draft,
 bloodstream_unknown,community_acquired,septic_shock,draft,
-bloodstream_unknown,healthcare_associated,sepsis,empty,
-bloodstream_unknown,healthcare_associated,septic_shock,empty,
 bloodstream_unknown,hospital_acquired,sepsis,draft,
 bloodstream_unknown,hospital_acquired,septic_shock,draft,
 bloodstream_unknown,ventilator_associated,sepsis,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 bloodstream_unknown,ventilator_associated,septic_shock,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 catheter_related,community_acquired,sepsis,empty,
 catheter_related,community_acquired,septic_shock,empty,
-catheter_related,healthcare_associated,sepsis,empty,
-catheter_related,healthcare_associated,septic_shock,empty,
 catheter_related,hospital_acquired,sepsis,empty,
 catheter_related,hospital_acquired,septic_shock,empty,
 catheter_related,ventilator_associated,sepsis,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 catheter_related,ventilator_associated,septic_shock,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.
 bone_joint,community_acquired,sepsis,empty,
 bone_joint,community_acquired,septic_shock,empty,
-bone_joint,healthcare_associated,sepsis,empty,
-bone_joint,healthcare_associated,septic_shock,empty,
 bone_joint,hospital_acquired,sepsis,empty,
 bone_joint,hospital_acquired,septic_shock,empty,
 bone_joint,ventilator_associated,sepsis,empty,Panel: does this combination apply? Ventilator-associated usually means pneumonia.

@@ -1,20 +1,16 @@
 import type { Metadata } from "next";
-import { DM_Mono, EB_Garamond, Playfair_Display } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 
-// Fonts from docs/DESIGN.md: Playfair Display (titles), EB Garamond (body), DM Mono (doses, numbers).
-const display = Playfair_Display({
-  variable: "--font-playfair",
+// Fonts from docs/DESIGN.md: IBM Plex Sans for text, IBM Plex Mono for doses, numbers and labels.
+const sans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
-const body = EB_Garamond({
-  variable: "--font-garamond",
-  subsets: ["latin"],
-});
-
-const mono = DM_Mono({
-  variable: "--font-dm-mono",
+const mono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
 });
@@ -26,10 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${sans.variable} ${mono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

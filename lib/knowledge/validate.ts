@@ -27,13 +27,17 @@ const CODED_COLUMNS: Record<string, string> = {
 
 // Required inputs from the CLINICAL_RULES.md input table ("none" counts as filled).
 const REQUIRED_INPUTS = [
-  "age", "sex", "weight_kg", "source", "setting", "source_control", "severity", "sofa",
+  "age", "sex", "weight_kg", "source", "setting", "source_control", "severity",
   "crcl_ml_min", "dialysis", "hepatic", "antibiotics_90d", "admission_90d", "prior_mdr",
   "devices", "comorbidities", "immunocompromise", "allergies",
 ];
 
 // Rough guard for CLAUDE.md rule 4: words or numbers that suggest a patient identifier.
 const IDENTIFIER_PATTERNS = [/\buhid\b/i, /\bip\s*no\b/i, /\bdob\b/i, /\bdate of birth\b/i, /\b\d{10}\b/, /\bmr\.?\s|\bmrs\.?\s|\bms\.?\s/i];
+
+export const SPECTRUM_COLUMNS = [
+  "gram_positive", "gram_negative", "pseudomonas", "mrsa", "esbl", "cre", "anaerobes", "atypicals",
+] as const;
 
 export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
   const problems: string[] = [];
@@ -62,8 +66,6 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
   if (version && !/^v\d+\.\d+(-draft)?$/.test(version)) {
     problems.push(`VERSION "${version}" should look like v0.1-draft or v1.0`);
   }
-
-  const isDraft = version.endsWith("-draft");
 
   // Provenance: every drafted row in drugs, mdr_risk and regimens must say where it came from.
   const provenance = new Set<string>();
@@ -97,6 +99,43 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     else if (drugs.has(row.drug)) problems.push(`drugs.csv line ${i + 2}: "${row.drug}" appears twice`);
     drugs.add(row.drug);
     if (row.drug && !traced("drugs", row.drug)) problems.push(`drugs.csv line ${i + 2}: "${row.drug}" has no entry in provenance.csv`);
+  }
+
+  // Drug classes: every drug MedWise can recommend must have a class, for allergy checks.
+  const classed = new Set<string>();
+  for (const [i, row] of tables.drug_classes.entries()) {
+    const where = `drug_classes.csv line ${i + 2}`;
+    if (!row.drug || row.drug !== row.drug.toLowerCase()) problems.push(`${where}: drug must be written in lower case`);
+    if (classed.has(row.drug)) problems.push(`${where}: "${row.drug}" appears twice`);
+    classed.add(row.drug);
+    if (!row.class) problems.push(`${where}: class is empty`);
+    if (row.beta_lactam !== "yes" && row.beta_lactam !== "no") problems.push(`${where}: beta_lactam must be yes or no`);
+    if (!row.source) problems.push(`${where}: source is empty`);
+  }
+  for (const drug of drugs) {
+    if (!classed.has(drug)) problems.push(`drug_classes.csv: "${drug}" (in drugs.csv) has no class, so allergies to it cannot be checked`);
+  }
+
+  // Drug spectrum: every drug MedWise can recommend has a coverage row; AWaRe may be empty only in a draft.
+  const isDraft = version.endsWith("-draft");
+  const covered = new Set<string>();
+  for (const [i, row] of tables.drug_spectrum.entries()) {
+    const where = `drug_spectrum.csv line ${i + 2}`;
+    if (covered.has(row.drug)) problems.push(`${where}: "${row.drug}" appears twice`);
+    covered.add(row.drug);
+    if (!drugs.has(row.drug)) problems.push(`${where}: "${row.drug}" is not in drugs.csv`);
+    for (const column of SPECTRUM_COLUMNS) {
+      if (!["yes", "limited", "no"].includes(row[column])) problems.push(`${where}: ${column} must be yes, limited or no`);
+    }
+    if (row.aware === "") {
+      if (!isDraft) problems.push(`${where}: aware is empty; it must be set before sign-off`);
+    } else if (!["Access", "Watch", "Reserve", "Not recommended"].includes(row.aware)) {
+      problems.push(`${where}: aware must be Access, Watch, Reserve or Not recommended`);
+    }
+    if (!row.source) problems.push(`${where}: source is empty`);
+  }
+  for (const drug of drugs) {
+    if (!covered.has(drug)) problems.push(`drug_spectrum.csv: "${drug}" (in drugs.csv) has no coverage row`);
   }
 
   // Coverage checklist: every source × setting × severity exactly once
@@ -150,9 +189,8 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     if (row.organism === "none" || !allowed("prior_mdr", row.organism)) {
       problems.push(`${where}: unknown organism "${row.organism}"`);
     }
-    if (row.weight === "") {
-      if (!isDraft) problems.push(`${where}: weight is empty; every weight must be set before sign-off`);
-    } else if (!/^-?\d+(\.\d+)?$/.test(row.weight)) {
+    // Weights are optional (DECISIONS 2026-10-29: the AI weighs MDR risk); if given, they must be numbers.
+    if (row.weight !== "" && !/^-?\d+(\.\d+)?$/.test(row.weight)) {
       problems.push(`${where}: weight "${row.weight}" is not a number`);
     }
     if (!traced("mdr_risk", `${row.risk_factor}|${row.organism}`)) {
@@ -171,9 +209,8 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     if (!organisms.includes(row.organism)) problems.push(`${where}: unknown organism "${row.organism}"`);
     if (thresholdOrganisms.has(row.organism)) problems.push(`${where}: "${row.organism}" appears twice`);
     thresholdOrganisms.add(row.organism);
-    if (row.high_risk_threshold === "") {
-      if (!isDraft) problems.push(`${where}: high_risk_threshold is empty; it must be set before sign-off`);
-    } else if (!(Number(row.high_risk_threshold) > 0)) {
+    // Thresholds are optional (DECISIONS 2026-10-29); if given, they must be above 0.
+    if (row.high_risk_threshold !== "" && !(Number(row.high_risk_threshold) > 0)) {
       problems.push(`${where}: high_risk_threshold "${row.high_risk_threshold}" must be a number above 0`);
     }
     if (!row.basis) problems.push(`${where}: basis is empty (say where the threshold comes from)`);
@@ -211,6 +248,39 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
     }
   }
 
+  // Guidelines and evidence library
+  const guidelines = new Set(tables.guidelines.map((row) => row.guideline));
+  for (const [i, row] of tables.guidelines.entries()) {
+    if (!row.guideline || !row.title || !row.version) problems.push(`guidelines.csv line ${i + 2}: guideline, title and version are required`);
+  }
+  const passageIds = new Set<string>();
+  const tagFields: [string, string, string[]][] = [
+    ["sources", "source", []],
+    ["settings", "setting", []],
+    ["organisms", "prior_mdr", ["none"]],
+  ];
+  for (const [i, row] of tables.evidence.entries()) {
+    const where = `evidence.csv ${row.passage_id || `line ${i + 2}`}`;
+    if (!row.passage_id) problems.push(`evidence.csv line ${i + 2}: passage_id is empty`);
+    if (passageIds.has(row.passage_id)) problems.push(`${where}: passage_id appears twice`);
+    passageIds.add(row.passage_id);
+    if (!guidelines.has(row.guideline)) problems.push(`${where}: guideline "${row.guideline}" is not in guidelines.csv`);
+    if (!row.location) problems.push(`${where}: location is empty`);
+    if (!/^\d+(-\d+)?$/.test(row.pdf_page)) problems.push(`${where}: pdf_page "${row.pdf_page}" should be a page or range like 36-37`);
+    if (row.format !== "prose" && row.format !== "table") problems.push(`${where}: format must be prose or table`);
+    if (row.format === "table" && row.text.split(" | ").length !== row.table_columns.split(" | ").length) {
+      problems.push(`${where}: number of cells in text does not match table_columns`);
+    }
+    if (!row.text) problems.push(`${where}: text is empty`);
+    if (!row.topics) problems.push(`${where}: topics is empty`);
+    for (const [column, field, excluded] of tagFields) {
+      for (const tag of splitList(row[column])) {
+        if (tag !== "any" && (!allowed(field, tag) || excluded.includes(tag))) problems.push(`${where}: unknown ${column} tag "${tag}"`);
+      }
+      if (splitList(row[column]).length === 0) problems.push(`${where}: ${column} is empty (use "any")`);
+    }
+  }
+
   // Antibiogram template
   for (const [i, row] of tables.antibiogram_template.entries()) {
     if (row.unit !== "ICU" && row.unit !== "ward") problems.push(`antibiogram_template.csv line ${i + 2}: unit must be ICU or ward`);
@@ -238,7 +308,7 @@ export function validateKnowledge(dir = KNOWLEDGE_DIR): string[] {
       const reaction = allergy.split(":")[1];
       if (!allowed("allergy_reaction", reaction)) problems.push(`${where}: allergy "${allergy}" should be drug:rash, drug:anaphylaxis or drug:other`);
     }
-    const numbers: [string, number, number][] = [["age", 18, 110], ["sofa", 0, 24], ["weight_kg", 20, 300], ["crcl_ml_min", 0, 250]];
+    const numbers: [string, number, number][] = [["age", 18, 110], ["weight_kg", 20, 300], ["crcl_ml_min", 0, 250]];
     for (const [column, min, max] of numbers) {
       if (row[column] && !(Number(row[column]) >= min && Number(row[column]) <= max)) {
         problems.push(`${where}: ${column} "${row[column]}" should be a number from ${min} to ${max}`);

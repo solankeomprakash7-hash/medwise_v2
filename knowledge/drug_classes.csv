@@ -1,0 +1,54 @@
+drug,class,beta_lactam,source
+amikacin,aminoglycoside,no,"IDSA 2026 Q3.2 p17: aminoglycosides (ie, amikacin, gentamicin, plazomicin, or tobramycin)"
+gentamicin,aminoglycoside,no,"IDSA 2026 Q3.2 p17: aminoglycosides (ie, amikacin, gentamicin, plazomicin, or tobramycin)"
+plazomicin,aminoglycoside,no,"IDSA 2026 Q3.2 p17: aminoglycosides (ie, amikacin, gentamicin, plazomicin, or tobramycin)"
+tobramycin,aminoglycoside,no,"IDSA 2026 Q3.2 p17: aminoglycosides (ie, amikacin, gentamicin, plazomicin, or tobramycin)"
+ciprofloxacin,fluoroquinolone,no,"IDSA 2026 p7: fluoroquinolones (eg, ciprofloxacin and levofloxacin)"
+levofloxacin,fluoroquinolone,no,"IDSA 2026 p7: fluoroquinolones (eg, ciprofloxacin and levofloxacin)"
+ertapenem,carbapenem,yes,"IDSA 2026 Q1.2 p7: carbapenems (ertapenem, meropenem, or imipenem)"
+meropenem,carbapenem,yes,"IDSA 2026 Q1.2 p7: carbapenems (ertapenem, meropenem, or imipenem)"
+imipenem-cilastatin,carbapenem,yes,"IDSA 2026 Q1.2 p7: carbapenems (ertapenem, meropenem, or imipenem)"
+imipenem-cilastatin-relebactam,carbapenem,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+meropenem-vaborbactam,carbapenem,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+piperacillin-tazobactam,penicillin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+ampicillin-sulbactam,penicillin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+ceftriaxone,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+cefotaxime,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+cefepime,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+cefepime-enmetazobactam,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+ceftazidime-avibactam,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+ceftolozane-tazobactam,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+cefiderocol,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+cefoperazone-sulbactam,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+aztreonam,monobactam,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+aztreonam-avibactam,monobactam,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+sulbactam-durlobactam,beta-lactamase inhibitor (sulbactam),yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+azithromycin,macrolide,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+doxycycline,tetracycline,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+minocycline,tetracycline,no,"IDSA 2026 p18: tetracycline derivatives (minocycline, tigecycline, eravacycline)"
+tigecycline,tetracycline,no,"IDSA 2026 p18: tetracycline derivatives (minocycline, tigecycline, eravacycline)"
+eravacycline,tetracycline,no,"IDSA 2026 p18: tetracycline derivatives (minocycline, tigecycline, eravacycline)"
+vancomycin,glycopeptide,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+teicoplanin,glycopeptide,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+linezolid,oxazolidinone,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+colistin,polymyxin,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+polymyxin b,polymyxin,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+fosfomycin,fosfomycin,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+trimethoprim-sulfamethoxazole,sulfonamide,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+amoxicillin,penicillin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+amoxicillin-clavulanate,penicillin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+ampicillin,penicillin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+penicillin,penicillin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+cloxacillin,penicillin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+cefixime,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+cefuroxime,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+cefpodoxime,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+cephalexin,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+ceftazidime,cephalosporin,yes,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+clarithromycin,macrolide,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+erythromycin,macrolide,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+ofloxacin,fluoroquinolone,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+moxifloxacin,fluoroquinolone,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+nitrofurantoin,nitrofuran,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+metronidazole,nitroimidazole,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm
+clindamycin,lincosamide,no,Standard pharmacological class; not stated in the supplied guidelines; panel to confirm

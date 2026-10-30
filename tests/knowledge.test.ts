@@ -48,7 +48,7 @@ describe("knowledge base checks catch mistakes", () => {
 
   it("misspelled source", () => {
     const problems = brokenCopy((dir) => append(dir, "coverage.csv", "pneumonia,community_acquired,sepsis,empty,"));
-    expect(problems).toContain('coverage.csv line 66: unknown source "pneumonia"');
+    expect(problems).toContain('coverage.csv line 50: unknown source "pneumonia"');
   });
 
   it("gap in the coverage checklist", () => {
@@ -80,9 +80,9 @@ describe("knowledge base checks catch mistakes", () => {
     expect(problems).toContain(`drugs.csv line ${nextLine("drugs.csv")}: "${FAKE}" has no entry in provenance.csv`);
   });
 
-  it("MDR weight left empty after sign-off", () => {
-    const problems = brokenCopy((dir) => writeFileSync(join(dir, "VERSION"), "v1.0\n"));
-    expect(problems).toContain("mdr_risk.csv line 2: weight is empty; every weight must be set before sign-off");
+  it("MDR weight that is not a number", () => {
+    const problems = brokenCopy((dir) => append(dir, "mdr_risk.csv", "admission_90d:yes,esbl,high,text,ref"));
+    expect(problems).toContain(`mdr_risk.csv line ${nextLine("mdr_risk.csv")}: weight "high" is not a number`);
   });
 
   it("MDR coverage naming an unknown organism and a drug with no dose row", () => {
@@ -106,9 +106,12 @@ describe("knowledge base checks catch mistakes", () => {
     expect(problems).toContain(`mdr_coverage.csv line ${nextLine("mdr_coverage.csv") + 1}: another row already covers "esbl;mrsa|any|any"`);
   });
 
-  it("MDR threshold left empty after sign-off", () => {
-    const problems = brokenCopy((dir) => writeFileSync(join(dir, "VERSION"), "v1.0\n"));
-    expect(problems).toContain("mdr_thresholds.csv line 2: high_risk_threshold is empty; it must be set before sign-off");
+  it("MDR threshold below zero", () => {
+    const problems = brokenCopy((dir) => {
+      const thresholds = join(dir, "mdr_thresholds.csv");
+      writeFileSync(thresholds, readFileSync(thresholds, "utf8").replace("esbl,,", "esbl,-1,"));
+    });
+    expect(problems).toContain('mdr_thresholds.csv line 2: high_risk_threshold "-1" must be a number above 0');
   });
 
   it("more than one regimen in first_choice", () => {
@@ -117,6 +120,50 @@ describe("knowledge base checks catch mistakes", () => {
       writeFileSync(regimens, readFileSync(regimens, "utf8").replace(",piperacillin-tazobactam,cefoperazone-sulbactam,", ",piperacillin-tazobactam; meropenem,cefoperazone-sulbactam,"));
     });
     expect(problems.some((p) => p.endsWith("first_choice must be one regimen (put others in alternative)"))).toBe(true);
+  });
+
+  it("evidence passage with a duplicate ID, unknown guideline and wrong tag", () => {
+    const problems = brokenCopy((dir) =>
+      append(dir, "evidence.csv", "ssc-16,who2030,p1,1,prose,,pneumonia,any,any,timing,Some text"));
+    expect(problems).toContain("evidence.csv ssc-16: passage_id appears twice");
+    expect(problems).toContain('evidence.csv ssc-16: guideline "who2030" is not in guidelines.csv');
+    expect(problems).toContain('evidence.csv ssc-16: unknown sources tag "pneumonia"');
+  });
+
+  it("evidence table passage with a missing cell", () => {
+    const problems = brokenCopy((dir) =>
+      append(dir, "evidence.csv", "ncdc-x,ncdc2025,p1,8,table,A | B | C,any,any,any,regimen,only | two"));
+    expect(problems).toContain("evidence.csv ncdc-x: number of cells in text does not match table_columns");
+  });
+
+  it("a prescribable drug with no class (allergies could not be checked)", () => {
+    const problems = brokenCopy((dir) => {
+      const classes = join(dir, "drug_classes.csv");
+      writeFileSync(classes, readFileSync(classes, "utf8").replace(/^meropenem,.*\n/m, ""));
+    });
+    expect(problems).toContain('drug_classes.csv: "meropenem" (in drugs.csv) has no class, so allergies to it cannot be checked');
+  });
+
+  it("a coverage value other than yes, limited or no, and a wrong AWaRe group", () => {
+    const problems = brokenCopy((dir) => {
+      const spectrum = join(dir, "drug_spectrum.csv");
+      writeFileSync(spectrum, readFileSync(spectrum, "utf8").replace(/^ceftriaxone,yes,yes,no,/m, "ceftriaxone,yes,yes,maybe,").replace(/^(vancomycin(?:,[a-z]+){8}),Watch,/m, "$1,Green,"));
+    });
+    expect(problems.some((p) => p.endsWith("pseudomonas must be yes, limited or no"))).toBe(true);
+    expect(problems.some((p) => p.endsWith("aware must be Access, Watch, Reserve or Not recommended"))).toBe(true);
+  });
+
+  it("AWaRe group left empty after sign-off", () => {
+    const problems = brokenCopy((dir) => writeFileSync(join(dir, "VERSION"), "v1.0\n"));
+    expect(problems.some((p) => p.endsWith("aware is empty; it must be set before sign-off"))).toBe(true);
+  });
+
+  it("a prescribable drug with no coverage row", () => {
+    const problems = brokenCopy((dir) => {
+      const spectrum = join(dir, "drug_spectrum.csv");
+      writeFileSync(spectrum, readFileSync(spectrum, "utf8").replace(/^linezolid,.*\n/m, ""));
+    });
+    expect(problems).toContain('drug_spectrum.csv: "linezolid" (in drugs.csv) has no coverage row');
   });
 
   it("wrong columns", () => {

@@ -1,34 +1,189 @@
 @import "tailwindcss";
 
 /*
- * Colour tokens from docs/DESIGN.md.
- * PLACEHOLDER VALUES: DESIGN.md does not yet give exact hex codes.
- * Replace these once the brand colours are decided. Red is for safety alerts only.
+ * Design tokens from docs/DESIGN.md (dark "Financial" style, DECISIONS 2026-10-29).
+ * Orange is for actions and selection, pale gold for doses and key numbers, red only for safety alerts.
+ * Buttons are solid fills: no gradients on controls.
  */
 :root {
-  --cream: #faf6ee;
-  --ink: #1a1a1a;
-  --gold: #8a6d1f;
-  --red: #a4161a;
-  --green: #2f6b3a;
-  --rule: #d9d1c1;
+  --dp-color-ground: #07090e;
+  --dp-color-ground-tint: #101522;
+  --dp-color-panel: #10141c;
+  --dp-color-accent: #ff951f;
+  --dp-color-value: #edcd8c;
+  --dp-color-ink: #f4f5f7;
+  --dp-color-ink-muted: #c9ced8;
+  --dp-color-line: #303139;
+  --dp-typography-body-face: "Financial Plex Sans", var(--font-plex-sans), sans-serif;
+  --dp-typography-data-face: "Financial Plex Mono", var(--font-plex-mono), monospace;
+  --dp-typography-body: 16px;
+  --dp-typography-supporting: 14px;
+  --dp-typography-metadata: 13px;
+  --dp-typography-body-leading: 1.6;
+  --dp-typography-reading-leading: 1.65;
+  --dp-spacing-cluster-gap: 24px;
+  --dp-spacing-compact-gap: 12px;
+  --dp-radius-panel: 5px;
+  --dp-radius-editorial: 4px;
+  --dp-radius-control: 40px;
+  --dp-border-hairline: 1px;
+  --dp-motion-interaction: 160ms;
+  --dp-motion-easing: ease;
+
+  /* Safety and status colours, tuned to read on the dark ground (DESIGN.md: red only for alerts). */
+  --alert: #ff6b78;
+  --done: #7fd6a2;
 }
 
 @theme inline {
-  --color-cream: var(--cream);
-  --color-ink: var(--ink);
-  --color-gold: var(--gold);
-  --color-red: var(--red);
-  --color-green: var(--green);
-  --color-rule: var(--rule);
-  --font-display: var(--font-playfair);
-  --font-serif: var(--font-garamond);
-  --font-mono: var(--font-dm-mono);
+  --color-ground: var(--dp-color-ground);
+  --color-tint: var(--dp-color-ground-tint);
+  --color-panel: var(--dp-color-panel);
+  --color-accent: var(--dp-color-accent);
+  --color-value: var(--dp-color-value);
+  --color-ink: var(--dp-color-ink);
+  --color-muted: var(--dp-color-ink-muted);
+  --color-line: var(--dp-color-line);
+  --color-alert: var(--alert);
+  --color-done: var(--done);
+  --font-sans: var(--dp-typography-body-face);
+  --font-mono: var(--dp-typography-data-face);
 }
 
 body {
-  background: var(--cream);
-  color: var(--ink);
-  font-family: var(--font-garamond), Georgia, serif;
-  font-size: 18px;
+  background: var(--dp-color-ground);
+  color: var(--dp-color-ink);
+  font-family: var(--dp-typography-body-face);
+  font-size: var(--dp-typography-body);
+  line-height: var(--dp-typography-body-leading);
+}
+
+:focus-visible {
+  outline: 2px solid var(--dp-color-accent);
+  outline-offset: 3px;
+}
+summary:focus-visible {
+  outline-offset: -3px;
+}
+
+@layer components {
+  /* Opaque content panel with a hairline edge. */
+  .fin-panel {
+    background: var(--dp-color-panel);
+    border: var(--dp-border-hairline) solid var(--dp-color-line);
+    border-radius: var(--dp-radius-panel);
+  }
+  /* Primary action: solid orange, dark text. */
+  .fin-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: var(--dp-radius-control);
+    background: var(--dp-color-accent);
+    color: var(--dp-color-ground);
+    font-weight: 600;
+    border: 1px solid var(--dp-color-accent);
+    transition:
+      background-color var(--dp-motion-interaction) var(--dp-motion-easing),
+      border-color var(--dp-motion-interaction) var(--dp-motion-easing);
+  }
+  .fin-button:hover:not(:disabled) {
+    background: #ffab52;
+    border-color: #ffab52;
+  }
+  /* Secondary action: dark fill, hairline outline, pale text. */
+  .fin-button-quiet {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: var(--dp-radius-control);
+    background: var(--dp-color-ground-tint);
+    color: var(--dp-color-ink);
+    font-weight: 600;
+    border: 1px solid var(--dp-color-line);
+    transition: border-color var(--dp-motion-interaction) var(--dp-motion-easing);
+  }
+  .fin-button-quiet:hover:not(:disabled) {
+    border-color: var(--dp-color-ink-muted);
+  }
+  /* A tappable answer: outlined pill; chosen = orange edge and dot. */
+  .fin-option {
+    border-radius: var(--dp-radius-control);
+    background: var(--dp-color-ground-tint);
+    border: 1px solid var(--dp-color-line);
+    color: var(--dp-color-ink);
+    transition:
+      border-color var(--dp-motion-interaction) var(--dp-motion-easing),
+      background-color var(--dp-motion-interaction) var(--dp-motion-easing);
+  }
+  .fin-option:hover {
+    border-color: var(--dp-color-ink-muted);
+  }
+  .fin-option:has(:checked) {
+    border-color: var(--dp-color-accent);
+    background: rgb(255 149 31 / 0.12);
+  }
+  .fin-option:has(:focus-visible) {
+    outline: 2px solid var(--dp-color-accent);
+    outline-offset: 3px;
+  }
+  /* Text box. */
+  .fin-input {
+    background: var(--dp-color-ground);
+    border: 1px solid var(--dp-color-line);
+    border-radius: var(--dp-radius-panel);
+    color: var(--dp-color-ink);
+    transition: border-color var(--dp-motion-interaction) var(--dp-motion-easing);
+  }
+  .fin-input:focus {
+    border-color: var(--dp-color-accent);
+  }
+  /* The framed object: thin offset outlines behind the main panel. Static. */
+  .fin-frame {
+    position: relative;
+    isolation: isolate;
+  }
+  .fin-frame::before,
+  .fin-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border: 1px solid var(--dp-color-line);
+    border-radius: var(--dp-radius-panel);
+    pointer-events: none;
+  }
+  .fin-frame::before {
+    transform: translate(10px, 10px);
+  }
+  .fin-frame::after {
+    transform: translate(20px, 20px);
+    opacity: 0.6;
+  }
+  @media (min-width: 800px) {
+    .fin-frame::before {
+      transform: translate(16px, 16px);
+    }
+    .fin-frame::after {
+      transform: translate(32px, 32px);
+    }
+  }
+  /* Warm light kept local: behind the framed object and under the closing actions only. */
+  .fin-glow {
+    background:
+      radial-gradient(60% 55% at 50% 100%, rgb(255 149 31 / 0.16), transparent 70%),
+      var(--dp-color-ground-tint);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
 }
