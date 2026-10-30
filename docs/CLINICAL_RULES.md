@@ -39,12 +39,14 @@ from the guideline table for this patient, both are shown and the difference is 
 | Basics | Age | years, 18–110 | Yes |
 | | Sex | male / female / other | Yes |
 | | Weight | kg | Yes |
+| | Height | cm, 120–230 (only used to adjust Cockcroft-Gault in obesity) | No |
 | Source | Suspected source(s) | lung, urinary, intra-abdominal, CNS, skin/soft tissue, bloodstream/unknown, catheter-related, bone/joint — **one or more**; one is marked the **main source** | Yes |
 | | Setting | community-acquired / healthcare-associated / hospital-acquired / ventilator-associated | Yes |
 | | Source control | not needed / needed, done / needed, not yet done | Yes |
 | Severity | Category | sepsis / septic shock | Yes |
 | | SOFA score | 0–24 | Yes |
-| Organs | Creatinine clearance or eGFR | mL/min; on dialysis yes/no (type) | Yes |
+| Organs | Kidney function | serum creatinine (mg/dL or µmol/L) → CrCl by Cockcroft-Gault, **or** CrCl / eGFR entered directly; the clinician can override the calculated value | Yes |
+| | Dialysis | no / yes → type (haemodialysis, peritoneal, CRRT) | Yes |
 | | Hepatic function | normal / mild / moderate / severe (Child-Pugh if cirrhotic) | Yes |
 | Exposures (90 days) | Antibiotics received | list of drugs + approx. days | Yes (can be "none") |
 | | Hospital admission | yes / no | Yes |
@@ -54,7 +56,31 @@ from the guideline table for this patient, both are shown and the difference is 
 | | Immunocompromise | neutropenia, transplant, steroids, chemo, HIV, other | Yes (can be "none") |
 | | Allergies | drug + reaction type (rash / anaphylaxis / other) | Yes (can be "none") |
 | Current | Current antibiotics | list | No |
-| | Pregnancy | not applicable / no / yes → **stop: out of scope** | Yes for females |
+| | Pregnancy | no / yes → **stop: out of scope**. Asked for every woman aged 18 or over (owner decision 2026-10-30) | Yes for females |
+
+### Kidney function from creatinine (owner decision 2026-10-30)
+- **Cockcroft-Gault:** CrCl (mL/min) = (140 − age) × weight ÷ (72 × serum creatinine in mg/dL), × 0.85 for women.
+  µmol/L is converted: mg/dL = µmol/L ÷ 88.4.
+- **Weight:** actual body weight. If height is given and actual weight is over 120% of ideal body weight
+  (Devine: men 50 kg, women 45.5 kg, + 0.91 kg per cm above 152.4 cm), adjusted body weight is used:
+  ideal + 0.4 × (actual − ideal). The screen shows the formula with the numbers and which weight was used.
+- **Sex "other":** no formula; the clinician enters CrCl / eGFR directly.
+- **Caution shown with the result of the calculation:** unreliable while creatinine is changing (for example AKI);
+  the clinician can then enter their own estimate instead.
+- Only the CrCl is sent for the recommendation (the input format for the recommendation is unchanged).
+
+### Values on the entry screen (owner decision 2026-10-30)
+| Field | Blocked (must be corrected) | Asked to confirm |
+| --- | --- | --- |
+| Age | over 110 (under 18 → out of scope) | 100–110 |
+| Weight | under 20 or over 300 kg | 20–25 kg, or over 200 kg |
+| SOFA | over 24 | |
+| CrCl / eGFR | over 250 mL/min | 200–250 mL/min |
+| Creatinine | outside 0.1–20 mg/dL (9–1768 µmol/L) | |
+| Height (optional) | outside 120–230 cm | |
+
+Out-of-scope message on the entry screen: "MedWise v1 does not cover this patient. Consult ID / microbiology."
+(neutropenia also: "Follow your hospital's febrile-neutropenia protocol").
 
 ## Knowledge-base tables (live in `/knowledge`, CSV, versioned)
 | Table | Columns |

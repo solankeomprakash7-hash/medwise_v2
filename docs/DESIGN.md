@@ -62,16 +62,35 @@ broad / MedWise) → how it works (4 connected steps; vertical on phones) → wh
 Wording comes from `PRODUCT.md`. No study figures, numbers or testimonials on this page.
 
 ### 1. Patient entry
-- **One scrolling page, no "Next" screens**, in five section cards: Patient → Infection → Kidney & liver →
-  Resistance risk → Host & allergies. Each card shows its number, then a green tick and "Complete" when done.
-- Sticky bottom bar: "n of 5 sections complete" with a small progress bar, and **Get recommendation**.
-  If anything is missing, the page scrolls to the first unfinished section and each unfinished section
-  lists what it still needs. The page itself is the review: there is no separate review step.
-- Tap buttons and chips instead of typing wherever possible; chosen answers get an orange edge and dot.
-- **Suspected source: one or more.** With two or more ticked, a "Main source" row appears (main marked on its chip).
+*Redesigned 2026-10-30 (DECISIONS.md): one page, for a phone or Android tablet at night, under 2 minutes.*
+- **One scrolling page, no Back/Next**, in six sections plus a review: Basics → Source & setting → Severity →
+  Organs → Exposures → Host → Review. Each section shows its number, then a green tick and "Complete".
+  On wide screens (tablet sideways, desktop) a section list stays on the left; tapping a name jumps to it.
+- **Review** (last section): everything on one panel, each section with an "Edit" link that jumps back to it.
+- Fixed bottom bar: "n of 6 sections complete" with a small progress bar, and **Get recommendation**. If
+  anything is missing, the page jumps to the first unfinished section and every unanswered field says
+  "Required: please answer" right under it (no popups).
+- Chips and pick-lists instead of typing; numbers open the number keypad; chosen answers get an orange edge
+  and dot. "None" chips for exposures, devices, comorbidities, immunocompromise and allergies, so "none" is a
+  confirmed answer, never a blank.
+- Shown only when relevant: dialysis type only when on dialysis; reaction only for an added allergy; pregnancy
+  for every woman aged 18 or over.
+- **Kidney function:** serum creatinine (mg/dL or µmol/L) with the Cockcroft-Gault result and its formula, and
+  "Use a different CrCl value"; or CrCl / eGFR typed directly (CLINICAL_RULES.md).
+- Drug names (recent antibiotics, allergies, antibiotics now): search as you type from the knowledge-base list;
+  "Other: keep …" keeps a name that is not listed. An allergy not in the list shows that MedWise cannot check
+  it and will advise discussing with ID / microbiology.
+- **Septic shock** shows a gold reminder: send cultures and give the first dose without delay, ideally within
+  1 hour (SSC 2026 Rec 16, NCDC/ICMR 2025). Not red: it is a reminder, not a safety stop.
+- Values: impossible ones must be corrected; unusual ones ask "Yes, this is correct" (CLINICAL_RULES.md table).
+- Out-of-scope stops (age < 18, pregnancy, neutropenia) appear in red directly under the answer.
+- "Do not enter patient identifiers." at the top; there are no fields where one could be typed.
+- Entries are kept only in this browser tab (survive a refresh), and cleared after the result is shown, on
+  "Clear form" or "New patient", and after 2 hours.
+- "Load test case" buttons (Case 1 and Case 2, placeholder values listed on screen) appear on preview,
+  staging and local copies only, never on the live site.
 - While the recommendation is worked out, a "Working it out" screen lists the real steps
   (patient checks → guideline passages → AI → safety checks → doses). It does not animate.
-- Out-of-scope stops (age < 18, pregnancy, neutropenia) appear in red directly under the answer.
 
 ### 2. Result (cards in this exact order)
 *Updated 2026-10-29 with ideas from the first prototype (DECISIONS.md).*

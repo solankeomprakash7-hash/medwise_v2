@@ -5,6 +5,11 @@
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-30 | Patient input redesigned on one page (owner chose one page over 7 steps): Basics, Source & setting, Severity, Organs, Exposures, Host, Review with Edit links; side section list on wide screens; required messages under each field; "None" chips; drug search with "Other" | Owner: enter a septic patient in under 2 minutes, without errors, on a phone or tablet at night |
+| 2026-10-30 | Serum creatinine → CrCl by Cockcroft-Gault (mg/dL or µmol/L; actual weight, adjusted weight if height given and over 120% of ideal; sex Other enters CrCl directly; formula shown; clinician can override; AKI caution) | Owner approved the suggested rule; CLINICAL_RULES.md updated |
+| 2026-10-30 | Pregnancy asked for every woman aged 18 or over (not only 18 to 50); impossible values blocked, unusual ones confirmed (table in CLINICAL_RULES.md); stop wording "MedWise v1 does not cover this patient. Consult ID / microbiology." | Owner approved the suggestions: no pregnant patient missed; no em dash |
+| 2026-10-30 | Entries kept in the browser tab only (sessionStorage), cleared after the result, on Clear form / New patient, and after 2 hours | Survives an accidental refresh; nothing left on a shared ward device |
+| 2026-10-30 | "Load test case" (Case 1, Case 2) on preview / staging only (VERCEL_ENV not production). Values the cases do not state are placeholders listed on screen; golden_tests.csv not changed | Testing without inventing clinical facts |
 | 2026-10-29 | New look: dark "Financial" style (navy-black, opaque panels with hairlines, orange actions, pale gold doses, IBM Plex Sans and Mono). Replaces the clay style | Owner request |
 | 2026-10-29 | Owner website rules: no gradient buttons, reviews, fake buttons or fake contacts, big hero text, emoji icons, em dashes, AI stock photos or copy, cursor or heavy scroll animation (DESIGN.md "Website rules"; a test blocks em dashes on screen). The disabled Accept / Modify / Override buttons were removed until login makes them work | Owner |
 | 2026-10-29 | No public launch until: custom domain, favicon (done), no "made with AI" tag, privacy policy page, terms and conditions page (ARCHITECTURE.md checklist) | Owner |

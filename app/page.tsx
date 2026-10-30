@@ -69,7 +69,7 @@ export default function Home() {
               Enter the patient. MedWise suggests one empiric regimen with dose, reasons and guideline evidence. You decide.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-              <Link href="/new" className="fin-button min-h-12 px-6 text-base">
+              <Link href="/new?new=1" className="fin-button min-h-12 px-6 text-base">
                 Find the right antibiotic <span aria-hidden>→</span>
               </Link>
               <a href="#problem" className="min-h-12 content-center text-base font-medium text-ink underline decoration-line underline-offset-4 hover:decoration-muted">
@@ -203,7 +203,7 @@ export default function Home() {
             Choosing an empiric antibiotic tonight?
           </h2>
           <p className="mx-auto mt-3 max-w-md text-lg text-muted">Let&apos;s find the right one for your patient, step by step.</p>
-          <Link href="/new" className="fin-button mt-8 min-h-12 px-7 text-base">
+          <Link href="/new?new=1" className="fin-button mt-8 min-h-12 px-7 text-base">
             Start with a new patient <span aria-hidden>→</span>
           </Link>
         </div>
@@ -218,7 +218,7 @@ export default function Home() {
                 <Link href="/" className="underline decoration-line underline-offset-4 hover:decoration-muted">Home</Link>
               </li>
               <li>
-                <Link href="/new" className="underline decoration-line underline-offset-4 hover:decoration-muted">New patient</Link>
+                <Link href="/new?new=1" className="underline decoration-line underline-offset-4 hover:decoration-muted">New patient</Link>
               </li>
             </ul>
           </div>

@@ -7,327 +7,456 @@ import type { Result } from "@/lib/recommend/recommend";
 import { getRecommendation } from "./actions";
 import ResultView from "./ResultView";
 import { Logo } from "../Sculpture";
+import {
+  EMPTY, LABELS, SECTIONS, TEST_CASES, checkForm, cockcroftGault, isDrugName, lettersOnly, pregnancyAsked, sectionDone, toPatient,
+} from "./form";
+import type { Form, Problems } from "./form";
 
-// Patient entry (docs/DESIGN.md, screen 1). Details live only in this page's memory: nothing is stored
-// in the browser, and there are no free-text fields where a name or ID could be typed.
+// Patient entry (docs/DESIGN.md, screen 1): one page in six sections plus a review, for a phone or tablet at
+// night. There are no fields where a name or ID could be typed. Details are kept only in this browser tab
+// (sessionStorage) so an accidental refresh loses nothing; they are cleared after the result is shown, when a
+// new patient is started, and after 2 hours.
 
 export interface Options {
   choices: Record<string, { value: string; label: string }[]>;
   drugNames: string[];
 }
 
-interface Form {
-  age: string;
-  sex: string;
-  weight_kg: string;
-  pregnancy: string;
-  source: string; // main source
-  extra_sources: string[];
-  setting: string;
-  source_control: string;
-  severity: string;
-  sofa: string;
-  crcl_ml_min: string;
-  dialysis: string;
-  hepatic: string;
-  antibioticsGiven: string; // "no" | "yes" | ""
-  antibiotics_90d: { drug: string; days: string }[];
-  admission_90d: string;
-  prior_mdr: string[];
-  devices: string[];
-  comorbidities: string[];
-  immunocompromise: string[];
-  allergiesKnown: string; // "no" | "yes" | ""
-  allergies: { drug: string; reaction: string }[];
-  current_antibiotics: string[];
+const DRAFT_KEY = "medwise:new-patient-draft";
+const DRAFT_MAX_AGE_MS = 2 * 60 * 60 * 1000;
+const REVIEW = { id: "review", title: "Review" };
+
+function readDraft(): Form | null {
+  try {
+    const raw = window.sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const draft = JSON.parse(raw) as { savedAt: number; form: Form };
+    if (Date.now() - draft.savedAt > DRAFT_MAX_AGE_MS) {
+      window.sessionStorage.removeItem(DRAFT_KEY);
+      return null;
+    }
+    return { ...EMPTY, ...draft.form };
+  } catch {
+    return null;
+  }
+}
+function writeDraft(form: Form) {
+  try {
+    window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ savedAt: Date.now(), form }));
+  } catch {
+    // Storage blocked (private mode): the form still works, it just is not kept on refresh.
+  }
+}
+function clearDraft() {
+  try {
+    window.sessionStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // nothing to clear
+  }
 }
 
-const EMPTY: Form = {
-  age: "", sex: "", weight_kg: "", pregnancy: "", source: "", extra_sources: [], setting: "", source_control: "", severity: "",
-  sofa: "", crcl_ml_min: "", dialysis: "", hepatic: "", antibioticsGiven: "", antibiotics_90d: [],
-  admission_90d: "", prior_mdr: [], devices: [], comorbidities: [], immunocompromise: [], allergiesKnown: "",
-  allergies: [], current_antibiotics: [],
+const scrollToId = (id: string) => {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.getElementById(id)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
 };
 
-// One scrolling page in five sections (DESIGN.md, screen 1): no "Next" screens to page through.
-const SECTIONS = [
-  { title: "Patient", hint: "Age, sex, weight" },
-  { title: "Infection", hint: "Source, setting, severity" },
-  { title: "Kidney & liver", hint: "For dose adjustment" },
-  { title: "Resistance risk", hint: "Recent antibiotics, admission, MDR, devices" },
-  { title: "Host & allergies", hint: "Comorbidities, immunity, allergies" },
-] as const;
-
-const LABELS: Record<string, string> = {
-  age: "Age (years)",
-  sex: "Sex",
-  weight_kg: "Weight (kg)",
-  pregnancy: "Pregnant?",
-  source: "Suspected source(s)",
-  setting: "Where was it acquired?",
-  source_control: "Source control",
-  severity: "Severity",
-  sofa: "SOFA score (0–24)",
-  crcl_ml_min: "Creatinine clearance or eGFR (mL/min)",
-  dialysis: "On dialysis?",
-  hepatic: "Liver function",
-  antibiotics_90d: "Antibiotics in the last 90 days",
-  admission_90d: "Hospital admission in the last 90 days",
-  prior_mdr: "Previous MDR organism",
-  devices: "Devices in place",
-  comorbidities: "Comorbidities",
-  immunocompromise: "Immunocompromise",
-  allergies: "Drug allergies",
-  current_antibiotics: "Antibiotics being given now (optional)",
-};
-
-const DRUG_NAME = /^[a-z][a-z \-/]{1,39}$/;
-const isDrugName = (s: string) => DRUG_NAME.test(s.trim().toLowerCase());
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
-const inRange = (s: string, min: number, max: number) => Number.isFinite(num(s)) && num(s) >= min && num(s) <= max;
-
-// What each section still needs, and any out-of-scope stop it triggers.
-function sectionProblems(step: number, f: Form): { missing: string[]; invalid: string[]; stop: string[] } {
-  const missing: string[] = [];
-  const invalid: string[] = [];
-  const stop: string[] = [];
-  const need = (field: keyof Form) => {
-    const v = f[field];
-    if (Array.isArray(v) ? v.length === 0 : v === "") missing.push(LABELS[field]);
-  };
-  if (step === 0) {
-    need("age");
-    need("sex");
-    need("weight_kg");
-    if (f.sex === "female") need("pregnancy");
-    if (f.age && !inRange(f.age, 0, 110)) invalid.push("Age must be a number up to 110.");
-    if (f.weight_kg && !inRange(f.weight_kg, 20, 300)) invalid.push("Weight must be 20 to 300 kg.");
-    if (inRange(f.age, 0, 17.99)) stop.push("Age under 18 is outside MedWise version 1.");
-    if (f.pregnancy === "yes") stop.push("Pregnancy is outside MedWise version 1.");
-  }
-  if (step === 1) {
-    (["source", "setting", "source_control", "severity", "sofa"] as const).forEach(need);
-    if (f.sofa && !inRange(f.sofa, 0, 24)) invalid.push("SOFA score must be 0 to 24.");
-  }
-  if (step === 2) {
-    (["crcl_ml_min", "dialysis", "hepatic"] as const).forEach(need);
-    if (f.crcl_ml_min && !inRange(f.crcl_ml_min, 0, 250)) invalid.push("Creatinine clearance must be 0 to 250 mL/min.");
-  }
-  if (step === 3) {
-    if (f.antibioticsGiven === "") missing.push(LABELS.antibiotics_90d);
-    if (f.antibioticsGiven === "yes") {
-      if (f.antibiotics_90d.length === 0) missing.push("Add at least one antibiotic, or choose No");
-      for (const a of f.antibiotics_90d) {
-        if (!isDrugName(a.drug)) invalid.push("Antibiotic names may contain letters only.");
-        if (!inRange(a.days, 0, 90)) invalid.push("Days must be 0 to 90.");
-      }
-    }
-    (["admission_90d", "prior_mdr", "devices"] as const).forEach(need);
-  }
-  if (step === 4) {
-    (["comorbidities", "immunocompromise"] as const).forEach(need);
-    if (f.allergiesKnown === "") missing.push(LABELS.allergies);
-    if (f.allergiesKnown === "yes") {
-      if (f.allergies.length === 0) missing.push("Add at least one allergy, or choose No");
-      for (const a of f.allergies) {
-        if (!isDrugName(a.drug)) invalid.push("Allergy names may contain letters only.");
-        if (!a.reaction) missing.push(`Reaction to ${a.drug || "the allergy"}`);
-      }
-    }
-    for (const d of f.current_antibiotics) if (!isDrugName(d)) invalid.push("Current antibiotic names may contain letters only.");
-    if (f.immunocompromise.includes("neutropenia")) {
-      stop.push("Neutropenic sepsis is outside MedWise version 1. Follow your hospital's febrile-neutropenia protocol.");
-    }
-  }
-  return { missing, invalid: [...new Set(invalid)], stop };
-}
-
-// The patient as the server expects it (lib/recommend/input.ts).
-function toPatient(f: Form) {
-  const clean = (s: string) => s.trim().toLowerCase();
-  return {
-    age: num(f.age),
-    sex: f.sex,
-    weight_kg: num(f.weight_kg),
-    pregnancy: f.sex === "female" ? f.pregnancy : "not_applicable",
-    source: f.source,
-    extra_sources: f.extra_sources,
-    setting: f.setting,
-    source_control: f.source_control,
-    severity: f.severity,
-    sofa: num(f.sofa),
-    crcl_ml_min: num(f.crcl_ml_min),
-    dialysis: f.dialysis,
-    hepatic: f.hepatic,
-    antibiotics_90d: f.antibioticsGiven === "yes" ? f.antibiotics_90d.map((a) => ({ drug: clean(a.drug), days: num(a.days) })) : [],
-    admission_90d: f.admission_90d,
-    prior_mdr: f.prior_mdr,
-    devices: f.devices,
-    comorbidities: f.comorbidities,
-    immunocompromise: f.immunocompromise,
-    allergies: f.allergiesKnown === "yes" ? f.allergies.map((a) => ({ drug: clean(a.drug), reaction: a.reaction })) : [],
-    current_antibiotics: f.current_antibiotics.map(clean).filter(Boolean),
-  };
-}
-
-export default function EntryForm({ options }: { options: Options }) {
+export default function EntryForm({ options, showTestCases }: { options: Options; showTestCases: boolean }) {
   const [form, setForm] = useState<Form>(EMPTY);
+  const [ready, setReady] = useState(false); // draft read (or not) after the page loads
+  const [restored, setRestored] = useState(false);
+  const [loadedCase, setLoadedCase] = useState<(typeof TEST_CASES)[number] | null>(null);
   const [showProblems, setShowProblems] = useState(false);
-  const [typingAge, setTypingAge] = useState(false);
+  const [focused, setFocused] = useState("");
   const [result, setResult] = useState<Omit<Result, "audit"> | null>(null);
   const [pending, startTransition] = useTransition();
-  const listId = useId();
-  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
+  const uid = useId();
+
+  // Restore a draft from this tab, unless "New patient" was tapped (?new=1), which starts empty.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("new")) {
+      clearDraft();
+      url.searchParams.delete("new");
+      window.history.replaceState(null, "", url.pathname + url.search);
+    } else {
+      const draft = readDraft();
+      if (draft) {
+        setForm(draft); // eslint-disable-line react-hooks/set-state-in-effect -- browser-only value, read once after load
+        setRestored(true);
+      }
+    }
+    setReady(true);
+  }, []);
+  useEffect(() => {
+    if (ready && !result) writeDraft(form);
+  }, [form, ready, result]);
 
   const set = <K extends keyof Form>(field: K, value: Form[K]) => {
     setForm((f) => ({ ...f, [field]: value }));
     setResult(null);
   };
-  const problems = SECTIONS.map((_, i) => sectionProblems(i, form));
-  const isDone = (i: number) => problems[i].missing.length + problems[i].invalid.length + problems[i].stop.length === 0;
-  const doneCount = SECTIONS.filter((_, i) => isDone(i)).length;
+  const p = checkForm(form);
+  const done = SECTIONS.map((_, i) => sectionDone(p, i));
+  const doneCount = done.filter(Boolean).length;
+  const label = (field: string, value: string) => options.choices[field]?.find((c) => c.value === value)?.label ?? value;
 
   const submit = () => {
-    const first = SECTIONS.findIndex((_, i) => !isDone(i));
+    const first = SECTIONS.findIndex((_, i) => !done[i]);
     if (first >= 0) {
       setShowProblems(true);
-      sectionRefs.current[first]?.scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollToId(`${uid}-${SECTIONS[first].id}`);
       return;
     }
     startTransition(async () => {
-      setResult(await getRecommendation(toPatient(form)));
+      const answer = await getRecommendation(toPatient(form));
+      clearDraft(); // the recommendation is shown: nothing stays stored on this device
+      setResult(answer);
       window.scrollTo({ top: 0 });
     });
   };
   const startAgain = () => {
+    clearDraft();
     setForm(EMPTY);
     setResult(null);
     setShowProblems(false);
+    setRestored(false);
+    setLoadedCase(null);
     window.scrollTo({ top: 0 });
   };
+  const loadCase = (c: (typeof TEST_CASES)[number]) => {
+    setForm(c.form);
+    setResult(null);
+    setShowProblems(false);
+    setRestored(false);
+    setLoadedCase(c);
+  };
 
-  const choice = (field: keyof Form & string, columns?: 2 | 3) => (
+  // Messages shown next to a field: out of scope (red), must correct, please confirm, or required.
+  const note = (field: string) => (
+    <FieldNote
+      problems={p}
+      field={field}
+      showMissing={showProblems}
+      hidden={focused === field}
+      onConfirm={(value) => set("confirmed", { ...form.confirmed, [field]: value })}
+      onStartAgain={startAgain}
+    />
+  );
+  const choice = (field: keyof Form & string, opts?: { columns?: 2 | 3; exclude?: string[]; legend?: string }) => (
     <Choice
-      legend={LABELS[field]}
-      options={options.choices[field] ?? []}
+      legend={opts?.legend ?? LABELS[field]}
+      options={(options.choices[field] ?? []).filter((o) => !opts?.exclude?.includes(o.value))}
       value={form[field] as string}
       onChange={(v) => set(field, v as Form[typeof field])}
-      columns={columns}
+      columns={opts?.columns}
     />
   );
   const multi = (field: "prior_mdr" | "devices" | "comorbidities" | "immunocompromise") => (
     <MultiChoice legend={LABELS[field]} options={options.choices[field] ?? []} value={form[field]} onChange={(v) => set(field, v)} />
   );
-  const yesNo = [
-    { value: "no", label: "No / none" },
-    { value: "yes", label: "Yes" },
+  const noneOrYes = (none: string, yes: string) => [
+    { value: "no", label: none },
+    { value: "yes", label: yes },
   ];
+  const numberField = (field: "age" | "weight_kg" | "height_cm" | "sofa" | "crcl_ml_min" | "creatinine", decimal = false, unit?: string) => (
+    <NumberField
+      label={LABELS[field]}
+      unit={unit}
+      value={form[field]}
+      onChange={(v) => set(field, v)}
+      decimal={decimal}
+      onFocus={() => setFocused(field === "crcl_ml_min" || field === "creatinine" ? "renal" : field)}
+      onBlur={() => setFocused("")}
+    />
+  );
 
-  const fields: ReactNode[] = [
-    <>
-      <div className="grid grid-cols-2 gap-4">
-        <NumberField
-          label={LABELS.age}
-          value={form.age}
-          onChange={(v) => set("age", v)}
-          onFocus={() => setTypingAge(true)}
-          onBlur={() => setTypingAge(false)}
-        />
-        <NumberField label={LABELS.weight_kg} value={form.weight_kg} onChange={(v) => set("weight_kg", v)} decimal />
-      </div>
-      {/* Wait until typing is finished: "6" on the way to "62" must not stop the form. */}
-      {!typingAge && inRange(form.age, 0, 17.99) && <Stop message="Age under 18 is outside MedWise version 1." onStartAgain={startAgain} />}
-      {choice("sex", 3)}
-      {form.sex === "female" && choice("pregnancy", 3)}
-      {form.pregnancy === "yes" && <Stop message="Pregnancy is outside MedWise version 1." onStartAgain={startAgain} />}
-    </>,
-    <>
-      <SourcePicker
-        options={options.choices.source ?? []}
-        main={form.source}
-        extra={form.extra_sources}
-        onChange={(main, extra) => {
-          setForm((f) => ({ ...f, source: main, extra_sources: extra }));
-          setResult(null);
-        }}
-      />
-      {choice("setting")}
-      {choice("source_control")}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-[1fr_auto]">
-        {choice("severity")}
-        <NumberField label={LABELS.sofa} value={form.sofa} onChange={(v) => set("sofa", v)} />
-      </div>
-    </>,
-    <>
-      <NumberField label={LABELS.crcl_ml_min} value={form.crcl_ml_min} onChange={(v) => set("crcl_ml_min", v)} decimal />
-      {choice("dialysis")}
-      {choice("hepatic")}
-    </>,
-    <>
-      <Choice legend={LABELS.antibiotics_90d} options={yesNo} value={form.antibioticsGiven} onChange={(v) => set("antibioticsGiven", v)} />
-      {form.antibioticsGiven === "yes" && (
-        <DrugRows
-          rows={form.antibiotics_90d.map((a) => ({ drug: a.drug, extra: a.days }))}
-          onChange={(rows) => set("antibiotics_90d", rows.map((r) => ({ drug: r.drug, days: r.extra })))}
-          listId={listId}
-          what="antibiotic"
-          extra={{ kind: "days" }}
-        />
-      )}
-      {choice("admission_90d")}
-      {multi("prior_mdr")}
-      {multi("devices")}
-    </>,
-    <>
-      {multi("comorbidities")}
-      {multi("immunocompromise")}
-      {form.immunocompromise.includes("neutropenia") && (
-        <Stop
-          message="Neutropenic sepsis is outside MedWise version 1. Follow your hospital's febrile-neutropenia protocol."
-          onStartAgain={startAgain}
-        />
-      )}
-      <Choice legend={LABELS.allergies} options={yesNo} value={form.allergiesKnown} onChange={(v) => set("allergiesKnown", v)} />
-      {form.allergiesKnown === "yes" && (
-        <DrugRows
-          rows={form.allergies.map((a) => ({ drug: a.drug, extra: a.reaction }))}
-          onChange={(rows) => set("allergies", rows.map((r) => ({ drug: r.drug, reaction: r.extra })))}
-          listId={listId}
-          what="allergy (drug or class)"
-          extra={{ kind: "reaction", options: options.choices.allergy_reaction ?? [] }}
-        />
-      )}
-      <DrugRows
-        legend={LABELS.current_antibiotics}
-        rows={form.current_antibiotics.map((d) => ({ drug: d, extra: "" }))}
-        onChange={(rows) => set("current_antibiotics", rows.map((r) => r.drug))}
-        listId={listId}
-        what="antibiotic"
-      />
-    </>,
-  ];
+  const cg = form.renalMode === "creatinine" ? cockcroftGault(form) : null;
+  const drugNames = options.drugNames.filter(isDrugName);
+
+  const content: Record<string, ReactNode> = {
+    basics: (
+      <>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            {numberField("age")}
+            {note("age")}
+          </div>
+          <div>
+            {numberField("weight_kg", true)}
+            {note("weight_kg")}
+          </div>
+        </div>
+        <div>
+          {choice("sex", { columns: 3 })}
+          {note("sex")}
+        </div>
+        {pregnancyAsked(form) && (
+          <div>
+            {choice("pregnancy", { exclude: ["not_applicable"], legend: "Pregnant? (asked for every woman aged 18 or over)" })}
+            {note("pregnancy")}
+          </div>
+        )}
+        <div>
+          {numberField("height_cm")}
+          <p className="mt-1.5 text-[14px] text-muted">Only used to adjust the creatinine clearance calculation for obesity.</p>
+          {note("height_cm")}
+        </div>
+      </>
+    ),
+    source: (
+      <>
+        <div>
+          <SourcePicker
+            options={options.choices.source ?? []}
+            main={form.source}
+            extra={form.extra_sources}
+            onChange={(main, extra) => {
+              setForm((f) => ({ ...f, source: main, extra_sources: extra }));
+              setResult(null);
+            }}
+          />
+          {note("source")}
+        </div>
+        <div>
+          {choice("setting")}
+          {note("setting")}
+        </div>
+        <div>
+          {choice("source_control")}
+          {note("source_control")}
+        </div>
+      </>
+    ),
+    severity: (
+      <>
+        <div>
+          {choice("severity")}
+          {note("severity")}
+          {form.severity === "septic_shock" && (
+            <Notice title="Septic shock: do not delay treatment">
+              Send cultures and give the first antibiotic dose without delay, ideally within 1 hour of recognition. Do not wait
+              for this recommendation.
+              <span className="mt-1 block font-mono text-[13px] text-muted">SSC 2026 Rec 16 · NCDC/ICMR 2025</span>
+            </Notice>
+          )}
+        </div>
+        <div>
+          {numberField("sofa")}
+          {note("sofa")}
+        </div>
+      </>
+    ),
+    organs: (
+      <>
+        <div>
+          <Choice
+            legend={LABELS.renal}
+            options={[
+              { value: "creatinine", label: "Serum creatinine" },
+              { value: "crcl", label: "CrCl or eGFR known" },
+            ]}
+            value={form.renalMode}
+            onChange={(v) => set("renalMode", v as Form["renalMode"])}
+          />
+          {form.renalMode === "creatinine" && (
+            <div className="mt-4 flex flex-col gap-4">
+              <div className="flex flex-wrap items-end gap-4">
+                {numberField("creatinine", true)}
+                <Choice
+                  legend="Unit"
+                  compact
+                  options={[
+                    { value: "mg_dl", label: "mg/dL" },
+                    { value: "umol_l", label: "µmol/L" },
+                  ]}
+                  value={form.creatinineUnit}
+                  onChange={(v) => set("creatinineUnit", v as Form["creatinineUnit"])}
+                />
+              </div>
+              {form.sex !== "other" && !form.crclOverride && (
+                <div className="rounded-[5px] border border-line bg-tint p-4">
+                  {cg ? (
+                    <>
+                      <p className="font-mono text-[13px] uppercase tracking-[0.12em] text-muted">Calculated (Cockcroft-Gault)</p>
+                      <p className="mt-1 font-mono text-2xl text-value">{cg.crcl} mL/min</p>
+                      <p className="mt-1 font-mono text-[14px] text-muted">{cg.formula}</p>
+                      <p className="mt-2 text-[14px] text-muted">
+                        {cg.weightKind === "adjusted"
+                          ? "Adjusted body weight used: weight is over 120% of ideal weight for the height given."
+                          : "Actual body weight used. Add height in Basics to adjust for obesity."}{" "}
+                        Unreliable while creatinine is changing (for example AKI): then enter your own estimate.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-[15px] text-muted">Enter age, sex and weight in Basics and the creatinine here to calculate CrCl.</p>
+                  )}
+                </div>
+              )}
+              {form.sex !== "other" &&
+                (form.crclOverride ? (
+                  <div>
+                    {numberField("crcl_ml_min", true)}
+                    <button type="button" onClick={() => set("crclOverride", false)} className="mt-2 min-h-11 text-[15px] font-medium underline decoration-line underline-offset-4">
+                      Use the calculated value instead
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => set("crclOverride", true)} className="fin-button-quiet min-h-11 self-start px-5 text-[15px]">
+                    Use a different CrCl value
+                  </button>
+                ))}
+            </div>
+          )}
+          {form.renalMode === "crcl" && <div className="mt-4">{numberField("crcl_ml_min", true)}</div>}
+          {note("renal")}
+        </div>
+        <div>
+          <Choice
+            legend={LABELS.dialysis}
+            options={noneOrYes("No", "Yes")}
+            value={form.onDialysis}
+            onChange={(v) => {
+              setForm((f) => ({ ...f, onDialysis: v as Form["onDialysis"], dialysisType: v === "no" ? "" : f.dialysisType }));
+              setResult(null);
+            }}
+          />
+          {form.onDialysis === "yes" && (
+            <div className="mt-4">
+              <Choice
+                legend={LABELS.dialysisType}
+                options={(options.choices.dialysis ?? []).filter((o) => o.value !== "no")}
+                value={form.dialysisType}
+                onChange={(v) => set("dialysisType", v)}
+              />
+            </div>
+          )}
+          {note("dialysis")}
+        </div>
+        <div>
+          {choice("hepatic")}
+          {note("hepatic")}
+        </div>
+      </>
+    ),
+    exposures: (
+      <>
+        <div>
+          <Choice legend={LABELS.antibiotics_90d} options={noneOrYes("None", "Yes")} value={form.antibioticsGiven} onChange={(v) => set("antibioticsGiven", v as Form["antibioticsGiven"])} />
+          {form.antibioticsGiven === "yes" && (
+            <DrugRows
+              rows={form.antibiotics_90d.map((a) => ({ drug: a.drug, extra: a.days }))}
+              onChange={(rows) => set("antibiotics_90d", rows.map((r) => ({ drug: r.drug, days: r.extra })))}
+              drugNames={drugNames}
+              what="antibiotic"
+              extra={{ kind: "days" }}
+            />
+          )}
+          {note("antibiotics_90d")}
+        </div>
+        <div>
+          {choice("admission_90d")}
+          {note("admission_90d")}
+        </div>
+        <div>
+          {multi("prior_mdr")}
+          {note("prior_mdr")}
+        </div>
+        <div>
+          {multi("devices")}
+          {note("devices")}
+        </div>
+        <div>
+          <DrugRows
+            legend={LABELS.current_antibiotics}
+            rows={form.current_antibiotics.map((d) => ({ drug: d, extra: "" }))}
+            onChange={(rows) => set("current_antibiotics", rows.map((r) => r.drug))}
+            drugNames={drugNames}
+            what="antibiotic"
+          />
+          {note("current_antibiotics")}
+        </div>
+      </>
+    ),
+    host: (
+      <>
+        <div>
+          {multi("comorbidities")}
+          {note("comorbidities")}
+        </div>
+        <div>
+          {multi("immunocompromise")}
+          {note("immunocompromise")}
+        </div>
+        <div>
+          <Choice legend={LABELS.allergies} options={noneOrYes("None", "Yes")} value={form.allergiesKnown} onChange={(v) => set("allergiesKnown", v as Form["allergiesKnown"])} />
+          {form.allergiesKnown === "yes" && (
+            <DrugRows
+              rows={form.allergies.map((a) => ({ drug: a.drug, extra: a.reaction }))}
+              onChange={(rows) => set("allergies", rows.map((r) => ({ drug: r.drug, reaction: r.extra })))}
+              drugNames={drugNames}
+              what="allergy (drug or class)"
+              extra={{ kind: "reaction", options: options.choices.allergy_reaction ?? [] }}
+              otherWarning="Not in MedWise's drug list, so this allergy cannot be checked: MedWise will advise discussing with ID / microbiology."
+            />
+          )}
+          {note("allergies")}
+        </div>
+      </>
+    ),
+  };
+
+  const steps = [...SECTIONS.map((s, i) => ({ id: s.id, title: s.title, done: done[i] })), { ...REVIEW, done: doneCount === SECTIONS.length }];
 
   return (
     <div className="flex w-full flex-1 flex-col">
       <header className="border-b border-line bg-tint">
-        <div className="mx-auto w-full max-w-3xl px-5 py-5 sm:px-6">
-          <div>
-            <Link href="/" className="flex w-fit items-center gap-3 rounded-[5px]">
-              <Logo className="size-9" />
+        <div className="mx-auto w-full max-w-5xl px-5 py-5 sm:px-6">
+          <Link href="/" className="flex w-fit items-center gap-3 rounded-[5px]">
+            <Logo className="size-9" />
+            <div>
+              <p className="text-lg font-semibold leading-none">MedWise</p>
+              <p className="mt-1 font-mono text-[13px] uppercase tracking-[0.12em] text-muted">Empiric antibiotics · adult sepsis</p>
+            </div>
+          </Link>
+          {!result && (
+            <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-lg font-semibold leading-none">MedWise</p>
-                <p className="mt-1 font-mono text-[13px] uppercase tracking-[0.12em] text-muted">Empiric antibiotics · adult sepsis</p>
-              </div>
-            </Link>
-            {!result && (
-              <>
-                <h1 className="mt-7 text-[clamp(28px,4vw,36px)] font-medium leading-tight tracking-[-0.02em]">New patient</h1>
-                <p className="mt-2 max-w-lg text-base leading-[1.65] text-muted">
-                  Fill in the five sections on this page. No names, hospital numbers or dates of birth: none are needed.
+                <h1 className="text-[clamp(28px,4vw,36px)] font-medium leading-tight tracking-[-0.02em]">New patient</h1>
+                <p className="mt-2 max-w-xl text-base leading-[1.6] text-muted">
+                  <span className="font-medium text-ink">Do not enter patient identifiers.</span> No names, hospital numbers,
+                  phone numbers, addresses or dates of birth: MedWise does not need them.
                 </p>
-              </>
-            )}
-          </div>
+              </div>
+              <button type="button" onClick={startAgain} className="fin-button-quiet min-h-11 px-5 text-[15px]">
+                Clear form
+              </button>
+            </div>
+          )}
+          {!result && showTestCases && (
+            <div className="mt-5 rounded-[5px] border border-dashed border-line p-4">
+              <p className="font-mono text-[13px] uppercase tracking-[0.12em] text-muted">Testing only · not shown on the live site</p>
+              <div className="mt-3 flex flex-wrap gap-3">
+                {TEST_CASES.map((c) => (
+                  <button key={c.id} type="button" onClick={() => loadCase(c)} className="fin-button-quiet min-h-11 px-4 text-[15px]">
+                    Load test case: {c.title}
+                  </button>
+                ))}
+              </div>
+              {loadedCase && (
+                <p role="status" className="mt-3 text-[14px] text-muted">
+                  Loaded {loadedCase.title}. Placeholder values not stated in the case: {loadedCase.placeholders}.
+                </p>
+              )}
+            </div>
+          )}
+          {!result && restored && (
+            <p role="status" className="mt-4 text-[14px] text-muted">
+              Restored the details entered earlier in this browser tab.{" "}
+              <button type="button" onClick={startAgain} className="font-medium text-ink underline decoration-line underline-offset-4">
+                Start empty instead
+              </button>
+            </p>
+          )}
         </div>
       </header>
 
@@ -336,57 +465,48 @@ export default function EntryForm({ options }: { options: Options }) {
           <ResultView result={result} onEdit={() => setResult(null)} onStartAgain={startAgain} />
         </main>
       )}
-      <main className={`mx-auto w-full max-w-3xl flex-1 px-5 pb-36 pt-6 sm:px-6 ${result ? "hidden" : ""}`}>
-        <div className="flex flex-col gap-6">
-          {SECTIONS.map((section, i) => (
-            <section
-              key={section.title}
-              ref={(el) => {
-                sectionRefs.current[i] = el;
-              }}
-              aria-labelledby={`${listId}-s${i}`}
-              className="fin-panel scroll-mt-4 px-5 py-6 sm:px-7"
-            >
-              <div className="flex items-center gap-3 border-b border-line pb-4">
-                <span
-                  aria-hidden
-                  className={`flex size-10 shrink-0 items-center justify-center rounded-full border font-mono text-[15px] ${
-                    isDone(i) ? "border-done text-done" : "border-line text-value"
-                  }`}
+
+      <div className={`mx-auto w-full max-w-5xl flex-1 px-5 pb-36 pt-6 sm:px-6 lg:grid lg:grid-cols-[210px_1fr] lg:gap-10 ${result ? "hidden" : ""}`}>
+        {/* On wide screens (tablet sideways, desktop) the section list stays on the left. */}
+        <nav aria-label="Sections" className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
+          <ol className="flex flex-col border-l border-line">
+            {steps.map((s, i) => (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  onClick={() => scrollToId(`${uid}-${s.id}`)}
+                  className="-ml-px flex min-h-11 w-full items-center gap-3 border-l border-transparent py-1.5 pl-4 text-left text-[15px] hover:border-muted"
                 >
-                  {isDone(i) ? "✓" : String(i + 1).padStart(2, "0")}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <h2 id={`${listId}-s${i}`} className="text-lg font-medium leading-tight">
-                    {section.title}
-                  </h2>
-                  <p className="text-[14px] text-muted">{section.hint}</p>
-                </div>
-                <span className={`font-mono text-[13px] ${isDone(i) ? "text-done" : "text-muted"}`}>
-                  {isDone(i) ? "Complete" : problems[i].missing.length ? `${problems[i].missing.length} to answer` : "Check"}
-                </span>
-              </div>
-              {showProblems && problems[i].stop.length === 0 && (problems[i].missing.length > 0 || problems[i].invalid.length > 0) && (
-                <Alert tone="info" title="Still to complete here">
-                  {problems[i].missing.map((m) => (
-                    <p key={m}>Please answer: {m}</p>
-                  ))}
-                  {problems[i].invalid.map((m) => (
-                    <p key={m}>{m}</p>
-                  ))}
-                </Alert>
-              )}
-              <div className="mt-6 flex flex-col gap-6">{fields[i]}</div>
+                  <span className={`font-mono text-[13px] ${s.done ? "text-done" : "text-value"}`}>{s.done ? "✓" : String(i + 1).padStart(2, "0")}</span>
+                  {s.title}
+                </button>
+              </li>
+            ))}
+          </ol>
+        </nav>
+
+        <main className="flex min-w-0 flex-col gap-6">
+          {SECTIONS.map((section, i) => (
+            <section key={section.id} id={`${uid}-${section.id}`} aria-labelledby={`${uid}-${section.id}-h`} className="fin-panel scroll-mt-4 px-5 py-6 sm:px-7">
+              <SectionHeading id={`${uid}-${section.id}-h`} index={i} title={section.title} hint={section.hint} done={done[i]} problems={p} fields={section.fields} />
+              <div className="mt-6 flex flex-col gap-7">{content[section.id]}</div>
             </section>
           ))}
-        </div>
 
-        <datalist id={listId}>
-          {options.drugNames.map((d) => (
-            <option key={d} value={d} />
-          ))}
-        </datalist>
-      </main>
+          <section id={`${uid}-review`} aria-labelledby={`${uid}-review-h`} className="fin-panel scroll-mt-4 px-5 py-6 sm:px-7">
+            <div className="flex items-center gap-3 border-b border-line pb-4">
+              <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full border border-line font-mono text-[15px] text-value">
+                07
+              </span>
+              <div>
+                <h2 id={`${uid}-review-h`} className="text-lg font-medium leading-tight">Review</h2>
+                <p className="text-[14px] text-muted">Check everything, then get the recommendation</p>
+              </div>
+            </div>
+            <Review form={form} problems={p} label={label} onEdit={(id) => scrollToId(`${uid}-${id}`)} />
+          </section>
+        </main>
+      </div>
 
       {result?.status === "recommendation" && (
         <aside aria-label="Decision" className="mx-auto mb-8 w-full max-w-3xl px-5 sm:px-6">
@@ -399,28 +519,93 @@ export default function EntryForm({ options }: { options: Options }) {
       )}
       {pending && <Thinking />}
       <nav className={`fixed inset-x-0 bottom-0 z-40 border-t border-line bg-tint ${result ? "hidden" : ""}`} aria-label="Progress">
-        <div className="mx-auto flex max-w-3xl items-center gap-4 px-5 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-5xl items-center gap-4 px-5 py-3 sm:px-6">
           <div className="min-w-0 flex-1">
-            <p className="text-[14px] leading-tight text-muted">
+            <p className="text-[15px] leading-tight text-muted">
               <span className="font-mono text-value">{doneCount}</span> of <span className="font-mono text-value">{SECTIONS.length}</span> sections
               complete
             </p>
             <ol className="mt-2 flex gap-1" aria-hidden>
               {SECTIONS.map((s, i) => (
-                <li key={s.title} className={`h-1 flex-1 rounded-full ${isDone(i) ? "bg-done" : "bg-line"}`} />
+                <li key={s.id} className={`h-1 flex-1 rounded-full ${done[i] ? "bg-done" : "bg-line"}`} />
               ))}
             </ol>
           </div>
-          <button
-            type="button"
-            onClick={submit}
-            disabled={pending}
-            className="fin-button min-h-12 shrink-0 px-5 text-base disabled:opacity-70 sm:px-6"
-          >
+          <button type="button" onClick={submit} disabled={pending} className="fin-button min-h-12 shrink-0 px-5 text-base disabled:opacity-70 sm:px-6">
             {pending ? "Working…" : "Get recommendation"}
           </button>
         </div>
       </nav>
+    </div>
+  );
+}
+
+function SectionHeading(props: { id: string; index: number; title: string; hint: string; done: boolean; problems: Problems; fields: readonly string[] }) {
+  const missing = props.fields.filter((f) => props.problems.missing.has(f)).length;
+  const attention = props.fields.some((f) => props.problems.invalid.has(f) || props.problems.unusual.has(f) || props.problems.stop.has(f));
+  return (
+    <div className="flex items-center gap-3 border-b border-line pb-4">
+      <span
+        aria-hidden
+        className={`flex size-10 shrink-0 items-center justify-center rounded-full border font-mono text-[15px] ${props.done ? "border-done text-done" : "border-line text-value"}`}
+      >
+        {props.done ? "✓" : String(props.index + 1).padStart(2, "0")}
+      </span>
+      <div className="min-w-0 flex-1">
+        <h2 id={props.id} className="text-lg font-medium leading-tight">
+          {props.title}
+        </h2>
+        <p className="text-[14px] text-muted">{props.hint}</p>
+      </div>
+      <span className={`font-mono text-[13px] ${props.done ? "text-done" : "text-muted"}`}>
+        {props.done ? "Complete" : missing ? `${missing} to answer` : attention ? "Check" : ""}
+      </span>
+    </div>
+  );
+}
+
+// The message under a field. Red only for out-of-scope stops (safety); everything else uses the gold notice colour.
+function FieldNote(props: {
+  problems: Problems;
+  field: string;
+  showMissing: boolean;
+  hidden: boolean; // while the clinician is still typing in this field
+  onConfirm: (value: string) => void;
+  onStartAgain: () => void;
+}) {
+  const { problems: p, field } = props;
+  if (props.hidden) return null;
+  const stop = p.stop.get(field);
+  if (stop) return <Stop message={stop} onStartAgain={props.onStartAgain} />;
+  const invalid = p.invalid.get(field);
+  if (invalid) return <Message>{invalid}</Message>;
+  const unusual = p.unusual.get(field);
+  if (unusual) {
+    return (
+      <div role="status" className="mt-3 rounded-[5px] border border-l-4 border-value bg-tint p-4">
+        <p className="text-[15px] text-value">{unusual.message} Please check it.</p>
+        <button type="button" onClick={() => props.onConfirm(unusual.value)} className="fin-button-quiet mt-3 min-h-11 px-5 text-[15px]">
+          Yes, this is correct
+        </button>
+      </div>
+    );
+  }
+  if (props.showMissing && p.missing.has(field)) return <Message>Required: please answer.</Message>;
+  return null;
+}
+
+const Message = ({ children }: { children: ReactNode }) => (
+  <p role="status" className="mt-2 flex items-start gap-2 text-[15px] text-value">
+    <span aria-hidden className="font-mono">!</span>
+    {children}
+  </p>
+);
+
+function Notice({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div role="note" className="mt-4 rounded-[5px] border border-l-4 border-value bg-tint p-4">
+      <p className="font-medium text-value">{title}</p>
+      <p className="mt-1 text-[15px] leading-[1.6] text-ink">{children}</p>
     </div>
   );
 }
@@ -447,7 +632,7 @@ const breakable = (label: string) => (
   </span>
 );
 
-// The recessed dot of a single-choice answer.
+// The dot of a single-choice answer.
 const Dot = ({ on }: { on: boolean }) => (
   <span aria-hidden className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${on ? "border-accent" : "border-muted"}`}>
     {on && <span className="size-2 rounded-full bg-accent" />}
@@ -460,13 +645,14 @@ function Choice(props: {
   value: string;
   onChange: (v: string) => void;
   columns?: 2 | 3;
+  compact?: boolean;
 }) {
   const name = useId();
-  const grid = props.columns === 3 ? "grid-cols-3" : "grid-cols-2";
+  const grid = props.compact ? "flex flex-wrap" : props.columns === 3 ? "grid grid-cols-3" : "grid grid-cols-2";
   return (
     <fieldset>
       <legend className={legendClass}>{props.legend}</legend>
-      <div className={`grid gap-3 ${grid}`}>
+      <div className={`gap-3 ${grid}`}>
         {props.options.map((o) => {
           const selected = props.value === o.value;
           return (
@@ -482,7 +668,7 @@ function Choice(props: {
   );
 }
 
-// "None" cannot be combined with other answers.
+// "None" cannot be combined with other answers, so the clinician actively confirms none.
 function MultiChoice(props: { legend: string; options: { value: string; label: string }[]; value: string[]; onChange: (v: string[]) => void }) {
   const toggle = (v: string) => {
     if (props.value.includes(v)) props.onChange(props.value.filter((x) => x !== v));
@@ -518,6 +704,7 @@ function SourcePicker(props: {
   extra: string[];
   onChange: (main: string, extra: string[]) => void;
 }) {
+  const name = useId();
   const picked = props.main ? [props.main, ...props.extra] : [];
   const label = (v: string) => props.options.find((o) => o.value === v)?.label ?? v;
   const toggle = (v: string) => {
@@ -556,7 +743,7 @@ function SourcePicker(props: {
           <div className="mt-3 flex flex-wrap gap-3">
             {picked.map((v) => (
               <label key={v} className={`${optionClass} ${optionState(v === props.main)}`}>
-                <input type="radio" name="main-source" checked={v === props.main} onChange={() => makeMain(v)} className="sr-only" />
+                <input type="radio" name={name} checked={v === props.main} onChange={() => makeMain(v)} className="sr-only" />
                 <Dot on={v === props.main} />
                 {label(v)}
               </label>
@@ -622,6 +809,7 @@ function NumberField(props: {
   value: string;
   onChange: (v: string) => void;
   decimal?: boolean;
+  unit?: string;
   onFocus?: () => void;
   onBlur?: () => void;
 }) {
@@ -648,38 +836,90 @@ function NumberField(props: {
   );
 }
 
+// Search-as-you-type over the knowledge-base drug list. A name not in the list is kept as typed ("Other").
+function DrugPicker(props: { value: string; onChange: (v: string) => void; drugNames: string[]; label: string; otherWarning?: string }) {
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  const query = props.value.trim().toLowerCase();
+  const known = props.drugNames.includes(query);
+  const matches = query ? props.drugNames.filter((d) => d.includes(query)).sort((a, b) => Number(!a.startsWith(query)) - Number(!b.startsWith(query))).slice(0, 6) : [];
+  return (
+    <div className="flex flex-1 flex-col">
+      <label htmlFor={id} className="text-[14px] font-medium text-muted">
+        {props.label}
+      </label>
+      <input
+        id={id}
+        value={props.value}
+        onChange={(e) => {
+          props.onChange(lettersOnly(e.target.value));
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        autoComplete="off"
+        autoCapitalize="none"
+        placeholder="Start typing a drug or class"
+        className="fin-input mt-1.5 min-h-12 px-3 text-lg"
+      />
+      {open && query && !known && (
+        <ul aria-label="Matching drugs" className="mt-2 flex flex-wrap gap-2">
+          {matches.map((d) => (
+            <li key={d}>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  props.onChange(d);
+                  setOpen(false);
+                }}
+                className="fin-option min-h-11 px-4 text-[15px]"
+              >
+                {d}
+              </button>
+            </li>
+          ))}
+          <li>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setOpen(false)}
+              className="min-h-11 px-3 text-[15px] text-muted underline decoration-line underline-offset-4"
+            >
+              Other: keep “{props.value.trim()}”
+            </button>
+          </li>
+        </ul>
+      )}
+      {!open && query && !known && props.otherWarning && <Message>{props.otherWarning}</Message>}
+    </div>
+  );
+}
+
 type Extra = { kind: "days" } | { kind: "reaction"; options: { value: string; label: string }[] };
 
-// A short list of drug names (suggested from the knowledge base), each with days or a reaction.
+// A short list of drugs, each with days given or the reaction.
 function DrugRows(props: {
   legend?: string;
   rows: { drug: string; extra: string }[];
   onChange: (rows: { drug: string; extra: string }[]) => void;
-  listId: string;
+  drugNames: string[];
   what: string;
   extra?: Extra;
+  otherWarning?: string;
 }) {
   const update = (i: number, change: Partial<{ drug: string; extra: string }>) =>
     props.onChange(props.rows.map((r, j) => (j === i ? { ...r, ...change } : r)));
-  return (
-    <fieldset>
-      {props.legend && <legend className={legendClass}>{props.legend}</legend>}
-      <div className="flex flex-col gap-3">
-        {props.rows.map((row, i) => (
-          <div key={i} className="flex flex-wrap items-end gap-3 rounded-[5px] border border-line bg-tint p-4">
-            <label className="flex flex-1 flex-col text-[14px] font-medium text-muted">
-              {props.what[0].toUpperCase() + props.what.slice(1)}
-              <input
-                list={props.listId}
-                value={row.drug}
-                onChange={(e) => update(i, { drug: e.target.value })}
-                autoComplete="off"
-                className="fin-input mt-1.5 min-h-12 px-3 text-lg"
-              />
-            </label>
+  const Label = props.what[0].toUpperCase() + props.what.slice(1);
+  const body = (
+    <div className="mt-4 flex flex-col gap-3">
+      {props.rows.map((row, i) => (
+        <div key={i} className="flex flex-col gap-3 rounded-[5px] border border-line bg-tint p-4">
+          <div className="flex flex-wrap items-start gap-3">
+            <DrugPicker value={row.drug} onChange={(drug) => update(i, { drug })} drugNames={props.drugNames} label={Label} otherWarning={props.otherWarning} />
             {props.extra?.kind === "days" && (
               <label className="flex w-24 flex-col text-[14px] font-medium text-muted">
-                Days
+                Days (approx.)
                 <input
                   type="text"
                   inputMode="numeric"
@@ -688,46 +928,111 @@ function DrugRows(props: {
                   maxLength={2}
                   value={row.extra}
                   onChange={(e) => update(i, { extra: digitsOnly(e.target.value, false) })}
-                  className="fin-input mt-1.5 min-h-12 px-3 font-mono text-lg"
+                  className="fin-input mt-1.5 min-h-12 px-3 font-mono text-lg text-value"
                 />
               </label>
             )}
-            {props.extra?.kind === "reaction" && (
-              <label className="flex w-40 flex-col text-[14px] font-medium text-muted">
-                Reaction
-                <select
-                  value={row.extra}
-                  onChange={(e) => update(i, { extra: e.target.value })}
-                  className="fin-input mt-1.5 min-h-12 px-2 text-lg"
-                >
-                  <option value="">Choose…</option>
-                  {props.extra.options.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <button
-              type="button"
-              onClick={() => props.onChange(props.rows.filter((_, j) => j !== i))}
-              className="min-h-12 px-3 text-base font-medium underline decoration-line underline-offset-4 hover:decoration-muted"
-              aria-label={`Remove ${row.drug || props.what}`}
-            >
-              Remove
+          </div>
+          {props.extra?.kind === "reaction" && (
+            <Choice legend="Reaction" compact options={props.extra.options} value={row.extra} onChange={(v) => update(i, { extra: v })} />
+          )}
+          <button
+            type="button"
+            onClick={() => props.onChange(props.rows.filter((_, j) => j !== i))}
+            className="min-h-11 self-start text-[15px] font-medium underline decoration-line underline-offset-4 hover:decoration-muted"
+            aria-label={`Remove ${row.drug || props.what}`}
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+      <button type="button" onClick={() => props.onChange([...props.rows, { drug: "", extra: "" }])} className="fin-button-quiet min-h-12 self-start px-5 text-base">
+        + Add {props.what}
+      </button>
+    </div>
+  );
+  if (!props.legend) return body;
+  return (
+    <fieldset>
+      <legend className={legendClass}>{props.legend}</legend>
+      {body}
+    </fieldset>
+  );
+}
+
+// Everything on one panel, each section with an Edit link back to it.
+function Review(props: { form: Form; problems: Problems; label: (field: string, value: string) => string; onEdit: (sectionId: string) => void }) {
+  const { form: f, label } = props;
+  const list = (field: string, values: string[]) => values.map((v) => label(field, v)).join(", ");
+  const cg = f.renalMode === "creatinine" && !f.crclOverride ? cockcroftGault(f) : null;
+  const unit = f.creatinineUnit === "mg_dl" ? "mg/dL" : "µmol/L";
+  const renal =
+    f.renalMode === "crcl" ? `${f.crcl_ml_min} mL/min (entered)`
+    : f.renalMode === "creatinine" && f.crclOverride ? `${f.crcl_ml_min} mL/min (entered; creatinine ${f.creatinine} ${unit})`
+    : cg ? `${cg.crcl} mL/min (Cockcroft-Gault, creatinine ${f.creatinine} ${unit})`
+    : "";
+  const rows: Record<string, [string, string][]> = {
+    basics: [
+      [LABELS.age, f.age && `${f.age} years`],
+      [LABELS.sex, label("sex", f.sex)],
+      [LABELS.weight_kg, f.weight_kg && `${f.weight_kg} kg`],
+      ["Height", f.height_cm ? `${f.height_cm} cm` : "Not given"],
+      ...(pregnancyAsked(f) ? [[LABELS.pregnancy, label("pregnancy", f.pregnancy)] as [string, string]] : []),
+    ],
+    source: [
+      ["Main source", label("source", f.source)],
+      ...(f.extra_sources.length ? [["Also suspected", list("source", f.extra_sources)] as [string, string]] : []),
+      [LABELS.setting, label("setting", f.setting)],
+      [LABELS.source_control, label("source_control", f.source_control)],
+    ],
+    severity: [
+      [LABELS.severity, label("severity", f.severity)],
+      ["SOFA", f.sofa],
+    ],
+    organs: [
+      ["CrCl", renal],
+      [LABELS.dialysis, f.onDialysis === "yes" ? label("dialysis", f.dialysisType) : f.onDialysis === "no" ? "No" : ""],
+      [LABELS.hepatic, label("hepatic", f.hepatic)],
+    ],
+    exposures: [
+      ["Antibiotics, 90 days", f.antibioticsGiven === "yes" ? f.antibiotics_90d.map((a) => `${a.drug} (${a.days} days)`).join(", ") : f.antibioticsGiven === "no" ? "None" : ""],
+      ["Admission, 90 days", label("admission_90d", f.admission_90d)],
+      [LABELS.prior_mdr, list("prior_mdr", f.prior_mdr)],
+      [LABELS.devices, list("devices", f.devices)],
+      ["Antibiotics now", f.current_antibiotics.filter(Boolean).join(", ") || "None given"],
+    ],
+    host: [
+      [LABELS.comorbidities, list("comorbidities", f.comorbidities)],
+      [LABELS.immunocompromise, list("immunocompromise", f.immunocompromise)],
+      [LABELS.allergies, f.allergiesKnown === "yes" ? f.allergies.map((a) => `${a.drug} (${label("allergy_reaction", a.reaction) || "reaction?"})`).join(", ") : f.allergiesKnown === "no" ? "None" : ""],
+    ],
+  };
+  return (
+    <div className="mt-2 divide-y divide-line">
+      {SECTIONS.map((s, i) => (
+        <div key={s.id} className="py-4">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-medium">
+              <span className={`mr-2 font-mono text-[13px] ${sectionDone(props.problems, i) ? "text-done" : "text-value"}`}>
+                {sectionDone(props.problems, i) ? "✓" : String(i + 1).padStart(2, "0")}
+              </span>
+              {s.title}
+            </h3>
+            <button type="button" onClick={() => props.onEdit(s.id)} className="min-h-11 px-2 text-[15px] font-medium text-accent underline decoration-accent/40 underline-offset-4">
+              Edit {s.title}
             </button>
           </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => props.onChange([...props.rows, { drug: "", extra: "" }])}
-          className="fin-button-quiet min-h-12 self-start px-5 text-base"
-        >
-          + Add {props.what}
-        </button>
-      </div>
-    </fieldset>
+          <dl className="mt-1 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-[minmax(0,14rem)_1fr]">
+            {rows[s.id].map(([k, v]) => (
+              <div key={k} className="contents">
+                <dt className="text-[14px] text-muted">{k}</dt>
+                <dd className={`mb-2 sm:mb-0 ${v ? "" : "text-value"}`}>{v || "Not answered"}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -739,29 +1044,12 @@ function Stop({ message, onStartAgain }: { message: string; onStartAgain: () => 
     ref.current?.scrollIntoView({ block: "nearest" });
   }, []);
   return (
-    <div ref={ref} className="scroll-mb-28 -mt-2">
-      <Alert tone="danger" title="Outside MedWise version 1: no recommendation">
-        <p>{message}</p>
-        <button type="button" onClick={onStartAgain} className="fin-button-quiet mt-3 min-h-12 px-5 text-base">
-          Start a new patient
-        </button>
-      </Alert>
-    </div>
-  );
-}
-
-
-function Alert({ tone, title, children }: { tone: "danger" | "info" | "success"; title: string; children: ReactNode }) {
-  // Red stays for safety alerts only (DESIGN.md). Notices use the gold edge.
-  const style = {
-    danger: "border-alert text-alert",
-    info: "border-value text-value",
-    success: "border-done text-done",
-  }[tone];
-  return (
-    <div role={tone === "danger" ? "alert" : "status"} className={`mt-5 rounded-[5px] border border-l-4 bg-tint p-5 text-base ${style}`}>
-      <p className="font-medium">{title}</p>
-      <div className="mt-1 text-ink">{children}</div>
+    <div ref={ref} role="alert" className="mt-3 scroll-mb-28 rounded-[5px] border border-l-4 border-alert bg-tint p-5">
+      <p className="font-medium text-alert">Outside MedWise version 1: no recommendation</p>
+      <p className="mt-1 text-ink">{message}</p>
+      <button type="button" onClick={onStartAgain} className="fin-button-quiet mt-3 min-h-12 px-5 text-base">
+        Start a new patient
+      </button>
     </div>
   );
 }
