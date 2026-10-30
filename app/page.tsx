@@ -1,9 +1,17 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Logo } from "./Sculpture";
+import { Brand, FullLogo } from "./Sculpture";
 
-// Home page: what MedWise is, the problem it solves (docs/PRODUCT.md), how it works, and the way in.
-// No study figures or claims of accuracy here (PRODUCT.md), and no invented numbers.
+// Home page: what MedWise is, why it was built, who builds it, how it works, and the way in.
+// Wording from docs/PRODUCT.md. No study figures, claims of accuracy, reviews or invented numbers (PRODUCT.md,
+// DESIGN.md website rules).
+
+const NAV = [
+  { href: "#what", label: "What it is" },
+  { href: "#why", label: "Why we built it" },
+  { href: "#doctors", label: "Built by doctors" },
+  { href: "#how", label: "How it works" },
+];
 
 const FACTS = [
   { label: "Patients", text: "Adults with sepsis" },
@@ -19,6 +27,15 @@ const RESULT_SUMMARY = [
   { part: "Why this antibiotic", from: "Reasons and quoted guideline passages" },
   { part: "Coverage and spectrum fit", from: "Needed, given and excess" },
   { part: "Review timeline", from: "Cultures, 48 to 72 h, de-escalation" },
+];
+
+const BEDSIDE = [
+  { title: "Made for 3 am on a phone", text: "One page, mostly taps and switches. Units sit in the boxes; creatinine becomes CrCl for you." },
+  { title: "Every reason has a source", text: "Guideline passages are quoted word for word, with the guideline and page, so you can check them." },
+  { title: "Doses never come from the AI", text: "Dose, interval and infusion come from checked tables. Code rejects any answer that writes a dose." },
+  { title: "It knows when to stop", text: "Children, pregnancy and neutropenic sepsis are outside version 1: MedWise says so and points to ID / microbiology." },
+  { title: "Private by design", text: "There is nowhere to type a name, hospital number, phone number or date of birth." },
+  { title: "You make the decision", text: "MedWise suggests one regimen and shows its working. It never orders a drug." },
 ];
 
 const STEPS = [
@@ -50,18 +67,34 @@ const QUESTIONS = [
   },
 ];
 
+const linkClass = "underline decoration-line underline-offset-4 hover:decoration-muted";
+
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
+      <header className="border-b border-line">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-5 py-4 sm:px-8">
+          <Link href="/" aria-label="MedWise home" className="rounded-[5px]">
+            <Brand />
+          </Link>
+          <nav aria-label="On this page" className="hidden items-center gap-6 text-[15px] text-muted min-[1000px]:flex">
+            {NAV.map((n) => (
+              <a key={n.href} href={n.href} className="min-h-11 content-center hover:text-ink">
+                {n.label}
+              </a>
+            ))}
+          </nav>
+          <Link href="/new?new=1" className="fin-button-quiet min-h-11 shrink-0 px-5 text-[15px]">
+            New patient
+          </Link>
+        </div>
+      </header>
+
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-5 sm:px-8">
         {/* Opening: the promise on the left, the product summary in a framed panel on the right */}
         <section aria-labelledby="intro" className="grid items-center gap-12 py-12 min-[800px]:grid-cols-[1.15fr_1fr] min-[800px]:py-20">
           <div>
-            <div className="flex items-center gap-3">
-              <Logo className="size-9" />
-              <span className="text-xl font-semibold tracking-[-0.01em]">MedWise</span>
-            </div>
-            <p className="mt-8 font-mono text-[13px] uppercase tracking-[0.14em] text-muted">Empiric antibiotics · adult sepsis</p>
+            <p className="font-mono text-[13px] uppercase tracking-[0.14em] text-muted">Empiric antibiotics · adult sepsis</p>
             <h1 id="intro" className="mt-3 max-w-xl text-[clamp(30px,4vw,42px)] font-medium leading-[1.12] tracking-[-0.02em]">
               The first antibiotic for a septic patient, reasoned from the guidelines and checked before you see it.
             </h1>
@@ -72,8 +105,8 @@ export default function Home() {
               <Link href="/new?new=1" className="fin-button min-h-12 px-6 text-base">
                 Find the right antibiotic <span aria-hidden>→</span>
               </Link>
-              <a href="#problem" className="min-h-12 content-center text-base font-medium text-ink underline decoration-line underline-offset-4 hover:decoration-muted">
-                Why MedWise?
+              <a href="#what" className={`min-h-12 content-center text-base font-medium text-ink ${linkClass}`}>
+                What is MedWise?
               </a>
             </div>
             <p className="mt-6 font-mono text-[13px] text-muted">Demo version: draft knowledge base, not for patient care.</p>
@@ -111,11 +144,30 @@ export default function Home() {
           ))}
         </ul>
 
-        {/* The problem: narrower heading beside the wider explanation */}
-        <section aria-labelledby="problem" id="problem" className="scroll-mt-6 grid gap-8 py-16 min-[800px]:grid-cols-[0.8fr_1.2fr] min-[800px]:py-20">
+        {/* What MedWise is: the logo beside a plain description */}
+        <section aria-labelledby="what-h" id="what" className="scroll-mt-6 grid items-center gap-10 py-16 min-[800px]:grid-cols-[0.8fr_1.2fr] min-[800px]:py-20">
+          <div className="flex justify-center rounded-[5px] border border-line bg-tint px-6 py-10">
+            <FullLogo className="h-36 w-auto sm:h-44" />
+          </div>
           <div>
-            <Label>The problem</Label>
-            <h2 className="mt-3 text-[clamp(26px,3vw,32px)] font-medium leading-[1.15] tracking-[-0.02em]">It is not knowledge. It is synthesis.</h2>
+            <Label>What it is</Label>
+            <h2 id="what-h" className="mt-3 text-[clamp(26px,3vw,32px)] font-medium leading-[1.15] tracking-[-0.02em]">
+              Decision support for one decision: the first antibiotic in adult sepsis.
+            </h2>
+            <p className="mt-4 text-lg leading-[1.65] text-muted">
+              MedWise brings together the patient in front of you, the current sepsis guidelines (Surviving Sepsis Campaign,
+              IDSA and the Indian NCDC/ICMR guidelines) and, in time, your own hospital&apos;s antibiogram. It suggests one
+              empiric regimen with its dose, how to give it, why it fits this patient and when to review it.
+            </p>
+            <p className="mt-4 text-lg leading-[1.65] text-muted">It is a second pair of eyes, not an order set: the clinician always decides.</p>
+          </div>
+        </section>
+
+        {/* Why it was built: narrower heading beside the wider explanation */}
+        <section aria-labelledby="why-h" id="why" className="scroll-mt-6 grid gap-8 border-t border-line py-16 min-[800px]:grid-cols-[0.8fr_1.2fr] min-[800px]:py-20">
+          <div>
+            <Label>Why we built it</Label>
+            <h2 id="why-h" className="mt-3 text-[clamp(26px,3vw,32px)] font-medium leading-[1.15] tracking-[-0.02em]">It is not knowledge. It is synthesis.</h2>
           </div>
           <div>
             <p className="text-lg leading-[1.65] text-muted">
@@ -133,11 +185,35 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Built by doctors: what that means for how MedWise works */}
+        <section aria-labelledby="doctors-h" id="doctors" className="scroll-mt-6 border-t border-line py-16 min-[800px]:py-20">
+          <div className="grid gap-8 min-[800px]:grid-cols-[0.8fr_1.2fr]">
+            <div>
+              <Label>Built by doctors</Label>
+              <h2 id="doctors-h" className="mt-3 text-[clamp(26px,3vw,32px)] font-medium leading-[1.15] tracking-[-0.02em]">Built by doctors, for the bedside.</h2>
+            </div>
+            <p className="text-lg leading-[1.65] text-muted">
+              MedWise is built by doctors who make this choice themselves, on night shifts in casualty and the ICU. We built
+              the tool we wanted at 3&nbsp;am: quick to fill, honest about its sources, and clear about what it does not cover.
+            </p>
+          </div>
+          <ul className="fin-panel mt-10 grid overflow-hidden min-[520px]:grid-cols-2 min-[1000px]:grid-cols-3">
+            {BEDSIDE.map((b) => (
+              <li key={b.title} className="-mb-px -mr-px border-b border-r border-line p-6">
+                <h3 className="text-lg font-medium leading-snug">{b.title}</h3>
+                <p className="mt-1.5 text-[15px] leading-[1.6] text-muted">{b.text}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         {/* How it works: a connected process row (a vertical sequence on phones) */}
-        <section aria-labelledby="how" className="border-t border-line py-16 min-[800px]:py-20">
-          <Label id="how">How it works</Label>
+        <section aria-labelledby="how-h" id="how" className="scroll-mt-6 border-t border-line py-16 min-[800px]:py-20">
+          <h2 id="how-h" className="font-mono text-[13px] font-normal uppercase tracking-[0.14em] text-muted">
+            How it works
+          </h2>
           <ol className="relative mt-8 grid gap-8 min-[520px]:grid-cols-2 min-[1100px]:grid-cols-4 min-[1100px]:gap-6">
-            <span aria-hidden className="absolute left-[19px] top-5 bottom-5 w-px bg-line min-[520px]:hidden" />
+            <span aria-hidden className="absolute bottom-5 left-[19px] top-5 w-px bg-line min-[520px]:hidden" />
             <span aria-hidden className="absolute left-5 right-5 top-5 hidden h-px bg-line min-[1100px]:block" />
             {STEPS.map((s, i) => (
               <li key={s.title} className="relative flex gap-4 min-[520px]:flex-col">
@@ -158,12 +234,7 @@ export default function Home() {
           <Label id="get">What you get</Label>
           <ul className="fin-panel mt-8 grid overflow-hidden min-[520px]:grid-cols-2">
             {RESULT_PARTS.map((p, i) => (
-              <li
-                key={p.title}
-                className={`p-6 ${i > 0 ? "border-t border-line" : ""} ${i === 1 ? "min-[520px]:border-t-0" : ""} ${
-                  i % 2 === 1 ? "min-[520px]:border-l" : ""
-                }`}
-              >
+              <li key={p.title} className="-mb-px -mr-px border-b border-r border-line p-6">
                 <p aria-hidden className="font-mono text-[13px] text-value">
                   {String(i + 1).padStart(2, "0")}
                 </p>
@@ -210,15 +281,27 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-line">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-5 py-8 text-[14px] sm:px-8 min-[800px]:grid-cols-[1fr_1fr_2fr]">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-5 py-8 text-[14px] sm:px-8 min-[800px]:grid-cols-[1.2fr_1fr_1fr_2fr]">
+          <div className="col-span-2 min-[800px]:col-span-1">
+            <Brand markClass="h-8 w-auto" wordClass="h-4 w-auto" />
+          </div>
           <div>
             <p className="font-mono text-[13px] uppercase tracking-[0.12em] text-muted">MedWise</p>
             <ul className="mt-2 flex flex-col gap-1">
               <li>
-                <Link href="/" className="underline decoration-line underline-offset-4 hover:decoration-muted">Home</Link>
+                <Link href="/new?new=1" className={linkClass}>
+                  New patient
+                </Link>
               </li>
               <li>
-                <Link href="/new?new=1" className="underline decoration-line underline-offset-4 hover:decoration-muted">New patient</Link>
+                <a href="#what" className={linkClass}>
+                  What it is
+                </a>
+              </li>
+              <li>
+                <a href="#doctors" className={linkClass}>
+                  Built by doctors
+                </a>
               </li>
             </ul>
           </div>
@@ -226,9 +309,7 @@ export default function Home() {
             <p className="font-mono text-[13px] uppercase tracking-[0.12em] text-muted">Status</p>
             <p className="mt-2">Demo version</p>
           </div>
-          <p className="col-span-2 text-muted min-[800px]:col-span-1">
-            Decision support only. Verify with clinical judgement and local policy.
-          </p>
+          <p className="col-span-2 text-muted min-[800px]:col-span-1">Decision support only. Verify with clinical judgement and local policy.</p>
         </div>
       </footer>
     </div>

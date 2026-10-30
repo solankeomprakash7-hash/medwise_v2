@@ -6,6 +6,8 @@
 | Date | Decision | Why |
 | --- | --- | --- |
 | 2026-10-30 | Patient input redesigned on one page (owner chose one page over 7 steps): Basics, Source & setting, Severity, Organs, Exposures, Host, Review with Edit links; side section list on wide screens; required messages under each field; "None" chips; drug search with "Other" | Owner: enter a septic patient in under 2 minutes, without errors, on a phone or tablet at night |
+| 2026-10-30 | Owner's logo adopted (header, landing page, tab and home-screen icons); light version made for the dark pages. Landing page gains "What it is", "Why we built it" and "Built by doctors, for the bedside" | Owner |
+| 2026-10-30 | "Load test case" buttons removed from the input screen; Case 1 and Case 2 now live only in the automatic tests (tests/entry-form.test.ts) | Owner: not needed on screen |
 | 2026-10-30 | Setting: "healthcare-associated" removed; choices are community-acquired, hospital-acquired (began 48 h or more after admission), ventilator-associated. Its 16 empty coverage.csv rows removed | Owner. IDSA/ATS 2019 dropped the category; it had no guideline-table rows or passages; healthcare contact is captured by the exposure questions |
 | 2026-10-30 | Source control labels: Not applicable / Achieved / Not achieved (codes unchanged, so the review timeline is unchanged) | Owner |
 | 2026-10-30 | SOFA score removed as an input (screen, server check, golden_tests.csv column; REF-02 keeps "SOFA 4" in its notes). Not calculated by the app either | Owner chose removal over a 7 to 9 field calculator |

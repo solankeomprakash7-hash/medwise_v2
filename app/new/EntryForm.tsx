@@ -6,9 +6,9 @@ import type { ReactNode } from "react";
 import type { Result } from "@/lib/recommend/recommend";
 import { getRecommendation } from "./actions";
 import ResultView from "./ResultView";
-import { Logo } from "../Sculpture";
+import { Brand, Logo } from "../Sculpture";
 import {
-  EMPTY, LABELS, SECTIONS, TEST_CASES, checkForm, cockcroftGault, isDrugName, lettersOnly, pregnancyAsked, sectionDone, toPatient,
+  EMPTY, LABELS, SECTIONS, checkForm, cockcroftGault, isDrugName, lettersOnly, pregnancyAsked, sectionDone, toPatient,
 } from "./form";
 import type { Form, Problems } from "./form";
 
@@ -77,11 +77,10 @@ const scrollToId = (id: string) => {
   document.getElementById(id)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
 };
 
-export default function EntryForm({ options, showTestCases }: { options: Options; showTestCases: boolean }) {
+export default function EntryForm({ options }: { options: Options }) {
   const [form, setForm] = useState<Form>(EMPTY);
   const [ready, setReady] = useState(false); // draft read (or not) after the page loads
   const [restored, setRestored] = useState(false);
-  const [loadedCase, setLoadedCase] = useState<(typeof TEST_CASES)[number] | null>(null);
   const [showProblems, setShowProblems] = useState(false);
   const [focused, setFocused] = useState("");
   const [active, setActive] = useState(""); // the section being worked in: finished sections fold, except this one
@@ -141,16 +140,7 @@ export default function EntryForm({ options, showTestCases }: { options: Options
     setShowProblems(false);
     setActive("");
     setRestored(false);
-    setLoadedCase(null);
     window.scrollTo({ top: 0 });
-  };
-  const loadCase = (c: (typeof TEST_CASES)[number]) => {
-    setForm(c.form);
-    setActive("");
-    setResult(null);
-    setShowProblems(false);
-    setRestored(false);
-    setLoadedCase(c);
   };
 
   // Messages shown next to a field: out of scope (red), must correct, please confirm, or required.
@@ -431,12 +421,9 @@ export default function EntryForm({ options, showTestCases }: { options: Options
     <div className="flex w-full flex-1 flex-col">
       <header className="border-b border-line bg-tint">
         <div className="mx-auto w-full max-w-5xl px-5 py-5 sm:px-6">
-          <Link href="/" className="flex w-fit items-center gap-3 rounded-[5px]">
-            <Logo className="size-9" />
-            <div>
-              <p className="text-lg font-semibold leading-none">MedWise</p>
-              <p className="mt-1 font-mono text-[13px] uppercase tracking-[0.12em] text-muted">Empiric antibiotics · adult sepsis</p>
-            </div>
+          <Link href="/" className="flex w-fit flex-col gap-1.5 rounded-[5px]" aria-label="MedWise home">
+            <Brand />
+            <span className="font-mono text-[13px] uppercase tracking-[0.12em] text-muted">Empiric antibiotics · adult sepsis</span>
           </Link>
           {!result && (
             <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
@@ -450,23 +437,6 @@ export default function EntryForm({ options, showTestCases }: { options: Options
               <button type="button" onClick={startAgain} className="fin-button-quiet min-h-11 px-5 text-[15px]">
                 Clear form
               </button>
-            </div>
-          )}
-          {!result && showTestCases && (
-            <div className="mt-5 rounded-[5px] border border-dashed border-line p-4">
-              <p className="font-mono text-[13px] uppercase tracking-[0.12em] text-muted">Testing only · not shown on the live site</p>
-              <div className="mt-3 flex flex-wrap gap-3">
-                {TEST_CASES.map((c) => (
-                  <button key={c.id} type="button" onClick={() => loadCase(c)} className="fin-button-quiet min-h-11 px-4 text-[15px]">
-                    Load test case: {c.title}
-                  </button>
-                ))}
-              </div>
-              {loadedCase && (
-                <p role="status" className="mt-3 text-[14px] text-muted">
-                  Loaded {loadedCase.title}. Placeholder values not stated in the case: {loadedCase.placeholders}.
-                </p>
-              )}
             </div>
           )}
           {!result && restored && (
@@ -868,7 +838,7 @@ function Thinking() {
   return (
     <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center bg-ground/85 p-6">
       <div className="fin-panel w-full max-w-sm p-7">
-        <Logo className="mx-auto size-11" />
+        <Logo className="mx-auto h-14 w-auto" />
         <p className="mt-4 text-center text-xl font-medium">Working it out</p>
         <p className="text-center text-[14px] text-muted">This can take up to a minute.</p>
         <ol className="mt-5 flex flex-col gap-2.5">

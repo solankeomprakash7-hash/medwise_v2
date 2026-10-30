@@ -277,39 +277,3 @@ export function toPatient(f: Form) {
     current_antibiotics: f.current_antibiotics.map(clean).filter(Boolean),
   };
 }
-
-// ---------- Test cases (preview and staging only, never on the live site) ----------
-// From CLINICAL_RULES.md "Reference cases". Values the case does not state are PLACEHOLDERS chosen for
-// testing (owner decision 2026-10-30), listed in `placeholders`; they are not clinical facts about the case.
-
-export const TEST_CASES: { id: string; title: string; placeholders: string; form: Form }[] = [
-  {
-    id: "case-1",
-    title: "Case 1: community pneumonia",
-    placeholders: "weight 70 kg, source control not applicable, liver normal, no devices, no immunocompromise, no allergies",
-    form: {
-      ...EMPTY,
-      age: "62", sex: "male", weight_kg: "70",
-      source: "lung", setting: "community_acquired", source_control: "not_needed",
-      severity: "sepsis",
-      renalMode: "crcl", crcl_ml_min: "80", onDialysis: "no", hepatic: "normal",
-      antibioticsGiven: "no", admission_90d: "no", prior_mdr: ["none"], devices: ["none"],
-      comorbidities: ["diabetes", "copd"], immunocompromise: ["none"], allergiesKnown: "no",
-    },
-  },
-  {
-    id: "case-2",
-    title: "Case 2: urosepsis with a catheter",
-    placeholders: "weight 70 kg, community-acquired (healthcare contact is captured by the exposures), sepsis without shock, source control not achieved, liver normal, no comorbidities, no immunocompromise, no allergies",
-    form: {
-      ...EMPTY,
-      age: "65", sex: "male", weight_kg: "70",
-      source: "urinary", setting: "community_acquired", source_control: "needed_not_done",
-      severity: "sepsis",
-      renalMode: "crcl", crcl_ml_min: "40", onDialysis: "no", hepatic: "normal",
-      antibioticsGiven: "yes", antibiotics_90d: [{ drug: "cefixime", days: "5" }], admission_90d: "yes",
-      prior_mdr: ["none"], devices: ["urinary_catheter"], comorbidities: ["none"], immunocompromise: ["none"],
-      allergiesKnown: "no",
-    },
-  },
-];

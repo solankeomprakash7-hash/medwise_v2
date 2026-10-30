@@ -28,7 +28,8 @@ Stewardship admin ──► uploads antibiogram, views reports
 ## Folder layout
 Created 2026-10-28 (Phase 2, step 1). Folders marked *empty* hold only a README for now.
 ```
-/app                 screens: home page (Sculpture.tsx = shared logo and decorative shapes); /new = patient entry (one page: six sections + review; fields, checks, Cockcroft-Gault and test cases in app/new/form.ts) and result screen (app/new/ResultView.tsx, 10 cards per DESIGN.md), via the server action app/new/actions.ts; admin and login still to come
+/public/brand        the MedWise logo files (original and light version for the dark pages)
+/app                 screens: home page (Sculpture.tsx = logo components; icon.svg, favicon.ico, apple-icon.png = tab and home-screen icons); /new = patient entry (one page: six sections + review; fields, checks and Cockcroft-Gault in app/new/form.ts) and result screen (app/new/ResultView.tsx, 10 cards per DESIGN.md), via the server action app/new/actions.ts; admin and login still to come
 /app/api             server routes (recommend, decision, upload) — empty
 /lib/ai              AI answer format (answer.ts), instructions (prompt.ts), AI client interface + test stand-in (client.ts), DEMO stand-in used by the screen (demo.ts), real Claude client (claude.ts: Claude Opus 5.5, used only when ANTHROPIC_API_KEY is set; otherwise demo.ts)
 /lib/recommend       the recommendation: input checks, allergy checks (allergy.ts), coverage and spectrum fit (spectrum.ts), review timeline (timeline.ts), evidence pack, safety checks, doses, guideline-table comparison (recommend.ts)
@@ -124,7 +125,7 @@ Vercel also makes a one-off address for every build; those are not needed day to
 ### Before the public launch (owner rule, 2026-10-29)
 MedWise does not launch until every box is ticked:
 - [ ] Custom domain connected (Vercel → Settings → Domains), not a `vercel.app` address
-- [x] Favicon: the MedWise shield (`app/icon.svg`, `app/favicon.ico`), replacing the Next.js default
+- [x] Favicon: the MedWise logo mark (`app/icon.svg`, `app/favicon.ico`, `app/apple-icon.png`), replacing the Next.js default
 - [ ] No "made with AI" tag or builder badge anywhere (checked 2026-10-29: none in the app's code; check the live
       site again at launch)
 - [ ] Privacy policy page (needs the owner's details: who is responsible for the data, contact, hosting regions)

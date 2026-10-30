@@ -36,6 +36,13 @@ Tokens live in `app/globals.css` as `--dp-*` variables:
 | `--done` | Completed sections, "matches guideline table", key reasons | `#7fd6a2` |
 
 Radii: panels 5 px, tags 4 px, buttons and answers 40 px (pills).
+
+**Logo** (owner's artwork, 2026-10-30): the M mark with a cross and heartbeat line, the MedWise wordmark and a gold
+line, in navy `#1A1B4B`, teal `#19AB98` and gold. Files in `public/brand/`: the original (`medwise-logo.png`) and,
+for the dark pages, a light version with navy shown near-white and teal and gold unchanged
+(`medwise-logo-light.png`, `medwise-mark-light.png`, `medwise-wordmark-light.png`). The browser-tab and home-screen
+icons show the mark in its original colours on a white rounded square. A larger or vector (SVG) original would
+make the large logo sharper.
 Red is reserved for danger. Never use it for branding, buttons or headings in the app.
 
 | Role | Font | Use |
@@ -55,11 +62,14 @@ Motif: hairline rules and the five-segment ruler. Use the ruler for the **narrow
 
 ## Screens
 ### 0. Home (the introduction)
-Promise and "Find the right antibiotic" (left), framed "What every result shows" panel (right; below on
-phones) → ruled strip of four facts → the problem ("It is not knowledge. It is synthesis."; too narrow / too
-broad / MedWise) → how it works (4 connected steps; vertical on phones) → what you get (ruled cells) →
-"Before you start" questions → tinted closing with "Start with a new patient" → small grouped footer.
-Wording comes from `PRODUCT.md`. No study figures, numbers or testimonials on this page.
+Header: logo, links to the sections below (wide screens), "New patient" → promise and "Find the right antibiotic"
+(left) with the framed "What every result shows" panel (right; below on phones) → ruled strip of four facts →
+**What it is** (full logo beside a plain description) → **Why we built it** ("It is not knowledge. It is
+synthesis."; too narrow / too broad / MedWise) → **Built by doctors, for the bedside** (six ruled cells: made for
+3 am on a phone, every reason has a source, doses never from the AI, knows when to stop, private by design, you
+decide) → how it works (4 connected steps) → what you get → "Before you start" questions → closing with "Start
+with a new patient" → footer with the logo. Wording comes from `PRODUCT.md`. No study figures, numbers,
+names or testimonials on this page.
 
 ### 1. Patient entry
 *Redesigned 2026-10-30 (DECISIONS.md): one page, for a phone or Android tablet at night, under 2 minutes. No SOFA score.*
@@ -95,8 +105,6 @@ Wording comes from `PRODUCT.md`. No study figures, numbers or testimonials on th
 - "Do not enter patient identifiers." at the top; there are no fields where one could be typed.
 - Entries are kept only in this browser tab (survive a refresh), and cleared after the result is shown, on
   "Clear form" or "New patient", and after 2 hours.
-- "Load test case" buttons (Case 1 and Case 2, placeholder values listed on screen) appear on preview,
-  staging and local copies only, never on the live site.
 - While the recommendation is worked out, a "Working it out" screen lists the real steps
   (patient checks → guideline passages → AI → safety checks → doses). It does not animate.
 

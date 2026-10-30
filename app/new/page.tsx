@@ -19,10 +19,6 @@ function loadOptions(): Options {
   return { choices, drugNames };
 }
 
-// "Load test case" buttons: on preview, staging and local copies only. Vercel sets VERCEL_ENV to "production"
-// for the live site, which never shows them.
-const showTestCases = process.env.VERCEL_ENV !== "production";
-
 export default function NewPatientPage() {
-  return <EntryForm options={loadOptions()} showTestCases={showTestCases} />;
+  return <EntryForm options={loadOptions()} />;
 }
