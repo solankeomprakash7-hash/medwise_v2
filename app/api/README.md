@@ -1,3 +1,3 @@
 # Server routes
 
-Planned: `recommend`, `decision`, `upload`. Empty for now.
+`status`: which AI this deployment uses (no keys shown). Planned: `decision`, `upload`.
