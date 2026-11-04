@@ -111,7 +111,9 @@ never in GitHub.
 pins a model (default `openrouter/auto`, which lets OpenRouter choose; the model that answered is recorded). Requests
 ask OpenRouter to use only providers that do not collect data (`data_collection: deny`).
 `/api/status` shows which AI a deployment uses and the names (never values) of AI-key settings.
-`GEMINI_API_KEY` (Vercel, server only) switches on the real AI with Google Gemini; `GEMINI_MODEL` can pin an exact
+`GOOGLE_GEMMA` (Vercel, server only) is a Google AI Studio key used for the open Gemma models (default
+`gemma-4-31b-it`) through the same Google client; Gemma gets the instructions inside the message and its JSON is
+taken from the reply. `GEMINI_API_KEY` (Vercel, server only) switches on the real AI with Google Gemini; `GEMINI_MODEL` can pin an exact
 model (default `gemini-pro-latest`, which follows Google's current Pro model; the version that answered is recorded).
 If only `ANTHROPIC_API_KEY` is set, Claude is used instead. Without it the app uses the DEMO stand-in
 and costs nothing. Patient details sent to the AI contain no identifiers (rule 4). The recommendation may
