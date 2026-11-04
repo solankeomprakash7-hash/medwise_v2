@@ -44,7 +44,9 @@ export class GeminiAiClient implements AiClient {
       );
     } catch (error) {
       if (error instanceof ApiError) {
-        if (error.status === 400 && /api key/i.test(error.message)) throw new AiNoAnswer("The AI key is not valid. Check the hosting settings.");
+        if (error.status === 400 && /api key/i.test(error.message)) {
+          throw new AiNoAnswer(`The AI key is not valid. Check the hosting settings. Google says: ${error.message.slice(0, 300)}`);
+        }
         if (error.status === 401 || error.status === 403) throw new AiNoAnswer("The AI key is not valid or not allowed. Check the hosting settings.");
         if (error.status === 404) throw new AiNoAnswer(`The AI model "${this.model}" is not available. Check GEMINI_MODEL in the hosting settings.`);
         if (error.status === 429) throw new AiNoAnswer("The AI is busy or its usage limit is reached. Please try again in a minute.");
