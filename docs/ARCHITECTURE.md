@@ -31,7 +31,7 @@ Created 2026-10-28 (Phase 2, step 1). Folders marked *empty* hold only a README 
 /public/brand        the MedWise logo files (original and light version for the dark pages)
 /app                 screens: home page (Sculpture.tsx = logo components; icon.svg, favicon.ico, apple-icon.png = tab and home-screen icons); /new = patient entry (one page: six sections + review; fields, checks and Cockcroft-Gault in app/new/form.ts) and result screen (app/new/ResultView.tsx, 10 cards per DESIGN.md), via the server action app/new/actions.ts; admin and login still to come
 /app/api             server routes (recommend, decision, upload) — empty
-/lib/ai              AI answer format (answer.ts), instructions (prompt.ts), AI client interface + test stand-in (client.ts), DEMO stand-in used by the screen (demo.ts), real AI clients: gemini.ts (Google Gemini, used when GEMINI_API_KEY is set; owner decision 2026-10-30) and claude.ts (Claude Opus 5.5, used when only ANTHROPIC_API_KEY is set); otherwise demo.ts
+/lib/ai              AI answer format (answer.ts), instructions (prompt.ts), AI client interface + test stand-in (client.ts), DEMO stand-in used by the screen (demo.ts), real AI clients: openrouter.ts (OpenRouter, used first when OPENROUTER_API_KEY is set; owner decision 2026-11-04), gemini.ts (Google Gemini, used when GEMINI_API_KEY is set; owner decision 2026-10-30) and claude.ts (Claude Opus 5.5, used when only ANTHROPIC_API_KEY is set); otherwise demo.ts
 /lib/recommend       the recommendation: input checks, allergy checks (allergy.ts), coverage and spectrum fit (spectrum.ts), review timeline (timeline.ts), evidence pack, safety checks, doses, guideline-table comparison (recommend.ts)
 /lib/knowledge       reads the knowledge-base tables and checks them for mistakes
 /knowledge           CSV tables + VERSION + vocabulary + coverage checklist + provenance (see knowledge/README.md); draft rows only
@@ -107,6 +107,10 @@ Privacy and audit rules, enforced by the database itself (row-level security):
 API keys only in Vercel and Supabase environment settings. Never in code, never in the browser,
 never in GitHub.
 
+`OPENROUTER_API_KEY` (Vercel, server only) switches on the real AI through OpenRouter, and is used first; `OPENROUTER_MODEL`
+pins a model (default `openrouter/auto`, which lets OpenRouter choose; the model that answered is recorded). Requests
+ask OpenRouter to use only providers that do not collect data (`data_collection: deny`).
+`/api/status` shows which AI a deployment uses and the names (never values) of AI-key settings.
 `GEMINI_API_KEY` (Vercel, server only) switches on the real AI with Google Gemini; `GEMINI_MODEL` can pin an exact
 model (default `gemini-pro-latest`, which follows Google's current Pro model; the version that answered is recorded).
 If only `ANTHROPIC_API_KEY` is set, Claude is used instead. Without it the app uses the DEMO stand-in
