@@ -28,15 +28,19 @@ Limitations: retrospective, small, adequacy gain projected. Prospective validati
 
 ## Version 1 — in scope
 1. Login; each user belongs to one hospital with one role.
-2. Step-by-step patient entry (see `CLINICAL_RULES.md` for fields), usable on a phone.
+2. One-page patient entry in five sections (see `CLINICAL_RULES.md` for fields), usable on a phone.
 3. Result screen, in this order:
-   1. The recommendation (drug + dose)
+   1. The recommendation (drug + dose, AWaRe tag)
    2. How to give it (dose, interval, infusion, renal adjustment)
-   3. Will it reach the site? (site penetration)
-   4. Safety (side effects, interactions, monitoring)
-   5. Why this antibiotic (reasoning + guideline cited)
-   6. Flags (e.g. "exclude obstruction", "source control needed")
-   7. Versions used
+   3. Coverage grid
+   4. Spectrum fit (needed vs given vs excess; no score)
+   5. Will it reach the site? (site penetration)
+   6. Safety (side effects, interactions, monitoring)
+   7. Why this antibiotic (short reasons + reasoning with guideline passages cited)
+   8. Flags (e.g. "exclude obstruction", "source control needed")
+   9. Stewardship actions and review timeline (0–1 h, 24 h, 48–72 h)
+   10. Versions used
+   (Full detail in `DESIGN.md`.)
 4. Accept / Modify / Override, with a required reason for Modify and Override.
 5. Admin: antibiogram upload, case list, acceptance and override rates, carbapenem and colistin
    recommendations per month, export to Excel.

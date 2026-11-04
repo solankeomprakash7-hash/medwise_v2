@@ -13,10 +13,15 @@ administration, reasoning and safety notes. **The clinician always makes the fin
   or changing anything in `CLINICAL_RULES.md`.
 
 ## Non-negotiable rules (never break these)
-1. **Clinical content comes from the knowledge base, never from the AI.** Drugs, doses, intervals,
-   renal adjustments, cut-offs and MDR rules come only from the signed-off tables in `/knowledge`.
-2. **The AI chooses only from the rules engine's shortlist** and explains why. If its answer is not
-   on the shortlist, show the rules engine's first choice and flag it.
+1. **The AI decides; it never writes a dose.** The AI chooses the empiric regimen by reasoning over the
+   patient, the guideline evidence library (quoted passages with page numbers), the knowledge-base tables
+   and the hospital's antibiogram. Doses, intervals, infusion, renal/hepatic adjustments and allergy
+   classes come **only** from the signed-off tables in `/knowledge` and are added by code.
+2. **Code checks every AI answer before it is shown.** Every drug must be in `drugs.csv`; no allergy
+   conflict; out-of-scope patients are stopped before the AI is asked; every citation must match the
+   evidence library word for word; the answer must be valid. If any check fails, there is no
+   recommendation: show "Discuss with ID / microbiology". If the AI's regimen differs from the guideline
+   table for this patient, show both and flag the difference.
 3. **All AI calls happen on the server.** No API keys in browser code, ever.
 4. **No identifiable patient data**: no names, UHID/IP numbers, phone numbers, addresses or dates of birth.
 5. **No "confidence %", no "validated", no "approved"** wording anywhere in the app.

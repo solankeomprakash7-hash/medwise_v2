@@ -27,12 +27,27 @@ export const TABLE_COLUMNS = {
     "drug", "standard_dose", "interval", "infusion", "max_dose", "renal_bands",
     "hepatic_adjustment", "interactions", "monitoring", "site_penetration_notes",
   ],
+  // Class of each drug, for allergy checks (CLAUDE.md rule 1: allergy classes only from the tables).
+  drug_classes: ["drug", "class", "beta_lactam", "source"],
+  // Coverage given by each drug (yes / limited / no) and its WHO AWaRe group (Access / Watch / Reserve,
+  // or "Not recommended" for WHO's list of fixed-dose combinations it advises against).
+  drug_spectrum: [
+    "drug", "gram_positive", "gram_negative", "pseudomonas", "mrsa", "esbl", "cre", "anaerobes", "atypicals",
+    "aware", "source", "aware_source",
+  ],
   antibiogram_template: ["year", "unit", "organism", "antibiotic", "isolates_n", "percent_susceptible"],
+  // Guidelines MedWise uses; every result shows their versions (CLAUDE.md rule 6).
+  guidelines: ["guideline", "title", "version", "published", "citation"],
+  // Guideline passages copied word for word; the only text the AI may cite (CLAUDE.md rule 2).
+  evidence: [
+    "passage_id", "guideline", "location", "pdf_page", "format", "table_columns", "sources", "settings",
+    "organisms", "topics", "text",
+  ],
   // Where each drafted row came from (guideline, page, recommendation) and known gaps.
   provenance: ["table", "row_key", "fields", "source", "location", "note"],
   golden_tests: [
     "case_id", "origin", "review_status", "age", "sex", "weight_kg", "source", "setting",
-    "source_control", "severity", "sofa", "crcl_ml_min", "dialysis", "hepatic", "antibiotics_90d",
+    "source_control", "severity", "crcl_ml_min", "dialysis", "hepatic", "antibiotics_90d",
     "admission_90d", "prior_mdr", "devices", "comorbidities", "immunocompromise", "allergies",
     "current_antibiotics", "pregnancy", "expected_regimen", "acceptable_alternatives",
     "expected_flags", "notes",

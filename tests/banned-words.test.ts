@@ -22,3 +22,18 @@ describe("banned wording", () => {
     });
   }
 });
+
+// Owner's website rule (DESIGN.md, DECISIONS 2026-10-29): no em dashes in anything the screens show.
+// Comments are ignored. The clinical disclaimer in lib/recommend/recommend.ts is fixed wording from
+// CLINICAL_RULES.md and is checked there, not here.
+describe("no em dashes on screen", () => {
+  for (const file of codeFiles("app").filter((f) => f.endsWith(".tsx"))) {
+    it(`${file} shows no em dash`, () => {
+      const visible = readFileSync(file, "utf8")
+        .split("\n")
+        .filter((line) => !/^\s*(\/\/|\{\/\*|\*)/.test(line))
+        .join("\n");
+      expect(visible).not.toContain("—");
+    });
+  }
+});
